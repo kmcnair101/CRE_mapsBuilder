@@ -1,5 +1,6 @@
 import type { MapStyleName } from './map/styles'
-import type { PlanType } from './stripe'
+
+export type SubscriptionStatus = 'free' | 'active' | 'expired' | 'cancelled' | 'non_renewing'
 
 export interface ContainerStyle {
   backgroundColor: string
@@ -115,7 +116,7 @@ export interface Profile {
   website?: string
   avatar_url?: string
   company_logo_url?: string
-  subscription_tier: PlanType
+  subscription_status: SubscriptionStatus
   subscription_id?: string
   trial_ends_at?: string
   profile_completed: boolean

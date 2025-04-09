@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.6",
     "@headlessui/react": "^1.7.18",
     "@supabase/supabase-js": "^2.39.7",
-    "@googlemaps/js-api-loader": "^1.16.6",
     "clsx": "^2.1.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.344.0",
@@ -25,9 +25,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
     "@types/google.maps": "^3.55.4",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.6",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
     "eslint": "^9.9.1",
