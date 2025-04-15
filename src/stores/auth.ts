@@ -38,7 +38,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       password,
     })
     
-    if (signUpError) throw signUpError
+    if (signUpError) {
+      console.error('Supabase sign-up error:', signUpError.message);
+      alert(`Sign-up failed: ${signUpError.message}`);
+      throw signUpError;
+    }
 
     if (data.user) {
       set({ user: data.user })
