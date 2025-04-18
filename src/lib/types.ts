@@ -118,6 +118,7 @@ export interface Profile {
   company_logo_url?: string
   subscription_status: SubscriptionStatus
   subscription_id?: string
+  current_period_end?: string
   trial_ends_at?: string
   profile_completed: boolean
 }
