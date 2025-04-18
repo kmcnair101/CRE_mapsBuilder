@@ -1,124 +1,175 @@
-import type { MapStyleName } from './map/styles'
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export type SubscriptionStatus = 'free' | 'active' | 'expired' | 'cancelled' | 'non_renewing'
+export type Database = {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          company_name: string | null
+          phone: string | null
+          created_at: string
+          updated_at: string
+          subscription_status: string | null
+          avatar_url: string | null
+          first_name: string | null
+          last_name: string | null
+          website: string | null
+        }
+        Insert: {
+          id: string
+          email: string
+          company_name?: string | null
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+          subscription_status?: string | null
+          avatar_url?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          website?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          company_name?: string | null
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+          subscription_status?: string | null
+          avatar_url?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          website?: string | null
+        }
+      }
 
-export interface ContainerStyle {
-  backgroundColor: string
-  borderColor: string
-  borderWidth: number
-  padding: number
-  backgroundOpacity: number
-  borderOpacity: number
-}
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_subscription_id: string
+          stripe_price_id: string
+          status: string
+          current_period_start: string | null
+          current_period_end: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_subscription_id: string
+          stripe_price_id: string
+          status: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stripe_subscription_id?: string
+          stripe_price_id?: string
+          status?: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
 
-export interface MapOverlay {
-  id: string
-  type: 'image' | 'text' | 'business' | 'group' | 'shape'
-  position: {
-    lat: number
-    lng: number
-  }
-  properties: {
-    // Common properties
-    draggable?: boolean
-    zIndex?: number
-    width?: number
-    // Image specific
-    url?: string
-    height?: number
-    opacity?: number
-    containerStyle?: ContainerStyle
-    // Text specific
-    content?: string
-    fontSize?: number
-    fontFamily?: string
-    color?: string
-    backgroundColor?: string
-    borderColor?: string
-    borderWidth?: number
-    borderRadius?: number
-    padding?: number
-    backgroundOpacity?: number
-    borderOpacity?: number
-    // Business specific
-    businessName?: string
-    logo?: string
-    address?: string
-    // Group specific
-    title?: string
-    items?: Array<{
-      id: string
-      type: 'image' | 'logo'
-      url: string
-      width: number
-      height: number
-    }>
-    // Shape specific
-    shapeType?: 'rect' | 'circle' | 'polygon'
-    fill?: string
-    stroke?: string
-    strokeWidth?: number
-    shapeOpacity?: number
-    shapeWidth?: number
-    shapeHeight?: number
-    radius?: number
-    points?: Array<{
-      lat: number
-      lng: number
-    }>
-  }
-}
+      payment_records: {
+        Row: {
+          id: string
+          user_id: string
+          subscription_id: string | null
+          stripe_payment_id: string | null
+          amount: number | null
+          currency: string | null
+          status: string | null
+          payment_method: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          subscription_id?: string | null
+          stripe_payment_id?: string | null
+          amount?: number | null
+          currency?: string | null
+          status?: string | null
+          payment_method?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          subscription_id?: string | null
+          stripe_payment_id?: string | null
+          amount?: number | null
+          currency?: string | null
+          status?: string | null
+          payment_method?: string | null
+          created_at?: string
+        }
+      }
 
-export interface MapData {
-  title: string
-  center_lat: number
-  center_lng: number
-  zoom_level: number
-  overlays: MapOverlay[]
-  subject_property: {
-    address: string
-    lat: number
-    lng: number
-    name?: string
-    image?: string | null
-    style?: {
-      color: string
-      fontSize: number
-      fontFamily: string
-      backgroundColor: string
-      borderColor: string
-      borderWidth: number
-      padding: number
-      backgroundOpacity: number
-      borderOpacity: number
+      maps: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          center_lat: number
+          center_lng: number
+          zoom_level: number
+          overlays: Json | null
+          subject_property: Json | null
+          thumbnail: string | null
+          is_public: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          center_lat: number
+          center_lng: number
+          zoom_level?: number
+          overlays?: Json | null
+          subject_property?: Json | null
+          thumbnail?: string | null
+          is_public?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          center_lat?: number
+          center_lng?: number
+          zoom_level?: number
+          overlays?: Json | null
+          subject_property?: Json | null
+          thumbnail?: string | null
+          is_public?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
-  } | null
-  mapStyle?: {
-    type: MapStyleName | 'satellite' | 'terrain'
-    customStyles?: google.maps.MapTypeStyle[]
-    hideLabels?: boolean
-    hideStreetNames?: boolean
-    hidePOIs?: boolean
-    highlightHighways?: {
-      color: string
-      opacity: number
-    }
   }
-}
-
-export interface Profile {
-  id: string
-  email: string
-  first_name?: string
-  last_name?: string
-  phone?: string
-  company?: string
-  website?: string
-  avatar_url?: string
-  company_logo_url?: string
-  subscription_status: SubscriptionStatus
-  subscription_id?: string
-  current_period_end?: string
-  trial_ends_at?: string
-  profile_completed: boolean
 }
