@@ -10,7 +10,7 @@ export function ProfileSetup() {
   const { user, profile, loadProfile } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const [firstName, setFirstName] = useState(profile?.first_name || '')
   const [lastName, setLastName] = useState(profile?.last_name || '')
   const [phone, setPhone] = useState(profile?.phone || '')
@@ -18,13 +18,26 @@ export function ProfileSetup() {
   const [website, setWebsite] = useState(profile?.website || '')
   const [avatar, setAvatar] = useState<string | null>(null)
   const [companyLogo, setCompanyLogo] = useState<string | null>(null)
-  
+
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+
+    if (!file) {
+      console.error('❌ No file selected for avatar upload.')
+      setError('No file selected.')
+      return
+    }
+
+    if (!user) {
+      console.error('❌ No user logged in.')
+      setError('You must be logged in to upload.')
+      return
+    }
+
+    console.log('✅ File selected for avatar upload:', file)
 
     try {
       const fileExt = file.name.split('.').pop()
@@ -42,7 +55,7 @@ export function ProfileSetup() {
 
       setAvatar(publicUrl)
     } catch (error) {
-      console.error('Error uploading avatar:', error)
+      console.error('🔥 Error uploading avatar:', error)
       setError('Failed to upload avatar')
     }
   }
@@ -86,7 +99,7 @@ export function ProfileSetup() {
           first_name: firstName,
           last_name: lastName,
           phone,
-          company,
+          company_name: company,
           website,
           avatar_url: avatar,
           company_logo_url: companyLogo,
@@ -207,7 +220,7 @@ export function ProfileSetup() {
             {/* Company Information */}
             <div className="border-t pt-6 mt-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
