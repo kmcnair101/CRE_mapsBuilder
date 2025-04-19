@@ -1,16 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/supabase/types'
 
+// Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2022-11-15',
 })
-
-const supabase = createClient<Database>(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -22,7 +16,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log('🧾 STRIPE_PRICE_ID_MONTHLY:', process.env.STRIPE_PRICE_ID_MONTHLY)
   console.log('🧾 STRIPE_PRICE_ID_ANNUAL:', process.env.STRIPE_PRICE_ID_ANNUAL)
   console.log('🌐 NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL)
-
 
   const { plan, userId } = req.body
 
@@ -45,8 +38,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cancel`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription?canceled=true`,
       metadata: {
         userId,
         priceId,
@@ -55,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({ url: session.url })
   } catch (error: any) {
-    console.error('Stripe Checkout Session Error:', error)
-    return res.status(500).json({ error: error.message })
+    console.error('❌ Stripe Checkout Error:', error)
+    return res.status(500).json({ error: error.message || 'Unknown server error' })
   }
 }
