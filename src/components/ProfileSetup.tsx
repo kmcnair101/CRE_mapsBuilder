@@ -92,12 +92,6 @@ export function ProfileSetup() {
     e.preventDefault()
     if (!user) return
 
-    // Validate required fields
-    if (!firstName.trim() || !lastName.trim() || !company.trim()) {
-      setError('First name, last name, and company name are required')
-      return
-    }
-
     setLoading(true)
     setError('')
 
@@ -111,21 +105,24 @@ export function ProfileSetup() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          phone: phone.trim(),
-          company: company.trim(),
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+          company,
           website: formattedWebsite,
           avatar_url: avatar,
-          company_logo_url: companyLogo,
-          profile_completed: true
+          company_logo_url: companyLogo
         })
         .eq('id', user.id)
 
       if (updateError) throw updateError
 
       await loadProfile()
-      navigate('/')
+      // Show success message briefly before redirecting
+      setError('Profile updated successfully!')
+      setTimeout(() => {
+        navigate('/')
+      }, 1000) // Redirect after 1 second
     } catch (err) {
       console.error('Error updating profile:', err)
       setError('Failed to update profile')
