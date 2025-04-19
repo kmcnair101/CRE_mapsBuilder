@@ -118,11 +118,11 @@ export function ProfileSetup() {
       if (updateError) throw updateError
 
       await loadProfile()
-      // Show success message briefly before redirecting
       setError('Profile updated successfully!')
+      // Add a slight delay before navigation to show the success message
       setTimeout(() => {
         navigate('/')
-      }, 1000) // Redirect after 1 second
+      }, 1000)
     } catch (err) {
       console.error('Error updating profile:', err)
       setError('Failed to update profile')
