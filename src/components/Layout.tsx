@@ -5,7 +5,8 @@ import {
   MapPin, 
   LogOut,
   LayoutDashboard,
-  User
+  User,
+  CreditCard
 } from 'lucide-react'
 import { Menu, Transition } from '@headlessui/react'
 import { cn } from '@/lib/utils'
@@ -21,6 +22,7 @@ export function Layout() {
 
   const userNavigation = [
     { name: 'Profile Settings', href: '/settings/profile', icon: User },
+    { name: 'Subscription', href: '/subscription', icon: CreditCard },
   ]
 
   return (
