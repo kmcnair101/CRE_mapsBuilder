@@ -8,7 +8,7 @@ import { LogoSearch } from '@/components/LogoSearch'
 import { Auth } from '@/components/Auth'
 import { ProfileSetup } from '@/components/ProfileSetup'
 import { ProfileSettings } from '@/components/settings/ProfileSettings'
-import { SubscriptionDetails } from '@/components/settings/SubscriptionDetails'
+import { SubscriptionDetails } from '@/components/SubscriptionDetails'
 import { Layout } from '@/components/Layout'
 
 function App() {
