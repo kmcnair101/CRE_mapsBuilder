@@ -18,7 +18,7 @@ export function SubscriptionDetails() {
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching subscription:', error)
