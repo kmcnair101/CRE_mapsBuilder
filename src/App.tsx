@@ -8,6 +8,7 @@ import { LogoSearch } from '@/components/LogoSearch'
 import { Auth } from '@/components/Auth'
 import { ProfileSetup } from '@/components/ProfileSetup'
 import { ProfileSettings } from '@/components/settings/ProfileSettings'
+import { SubscriptionDetails } from '@/components/settings/SubscriptionDetails'
 import { Layout } from '@/components/Layout'
 
 function App() {
@@ -108,6 +109,16 @@ function App() {
                 ? needsProfileSetup 
                   ? <Navigate to="/profile/setup" />
                   : <ProfileSettings />
+                : <Navigate to="/auth" />
+            } 
+          />
+          <Route 
+            path="subscription" 
+            element={
+              user 
+                ? needsProfileSetup 
+                  ? <Navigate to="/profile/setup" />
+                  : <SubscriptionDetails />
                 : <Navigate to="/auth" />
             } 
           />
