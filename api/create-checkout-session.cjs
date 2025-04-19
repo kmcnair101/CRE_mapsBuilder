@@ -1,12 +1,12 @@
-import Stripe from 'stripe';
+const Stripe = require('stripe');
 
 // Initialize Stripe with your secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 /**
  * Vercel Serverless Function: Create Stripe Checkout Session
  */
-export default async (req: any, res: any) => {
+module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -47,7 +47,7 @@ export default async (req: any, res: any) => {
     });
 
     return res.status(200).json({ url: session.url });
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Stripe error:', error);
     return res.status(500).json({ error: error.message });
   }
