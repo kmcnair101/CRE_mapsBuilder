@@ -34,17 +34,17 @@ export function SubscriptionDetails() {
   const handleSubscribe = async () => {
     setLoading(true)
     setError('')
-
+  
     try {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID // or use annual
+          plan: 'monthly' // or 'annual' dynamically
         })
       })
-
+  
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
@@ -58,6 +58,7 @@ export function SubscriptionDetails() {
       setLoading(false)
     }
   }
+  
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
