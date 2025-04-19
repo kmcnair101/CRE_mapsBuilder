@@ -1,17 +1,17 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/supabase/types'
+import type { Database } from '../src/lib/supabase/types'
 
 // Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
   apiVersion: '2022-11-15',
 })
 
 // Initialize Supabase
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 )
 
 type ResponseData = {
@@ -25,17 +25,15 @@ type RequestBody = {
 }
 
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ResponseData>
+  req: VercelRequest,
+  res: VercelResponse
 ) {
-  // CORS headers for Vercel
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
-  
   if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version')
+    return res.status(200).end()
   }
 
   if (req.method !== 'POST') {
@@ -45,7 +43,7 @@ export default async function handler(
   try {
     const { plan, userId } = req.body as RequestBody
 
-    // Debug logging for Vercel
+    // Debug logging
     console.log('🧪 Received request body:', req.body)
     console.log('🔐 STRIPE_SECRET_KEY loaded:', !!process.env.STRIPE_SECRET_KEY)
     console.log('🧾 STRIPE_PRICE_ID_MONTHLY:', process.env.STRIPE_PRICE_ID_MONTHLY)
