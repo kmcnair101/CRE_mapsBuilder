@@ -17,9 +17,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method Not Allowed' })
   }
 
+  console.log('🧪 Received request body:', req.body)
+  console.log('🔐 STRIPE_SECRET_KEY loaded:', !!process.env.STRIPE_SECRET_KEY)
+  console.log('🧾 STRIPE_PRICE_ID_MONTHLY:', process.env.STRIPE_PRICE_ID_MONTHLY)
+  console.log('🧾 STRIPE_PRICE_ID_ANNUAL:', process.env.STRIPE_PRICE_ID_ANNUAL)
+  console.log('🌐 NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL)
+
+
   const { plan, userId } = req.body
 
-  // Get price ID from env vars
   const priceId =
     plan === 'annual'
       ? process.env.STRIPE_PRICE_ID_ANNUAL
@@ -43,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cancel`,
       metadata: {
         userId,
-        priceId, // ⬅️ Needed in webhook to store subscription
+        priceId,
       },
     })
 
