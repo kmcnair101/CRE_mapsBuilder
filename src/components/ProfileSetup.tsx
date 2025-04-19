@@ -43,6 +43,9 @@ export function ProfileSetup() {
       const fileExt = file.name.split('.').pop()
       const filePath = `${user.id}/avatar.${fileExt}`
 
+      console.log('🧪 Uploading avatar to:', filePath)
+      console.log('🧪 User ID (auth.uid()):', user.id)
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true })
