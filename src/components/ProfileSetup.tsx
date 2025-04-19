@@ -48,7 +48,7 @@ export function ProfileSetup() {
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true })
+        .upload(filePath, file)
 
       if (uploadError) throw uploadError
 
