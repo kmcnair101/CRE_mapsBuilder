@@ -31,47 +31,61 @@ export function SubscriptionDetails() {
     fetchSubscription()
   }, [user])
 
-  const handleManageSubscription = async () => {
+  const handleSubscribe = async () => {
     setLoading(true)
+    setError('')
+
     try {
-      const res = await fetch('/api/create-portal-link', {
+      const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        body: JSON.stringify({ userId: user?.id }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          priceId: process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID // or use annual
+        })
       })
-      const { url } = await res.json()
-      window.location.href = url
-    } catch (err) {
-      console.error(err)
-      setError('Unable to redirect to billing portal')
+
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('Failed to redirect to checkout.')
+      }
+    } catch (err: any) {
+      console.error('Subscription error:', err)
+      setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded shadow-sm">
-      <h2 className="text-xl font-semibold mb-4">Subscription Details</h2>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <h2 className="text-2xl font-bold mb-4">Subscription Details</h2>
 
-      {error && <p className="text-red-500">{error}</p>}
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">{error}</div>
+      )}
+
+      {loading && <p className="text-gray-600 mb-4">Loading...</p>}
 
       {!subscription ? (
-        <p>No active subscription found.</p>
+        <div className="text-center">
+          <p className="mb-4 text-gray-700">No active subscription found.</p>
+          <button
+            onClick={handleSubscribe}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Redirecting...' : 'Subscribe Now'}
+          </button>
+        </div>
       ) : (
-        <div className="space-y-2 text-sm text-gray-700">
+        <div className="bg-gray-100 p-4 rounded shadow">
           <p><strong>Status:</strong> {subscription.status}</p>
           <p><strong>Plan:</strong> {subscription.stripe_price_id}</p>
-          <p><strong>Current Period Ends:</strong> {new Date(subscription.current_period_end).toLocaleDateString()}</p>
-
-          <button
-            onClick={handleManageSubscription}
-            className="mt-4 px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : 'Manage Billing'}
-          </button>
+          <p><strong>Period Start:</strong> {new Date(subscription.current_period_start).toLocaleDateString()}</p>
+          <p><strong>Period End:</strong> {new Date(subscription.current_period_end).toLocaleDateString()}</p>
         </div>
       )}
     </div>
