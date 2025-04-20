@@ -35,7 +35,7 @@ export default async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
       metadata: {
         userId,
