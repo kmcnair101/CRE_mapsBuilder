@@ -1,12 +1,10 @@
-const Stripe = require('stripe');
+// File: /api/create-checkout-session.js
+import Stripe from 'stripe';
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-/**
- * Vercel Serverless Function: Create Stripe Checkout Session
- */
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -20,10 +18,9 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Missing userId or plan' });
     }
 
-    const priceId =
-      plan === 'annual'
-        ? process.env.STRIPE_PRICE_ID_ANNUAL
-        : process.env.STRIPE_PRICE_ID_MONTHLY;
+    const priceId = plan === 'annual'
+      ? process.env.STRIPE_PRICE_ID_ANNUAL
+      : process.env.STRIPE_PRICE_ID_MONTHLY;
 
     if (!priceId || !process.env.NEXT_PUBLIC_SITE_URL) {
       return res.status(500).json({ error: 'Stripe price ID or site URL missing' });
@@ -51,4 +48,4 @@ module.exports = async (req, res) => {
     console.error('❌ Stripe error:', error);
     return res.status(500).json({ error: error.message });
   }
-};
+}
