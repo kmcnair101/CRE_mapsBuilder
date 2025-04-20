@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useNavigate } from 'react-router-dom'
 
 export function SubscriptionDetails() {
-  const { user, profile, loadProfile } = useAuthStore()
+  const { user } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [subscription, setSubscription] = useState<any>(null)
@@ -18,7 +18,7 @@ export function SubscriptionDetails() {
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle()
 
       if (error) {
         console.error('Error fetching subscription:', error)
@@ -31,17 +31,17 @@ export function SubscriptionDetails() {
     fetchSubscription()
   }, [user])
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (plan: 'monthly' | 'annual') => {
     setLoading(true)
     setError('')
-  
+
     try {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, plan: 'monthly' }) // or 'annual'
+        body: JSON.stringify({ userId: user?.id, plan })
       })
-  
+
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
@@ -55,7 +55,6 @@ export function SubscriptionDetails() {
       setLoading(false)
     }
   }
-  
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -68,18 +67,39 @@ export function SubscriptionDetails() {
       {loading && <p className="text-gray-600 mb-4">Loading...</p>}
 
       {!subscription ? (
-        <div className="text-center">
+        <div className="text-center space-y-6">
           <p className="mb-4 text-gray-700">No active subscription found.</p>
-          <button
-            onClick={handleSubscribe}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Redirecting...' : 'Subscribe Now'}
-          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Monthly Option */}
+            <div className="border rounded-lg p-4 shadow-sm">
+              <h3 className="text-lg font-semibold mb-2">Monthly Plan</h3>
+              <p className="text-gray-600 mb-4">$49 per month</p>
+              <button
+                onClick={() => handleSubscribe('monthly')}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? 'Redirecting...' : 'Subscribe Monthly'}
+              </button>
+            </div>
+
+            {/* Annual Option */}
+            <div className="border rounded-lg p-4 shadow-sm">
+              <h3 className="text-lg font-semibold mb-2">Annual Plan</h3>
+              <p className="text-gray-600 mb-4">$449 per year</p>
+              <button
+                onClick={() => handleSubscribe('annual')}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              >
+                {loading ? 'Redirecting...' : 'Subscribe Annually'}
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
-        <div className="bg-gray-100 p-4 rounded shadow">
+        <div className="bg-gray-100 p-4 rounded shadow text-left">
           <p><strong>Status:</strong> {subscription.status}</p>
           <p><strong>Plan:</strong> {subscription.stripe_price_id}</p>
           <p><strong>Period Start:</strong> {new Date(subscription.current_period_start).toLocaleDateString()}</p>
