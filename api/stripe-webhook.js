@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       process.env.STRIPE_WEBHOOK_SECRET!
     )
   } catch (err) {
-    console.error('Webhook signature verification failed:', err)
+    console.error('❌ Webhook signature verification failed:', err)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
@@ -49,23 +49,41 @@ export default async function handler(req, res) {
 
       if (!userId || !subscriptionId || !priceId) break
 
-      // 1. Update user profile
-      await supabase
-        .from('profiles')
-        .update({ subscription_status: 'active' })
-        .eq('id', userId)
+      try {
+        const stripeSub = await stripe.subscriptions.retrieve(subscriptionId)
 
-      // 2. Insert or update subscription record
-      await supabase.from('subscriptions').upsert({
-        user_id: userId,
-        stripe_subscription_id: subscriptionId,
-        stripe_price_id: priceId,
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: null, // you can update later with Stripe API
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+        // 1. Update user profile
+        await supabase
+          .from('profiles')
+          .update({ subscription_status: 'active' })
+          .eq('id', userId)
+
+        // 2. Insert or update subscription record
+        await supabase.from('subscriptions').upsert({
+          user_id: userId,
+          stripe_subscription_id: subscriptionId,
+          stripe_price_id: priceId,
+          status: stripeSub.status,
+          current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+
+        // 3. Insert payment record
+        await supabase.from('payment_records').insert({
+          user_id: userId,
+          subscription_id: subscriptionId,
+          stripe_payment_id: session.payment_intent as string,
+          amount: session.amount_total ? session.amount_total / 100 : 0,
+          currency: session.currency || 'usd',
+          status: session.payment_status || 'paid',
+          payment_method: session.payment_method_types?.[0] || 'card',
+          created_at: new Date().toISOString(),
+        })
+      } catch (err) {
+        console.error('❌ Error processing checkout.session.completed:', err)
+      }
 
       break
     }
@@ -76,20 +94,22 @@ export default async function handler(req, res) {
 
       if (!userId) break
 
-      // 1. Update profile
-      await supabase
-        .from('profiles')
-        .update({ subscription_status: 'cancelled' })
-        .eq('id', userId)
+      try {
+        await supabase
+          .from('profiles')
+          .update({ subscription_status: 'cancelled' })
+          .eq('id', userId)
 
-      // 2. Update subscription record
-      await supabase
-        .from('subscriptions')
-        .update({
-          status: 'cancelled',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('stripe_subscription_id', subscription.id)
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: 'cancelled',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', subscription.id)
+      } catch (err) {
+        console.error('❌ Error processing customer.subscription.deleted:', err)
+      }
 
       break
     }
