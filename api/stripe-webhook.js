@@ -49,6 +49,13 @@ export default async function handler(req, res) {
       if (!userId || !subscriptionId || !priceId) break
 
       try {
+        // Attach userId to the Stripe customer (for future reference)
+        if (session.customer) {
+          await stripe.customers.update(session.customer, {
+            metadata: { userId },
+          })
+        }
+
         const stripeSub = await stripe.subscriptions.retrieve(subscriptionId)
 
         await supabase
@@ -86,11 +93,16 @@ export default async function handler(req, res) {
 
     case 'customer.subscription.deleted': {
       const subscription = data
-      const userId = subscription.metadata?.userId
-
-      if (!userId) break
+      let userId = null
 
       try {
+        if (subscription.customer) {
+          const customer = await stripe.customers.retrieve(subscription.customer)
+          userId = customer.metadata?.userId
+        }
+
+        if (!userId) break
+
         await supabase
           .from('profiles')
           .update({ subscription_status: 'cancelled' })
