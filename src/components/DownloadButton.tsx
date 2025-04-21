@@ -14,6 +14,8 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
 
+  console.log('🚫 hasAccess:', hasAccess())
+
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     if (!hasAccess()) {
