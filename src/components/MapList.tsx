@@ -84,6 +84,7 @@ export function MapList() {
   const handleMapDownload = async (mapId: string) => {
     if (!hasAccess()) {
       setShowPricingPlans(true)
+      setActiveMapMenu(null)
       return
     }
 
@@ -91,7 +92,6 @@ export function MapList() {
       setDownloadingMap(mapId)
       setActiveMapMenu(null)
       
-      // Get the full map data
       const { data, error } = await supabase
         .from('maps')
         .select('*')
@@ -100,7 +100,6 @@ export function MapList() {
 
       if (error) throw error
 
-      // Download the map using the dedicated function
       await downloadMapFromData({
         title: data.title,
         center_lat: data.center_lat,
@@ -331,9 +330,13 @@ export function MapList() {
                             </Link>
                             <button
                               onClick={() => handleMapDownload(map.id)}
-                              disabled={downloadingMap === map.id || !hasAccess()}
-                              title={!hasAccess() ? "Subscribe to download maps" : "Download map"}
-                              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={downloadingMap === map.id}
+                              className={cn(
+                                "flex items-center w-full text-left px-4 py-2 text-sm",
+                                hasAccess() 
+                                  ? "text-gray-700 hover:bg-gray-100" 
+                                  : "text-gray-400 cursor-not-allowed"
+                              )}
                             >
                               {downloadingMap === map.id ? (
                                 <>
@@ -342,11 +345,8 @@ export function MapList() {
                                 </>
                               ) : (
                                 <>
-                                  <Download className={cn(
-                                    "h-4 w-4 mr-3",
-                                    hasAccess() ? "text-gray-500" : "text-gray-300"
-                                  )} />
-                                  Download
+                                  <Download className="h-4 w-4 mr-3 text-gray-500" />
+                                  {hasAccess() ? 'Download' : 'Subscribe to Download'}
                                 </>
                               )}
                             </button>

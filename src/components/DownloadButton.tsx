@@ -14,7 +14,8 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
     if (!hasAccess()) {
       setShowPricingPlans(true)
       return
@@ -26,11 +27,11 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
     <>
       <button
         onClick={handleClick}
-        disabled={loading || !hasAccess()}
+        disabled={loading}
         title={!hasAccess() ? "Subscribe to download maps" : "Download map"}
         className={cn(
           'inline-flex items-center justify-center text-sm',
-          !hasAccess() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700',
+          !hasAccess() && 'opacity-50 cursor-not-allowed',
           className
         )}
       >
@@ -42,7 +43,7 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
         ) : (
           <>
             <Download className="h-4 w-4 mr-1.5 flex-shrink-0" />
-            <span>Download</span>
+            <span>{hasAccess() ? 'Download' : 'Subscribe to Download'}</span>
           </>
         )}
       </button>

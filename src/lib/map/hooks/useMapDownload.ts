@@ -1,9 +1,17 @@
 import html2canvas from 'html2canvas'
 import { loader } from '@/lib/google-maps'
 import type { MapData } from '@/lib/types'
+import { useSubscription } from '@/hooks/useSubscription'
 
 export function useMapDownload() {
+  const { hasAccess } = useSubscription()
+
   const handleDownload = async (mapRef: React.RefObject<HTMLDivElement>, forThumbnail = false) => {
+    // Always allow thumbnails (they're used internally)
+    if (!forThumbnail && !hasAccess()) {
+      return null
+    }
+
     if (!mapRef.current) return null
 
     try {
@@ -93,6 +101,10 @@ export function useMapDownload() {
   }
 
   const downloadMapFromData = async (mapData: MapData, filename?: string) => {
+    if (!hasAccess()) {
+      return false
+    }
+
     try {
       // Create a temporary container for the map
       const container = document.createElement('div')
