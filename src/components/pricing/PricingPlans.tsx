@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { X } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth'
 
 interface PricingPlanProps {
   isOpen: boolean
@@ -6,6 +8,35 @@ interface PricingPlanProps {
 }
 
 export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
+  const { user } = useAuthStore()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubscribe = async (plan: 'monthly' | 'annual') => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id, plan })
+      })
+
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('Failed to redirect to checkout.')
+      }
+    } catch (err: any) {
+      console.error('Subscription error:', err)
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!isOpen) return null
 
   return (
@@ -22,6 +53,12 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
         </div>
         
         <div className="p-6">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 gap-8">
             {/* Monthly Plan */}
             <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow">
@@ -32,14 +69,13 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
                 <li>✓ Monthly billing</li>
                 <li>✓ Cancel anytime</li>
               </ul>
-              <a 
-                href="https://billing.zohosecure.com/subscribe/d9adf6900d8364ca1f91f1acbef9b45b7906f5e6327bed22ad482bf477cf719e/CREMaps-Monthly"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+              <button 
+                onClick={() => handleSubscribe('monthly')}
+                disabled={loading}
+                className="block w-full text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                Subscribe Monthly
-              </a>
+                {loading ? 'Please wait...' : 'Subscribe Monthly'}
+              </button>
             </div>
 
             {/* Annual Plan */}
@@ -55,14 +91,13 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
                 <li>✓ Save 24% annually</li>
                 <li>✓ Priority support</li>
               </ul>
-              <a 
-                href="https://billing.zohosecure.com/subscribe/d9adf6900d8364ca1f91f1acbef9b45b7906f5e6327bed22ad482bf477cf719e/CREMaps-Annual"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+              <button 
+                onClick={() => handleSubscribe('annual')}
+                disabled={loading}
+                className="block w-full text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                Subscribe Annually
-              </a>
+                {loading ? 'Please wait...' : 'Subscribe Annually'}
+              </button>
             </div>
           </div>
         </div>
