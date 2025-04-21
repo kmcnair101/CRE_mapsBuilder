@@ -27,7 +27,7 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
     <>
       <button
         onClick={handleClick}
-        disabled={loading}
+        disabled={loading || !hasAccess()}
         title={!hasAccess() ? "Subscribe to download maps" : "Download map"}
         className={cn(
           'inline-flex items-center justify-center text-sm',
