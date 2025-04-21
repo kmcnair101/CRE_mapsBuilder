@@ -15,20 +15,22 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
   const [showPricingPlans, setShowPricingPlans] = useState(false)
 
   const handleClick = () => {
-    if (hasAccess()) {
-      onDownload()
-    } else {
+    if (!hasAccess()) {
       setShowPricingPlans(true)
+      return
     }
+    onDownload()
   }
 
   return (
     <>
       <button
         onClick={handleClick}
-        disabled={loading}
+        disabled={loading || !hasAccess()}
+        title={!hasAccess() ? "Subscribe to download maps" : "Download map"}
         className={cn(
-          'inline-flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center text-sm',
+          !hasAccess() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700',
           className
         )}
       >

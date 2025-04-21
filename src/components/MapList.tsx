@@ -331,7 +331,8 @@ export function MapList() {
                             </Link>
                             <button
                               onClick={() => handleMapDownload(map.id)}
-                              disabled={downloadingMap === map.id}
+                              disabled={downloadingMap === map.id || !hasAccess()}
+                              title={!hasAccess() ? "Subscribe to download maps" : "Download map"}
                               className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {downloadingMap === map.id ? (
@@ -341,7 +342,10 @@ export function MapList() {
                                 </>
                               ) : (
                                 <>
-                                  <Download className="h-4 w-4 mr-3 text-gray-500" />
+                                  <Download className={cn(
+                                    "h-4 w-4 mr-3",
+                                    hasAccess() ? "text-gray-500" : "text-gray-300"
+                                  )} />
                                   Download
                                 </>
                               )}
