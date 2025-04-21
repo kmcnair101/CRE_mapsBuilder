@@ -6,6 +6,8 @@ import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
+import { useSubscription } from '@/hooks/useSubscription'
+import { PricingPlans } from './pricing/PricingPlans'
 
 type Map = Database['public']['Tables']['maps']['Row']
 type SortOption = 'updated_at' | 'created_at' | 'title'
@@ -22,6 +24,8 @@ export function MapList() {
   const [searchTerm, setSearchTerm] = useState('')
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const { downloadMapFromData } = useMapDownload()
+  const { hasAccess } = useSubscription()
+  const [showPricingPlans, setShowPricingPlans] = useState(false)
 
   useEffect(() => {
     async function loadMaps() {
@@ -78,6 +82,11 @@ export function MapList() {
   }
 
   const handleMapDownload = async (mapId: string) => {
+    if (!hasAccess()) {
+      setShowPricingPlans(true)
+      return
+    }
+
     try {
       setDownloadingMap(mapId)
       setActiveMapMenu(null)
@@ -371,6 +380,10 @@ export function MapList() {
           </div>
         )}
       </div>
+      <PricingPlans 
+        isOpen={showPricingPlans} 
+        onClose={() => setShowPricingPlans(false)} 
+      />
     </div>
   )
 }
