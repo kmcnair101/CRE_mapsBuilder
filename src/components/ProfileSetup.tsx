@@ -111,7 +111,8 @@ export function ProfileSetup() {
           company,
           website: formattedWebsite,
           avatar_url: avatar,
-          company_logo_url: companyLogo
+          company_logo_url: companyLogo,
+          profile_completed: true
         })
         .eq('id', user.id)
 
