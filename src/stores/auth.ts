@@ -17,6 +17,7 @@ interface AuthState {
   signInWithLinkedIn: () => Promise<void>
   signOut: () => Promise<void>
   loadProfile: () => Promise<void>
+  resetPassword: (email: string) => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -118,5 +119,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Error loading profile:', error)
       set({ loading: false })
     }
+  },
+  resetPassword: async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth?reset=true`,
+    })
+    if (error) throw error
   },
 }))

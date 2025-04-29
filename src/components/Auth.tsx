@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
 import { MapPin, Github, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Auth() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
-  const { signIn, signUp, signInWithGithub, signInWithGoogle, signInWithFacebook, signInWithLinkedIn } = useAuthStore()
+  const [resetSent, setResetSent] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const { signIn, signUp, signInWithGithub, signInWithGoogle, signInWithFacebook, signInWithLinkedIn, resetPassword } = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,6 +70,111 @@ export function Auth() {
     } catch (error) {
       setError(`Failed to sign in with ${provider}`)
     }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) {
+      setError('Please enter your email address')
+      return
+    }
+
+    try {
+      setError('')
+      setIsResetting(true)
+      await resetPassword(email)
+      setResetSent(true)
+    } catch (err) {
+      setError('Failed to send reset password email')
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
+  if (isResetting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex">
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="max-w-md w-full space-y-8">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                <MapPin className="h-8 w-8 text-blue-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+                Reset Password
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                {resetSent 
+                  ? 'Check your email for password reset instructions'
+                  : 'Enter your email to receive reset instructions'}
+              </p>
+            </div>
+
+            {!resetSent && (
+              <form onSubmit={handleResetPassword} className="mt-8 space-y-6">
+                {error && (
+                  <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    Email address
+                  </label>
+                  <div className="mt-1 relative">
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your email"
+                    />
+                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Send Reset Instructions
+                  </button>
+                </div>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsResetting(false)}
+                    className="text-sm text-blue-600 hover:text-blue-500"
+                  >
+                    Back to login
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {resetSent && (
+              <div className="text-center mt-8">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetting(false)
+                    setResetSent(false)
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-500"
+                >
+                  Back to login
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
