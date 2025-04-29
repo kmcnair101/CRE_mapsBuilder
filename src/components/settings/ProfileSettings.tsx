@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/auth'
 import { Upload, Building2, Globe, Phone, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
+import { useNavigate } from 'react-router-dom'
 
 export function ProfileSettings() {
   const { user, profile, loadProfile } = useAuthStore()
@@ -19,6 +20,7 @@ export function ProfileSettings() {
   
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -95,6 +97,7 @@ export function ProfileSettings() {
 
       await loadProfile()
       setError('Profile updated successfully!')
+      navigate('/')
     } catch (err) {
       console.error('Error updating profile:', err)
       setError('Failed to update profile')
