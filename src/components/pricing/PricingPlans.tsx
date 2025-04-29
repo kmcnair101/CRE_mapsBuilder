@@ -58,7 +58,6 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
               {error}
             </div>
           )}
-
           <div className="grid md:grid-cols-2 gap-8">
             {/* Monthly Plan */}
             <div className="border rounded-lg p-6 hover:shadow-lg transition-shadow">
