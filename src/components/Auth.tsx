@@ -26,7 +26,7 @@ export function Auth() {
         navigate('/')
       } else {
         await signUp(email, password)
-        navigate('/profile/setup')
+        navigate('/verify-email', { state: { email } })
       }
     } catch (err) {
       if (err instanceof Error) {

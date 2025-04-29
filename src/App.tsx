@@ -10,6 +10,7 @@ import { ProfileSetup } from '@/components/ProfileSetup'
 import { ProfileSettings } from '@/components/settings/ProfileSettings'
 import { SubscriptionDetails } from '@/components/SubscriptionDetails'
 import { Layout } from '@/components/Layout'
+import { EmailVerification } from '@/components/EmailVerification'
 
 function App() {
   const { loadProfile, loading, user, profile } = useAuthStore()
@@ -122,6 +123,7 @@ function App() {
                 : <Navigate to="/auth" />
             } 
           />
+          <Route path="/verify-email" element={<EmailVerification />} />
         </Route>
       </Routes>
     </Router>
