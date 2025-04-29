@@ -155,7 +155,7 @@ export function AddressSearch() {
                       <img
                         src={propertyImage}
                         alt="Property"
-                        className="w-full h-48 object-cover rounded-md"
+                        className="w-full h-48 object-contain rounded-md"
                       />
                       <button
                         type="button"
