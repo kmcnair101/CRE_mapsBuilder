@@ -24,15 +24,16 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
     }
     onDownload()
   }
+
   return (
     <>
       <button
         onClick={handleClick}
-        disabled={loading || !hasAccess()}
+        disabled={loading}
         title={!hasAccess() ? "Subscribe to download maps" : "Download map"}
         className={cn(
           'inline-flex items-center justify-center text-sm',
-          !hasAccess() && 'opacity-50 cursor-not-allowed',
+          !hasAccess() ? 'text-gray-400' : 'text-gray-700',
           className
         )}
       >
