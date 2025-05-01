@@ -1,4 +1,4 @@
-import { Download } from 'lucide-react'
+import { Download, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useState } from 'react'
@@ -44,8 +44,12 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
           </>
         ) : (
           <>
-            <Download className="h-4 w-4 mr-1.5 flex-shrink-0" />
-            <span>{hasAccess() ? 'Download' : 'Download'}</span>
+            {hasAccess() ? (
+              <Download className="h-4 w-4 mr-1.5 flex-shrink-0" />
+            ) : (
+              <Lock className="h-4 w-4 mr-1.5 flex-shrink-0" />
+            )}
+            <span>Download</span>
           </>
         )}
       </button>
