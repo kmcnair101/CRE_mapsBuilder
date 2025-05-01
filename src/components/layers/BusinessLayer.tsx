@@ -30,6 +30,7 @@ export function BusinessLayer({
   mapBounds,
   subjectProperty 
 }: BusinessLayerProps) {
+  const [searchValue, setSearchValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [logos, setLogos] = useState<Array<{ url: string }>>([])
@@ -196,6 +197,7 @@ export function BusinessLayer({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value
+    setSearchValue(query)
     
     // Clear any existing timeout
     if (searchTimeoutRef.current) {
@@ -358,6 +360,7 @@ export function BusinessLayer({
               placeholder="Search by business name or type (e.g., Starbucks, coffee shop)..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               disabled={loading}
+              value={searchValue}
               onChange={handleInputChange}
             />
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
