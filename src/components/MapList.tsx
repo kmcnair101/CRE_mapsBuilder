@@ -346,7 +346,7 @@ export function MapList() {
                               ) : (
                                 <>
                                   <Download className="h-4 w-4 mr-3 text-gray-500" />
-                                  {hasAccess() ? 'Download' : 'Subscribe to Download'}
+                                  {hasAccess() ? 'Download' : 'Download'}
                                 </>
                               )}
                             </button>
