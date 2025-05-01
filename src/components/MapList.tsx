@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, MoreVertical, Edit, Download, Trash2, MapPin, ArrowUpDown, ExternalLink, Search } from 'lucide-react'
+import { Plus, MoreVertical, Edit, Download, Trash2, MapPin, ArrowUpDown, ExternalLink, Search, Lock } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
 import { useAuthStore } from '@/stores/auth'
@@ -345,8 +345,12 @@ export function MapList() {
                                 </>
                               ) : (
                                 <>
-                                  <Download className="h-4 w-4 mr-3 text-gray-500" />
-                                  {hasAccess() ? 'Download' : 'Download'}
+                                  {hasAccess() ? (
+                                    <Download className="h-4 w-4 mr-3 text-gray-500" />
+                                  ) : (
+                                    <Lock className="h-4 w-4 mr-3 text-gray-500" />
+                                  )}
+                                  <span>Download</span>
                                 </>
                               )}
                             </button>
