@@ -46,6 +46,7 @@ export function BusinessLayer({
   const placesService = useRef<google.maps.places.PlacesService | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const searchTimeoutRef = useRef<number | null>(null)
+  const shouldMaintainFocus = useRef(false)
 
   useEffect(() => {
     if (isActive) {
@@ -71,6 +72,12 @@ export function BusinessLayer({
       }
     }
   }, [isActive, mapBounds, subjectProperty])
+
+  useEffect(() => {
+    if (isActive && shouldMaintainFocus.current && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isActive, loading, searchResults])
 
   const searchBusinesses = async (query: string) => {
     if (!placesService.current || !query.trim()) {
@@ -197,7 +204,7 @@ export function BusinessLayer({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value
-    setSearchValue(query)
+    shouldMaintainFocus.current = true
     
     // Clear any existing timeout
     if (searchTimeoutRef.current) {
@@ -208,6 +215,14 @@ export function BusinessLayer({
     searchTimeoutRef.current = window.setTimeout(() => {
       handleSearch(query)
     }, 300)
+  }
+
+  const handleInputFocus = () => {
+    shouldMaintainFocus.current = true
+  }
+
+  const handleInputBlur = () => {
+    shouldMaintainFocus.current = false
   }
 
   // Cleanup timeout on unmount
@@ -360,8 +375,9 @@ export function BusinessLayer({
               placeholder="Search by business name or type (e.g., Starbucks, coffee shop)..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               disabled={loading}
-              value={searchValue}
               onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
             />
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           </div>
