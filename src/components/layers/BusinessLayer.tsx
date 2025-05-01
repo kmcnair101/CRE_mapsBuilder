@@ -342,6 +342,21 @@ export function BusinessLayer({
     reader.readAsDataURL(file)
   }
 
+  const handleTextOnly = (businessName: string) => {
+    if (selectedBusiness) {
+      onAdd({
+        ...selectedBusiness,
+        logo: undefined // Don't include a logo for text-only
+      })
+      if (searchInputRef.current) {
+        searchInputRef.current.value = ''
+      }
+      setSearchResults([])
+      setIsLogoModalOpen(false)
+      onClose?.()
+    }
+  }
+
   const formatDistance = (meters: number): string => {
     const miles = meters * 0.000621371 // Convert meters to miles
     if (miles < 0.1) {
@@ -435,7 +450,6 @@ export function BusinessLayer({
         isOpen={isLogoModalOpen}
         onClose={() => {
           setIsLogoModalOpen(false)
-          // Clear selection when modal is closed without choosing
           setSelectedBusiness(null)
           if (searchInputRef.current) {
             searchInputRef.current.value = ''
@@ -446,6 +460,8 @@ export function BusinessLayer({
         logos={logos}
         onSelect={handleLogoSelect}
         onUpload={handleLogoUpload}
+        onTextOnly={handleTextOnly}
+        businessName={selectedBusiness?.name}
       />
     </div>
   )

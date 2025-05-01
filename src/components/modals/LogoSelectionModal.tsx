@@ -11,6 +11,8 @@ interface LogoSelectionModalProps {
   }>
   onSelect: (logo: string) => void
   onUpload: (file: File) => void
+  onTextOnly?: (businessName: string) => void
+  businessName?: string
 }
 
 export function LogoSelectionModal({
@@ -18,7 +20,9 @@ export function LogoSelectionModal({
   onClose,
   logos,
   onSelect,
-  onUpload
+  onUpload,
+  onTextOnly,
+  businessName
 }: LogoSelectionModalProps) {
   const [selectedLogo, setSelectedLogo] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -40,6 +44,13 @@ export function LogoSelectionModal({
       onUpload(file)
       onClose()
     }
+  }
+
+  const handleTextOnly = () => {
+    if (onTextOnly && businessName) {
+      onTextOnly(businessName)
+    }
+    onClose()
   }
 
   if (!isOpen) return null
@@ -90,7 +101,7 @@ export function LogoSelectionModal({
 
             {/* Use Text Only */}
             <button
-              onClick={onClose}
+              onClick={handleTextOnly}
               className={cn(
                 'aspect-video border-2 rounded-lg transition-colors hover:border-blue-500 group',
                 'flex flex-col items-center justify-center space-y-2 p-4',
