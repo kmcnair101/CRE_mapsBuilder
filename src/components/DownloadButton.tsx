@@ -24,7 +24,6 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
     }
     onDownload()
   }
-
   return (
     <>
       <button
