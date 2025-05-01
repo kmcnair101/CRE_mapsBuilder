@@ -14,6 +14,7 @@ export function AddressSearch() {
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [searchValue, setSearchValue] = useState('')
 
   useEffect(() => {
     async function initializeSearchBox() {
@@ -39,6 +40,7 @@ export function AddressSearch() {
             }
 
             setSelectedPlace(place)
+            setSearchValue(place.formatted_address || '')
             setError(null)
           })
         }
@@ -106,6 +108,8 @@ export function AddressSearch() {
                   ref={searchInputRef}
                   type="text"
                   id="address"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
                   placeholder="Search for an address..."
                   className="block w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   required
