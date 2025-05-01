@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
-import { MapPin, Github, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { MapPin, Github, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Auth() {
@@ -81,13 +81,10 @@ export function Auth() {
 
     try {
       setError('')
-      setIsResetting(true)
       await resetPassword(email)
       setResetSent(true)
     } catch (err) {
       setError('Failed to send reset password email')
-    } finally {
-      setIsResetting(false)
     }
   }
 
@@ -100,7 +97,7 @@ export function Auth() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
                 <MapPin className="h-8 w-8 text-blue-600" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+              <h2 className="text-3xl font-bold text-gray-900">
                 Reset Password
               </h2>
               <p className="mt-2 text-sm text-gray-600">
@@ -144,33 +141,23 @@ export function Auth() {
                     Send Reset Instructions
                   </button>
                 </div>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setIsResetting(false)}
-                    className="text-sm text-blue-600 hover:text-blue-500"
-                  >
-                    Back to login
-                  </button>
-                </div>
               </form>
             )}
 
-            {resetSent && (
-              <div className="text-center mt-8">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsResetting(false)
-                    setResetSent(false)
-                  }}
-                  className="text-sm text-blue-600 hover:text-blue-500"
-                >
-                  Back to login
-                </button>
-              </div>
-            )}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResetting(false)
+                  setResetSent(false)
+                  setError('')
+                }}
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to login
+              </button>
+            </div>
           </div>
         </div>
       </div>
