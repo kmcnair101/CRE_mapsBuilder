@@ -45,7 +45,7 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
         ) : (
           <>
             <Download className="h-4 w-4 mr-1.5 flex-shrink-0" />
-            <span>{hasAccess() ? 'Download' : 'Subscribe to Download'}</span>
+            <span>{hasAccess() ? 'Download' : 'Download'}</span>
           </>
         )}
       </button>
