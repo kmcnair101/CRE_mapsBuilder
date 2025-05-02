@@ -209,7 +209,6 @@ export function Auth() {
                 {error}
               </div>
             )}
-
             <div className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
