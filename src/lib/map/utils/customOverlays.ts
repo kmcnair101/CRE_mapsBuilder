@@ -57,7 +57,6 @@ export function createCustomImageOverlay(
         this.container.style.padding = `${style.padding}px`
       }
     }
-
     onAdd() {
       const div = document.createElement('div')
       div.style.position = 'absolute'
