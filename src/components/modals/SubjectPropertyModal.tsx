@@ -98,16 +98,97 @@ export function SubjectPropertyModal({
   }
 
   const handleFormat = (command: string) => {
-    document.execCommand(command, false)
-    // Log the formatted content for debugging
-    console.log('Formatted content:', editorRef.current?.innerHTML)
-  }
+    if (!editorRef.current) {
+      console.log('❌ Editor ref is not available');
+      return;
+    }
+    
+    console.log('🎯 Format command received:', command);
+    
+    const selection = window.getSelection();
+    const range = selection?.getRangeAt(0);
+    
+    console.log('📑 Selection state:', {
+      hasSelection: !!selection,
+      hasRange: !!range,
+      isCollapsed: selection?.isCollapsed,
+      selectedText: selection?.toString(),
+      rangeContent: range?.toString()
+    });
+    
+    if (!selection || !range || selection.isCollapsed) {
+      console.log('❌ No valid selection found');
+      return;
+    }
+    
+    // Save the selected text and its range
+    const selectedText = range.toString();
+    const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
+    
+    console.log('🏷️ Creating formatted text:', {
+      selectedText,
+      tag,
+      command
+    });
+    
+    // Create the formatted HTML
+    const formattedText = `<${tag}>${selectedText}</${tag}>`;
+    console.log('📝 Generated HTML:', formattedText);
+    
+    // Log the state before modification
+    console.log('📄 Editor content before:', editorRef.current.innerHTML);
+    
+    try {
+      // Delete the selected text and insert the formatted version
+      range.deleteContents();
+      const fragment = range.createContextualFragment(formattedText);
+      range.insertNode(fragment);
+      
+      // Update the text state
+      const newContent = editorRef.current.innerHTML;
+      setName(newContent);
+      
+      console.log('✅ Formatting applied successfully:', {
+        newContent,
+        editorContent: editorRef.current.innerHTML
+      });
+      
+      // Force focus back to the editor
+      editorRef.current.focus();
+      
+    } catch (error) {
+      console.error('❌ Error applying formatting:', error);
+    }
+    
+    // Log final state
+    console.log('🔍 Final editor state:', {
+      innerHTML: editorRef.current.innerHTML,
+      textContent: editorRef.current.textContent,
+      hasFormattingTags: {
+        bold: editorRef.current.innerHTML.includes('<b>'),
+        italic: editorRef.current.innerHTML.includes('<i>'),
+        underline: editorRef.current.innerHTML.includes('<u>')
+      }
+    });
+  };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const content = e.currentTarget.innerHTML
-    setName(content)
-    // Log the content when it changes
-    console.log('Content changed:', content)
+    console.log('📥 Input event received');
+    
+    const content = e.currentTarget.innerHTML;
+    console.log('📝 New content:', {
+      innerHTML: content,
+      textContent: e.currentTarget.textContent,
+      hasFormattingTags: {
+        bold: content.includes('<b>'),
+        italic: content.includes('<i>'),
+        underline: content.includes('<u>')
+      }
+    });
+    
+    setName(content);
+    
+    console.log('✅ State updated with new content');
   }
 
   const getRgbaColor = (hex: string, opacity: number) => {
@@ -218,7 +299,7 @@ export function SubjectPropertyModal({
                     ref={editorRef}
                     contentEditable
                     onInput={handleInput}
-                    className="min-h-[60px] max-h-[100px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto"
+                    className="min-h-[60px] max-h-[100px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto [&>b]:font-bold [&>i]:italic [&>u]:underline"
                     onPaste={(e) => {
                       e.preventDefault()
                       const text = e.clipboardData.getData('text/plain')
