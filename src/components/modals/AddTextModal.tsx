@@ -64,16 +64,53 @@ export function AddTextModal({
   }
 
   const handleFormat = (command: string) => {
+    const timestamp = new Date().toISOString()
+    const selection = window.getSelection()
+    const beforeContent = editorRef.current?.innerHTML || ''
+    
+    console.log('🎯 Text Formatting Operation')
+    console.log(`Command: ${command}`)
+    console.log(`Timestamp: ${timestamp}`)
+    
+    console.log('🔍 Selection Details')
+    console.log('Selection object:', {
+      exists: !!selection,
+      rangeCount: selection?.rangeCount,
+      type: selection?.type,
+      isCollapsed: selection?.isCollapsed,
+      anchorNode: selection?.anchorNode
+    })
+
+    if (!selection || selection.rangeCount === 0) {
+      console.log('⚠️ No Selection - Toggle Format State')
+      console.log('Current content:', beforeContent)
+      const isFormatted = document.queryCommandState(command)
+      console.log('Is formatted:', isFormatted)
+    }
+
     document.execCommand(command, false)
-    // Log the formatted content for debugging
-    console.log('Formatted content:', editorRef.current?.innerHTML)
+    
+    const afterContent = editorRef.current?.innerHTML || ''
+    console.log('✅ Format toggle result:', {
+      before: beforeContent,
+      after: afterContent,
+      tag: command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u',
+      wasFormatted: document.queryCommandState(command)
+    })
   }
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
     setText(content)
-    // Log the content when it changes
-    console.log('Content changed:', content)
+    
+    console.log('📝 Content Update')
+    console.log(`Timestamp: ${new Date().toISOString()}`)
+    console.log('New content:', content)
+    console.log('Content length:', content.length)
+    console.log('Has formatting:', content.includes('<'))
+    if (content.includes('<')) {
+      console.log('Formatting tags:', content.match(/<\/?[^>]+(>|$)/g))
+    }
   }
 
   // Convert hex color to rgba
