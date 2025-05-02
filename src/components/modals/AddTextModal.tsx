@@ -36,12 +36,27 @@ export function AddTextModal({
   const [padding, setPadding] = useState(8)
   const [backgroundOpacity, setBackgroundOpacity] = useState(1)
   const [borderOpacity, setBorderOpacity] = useState(1)
+  const [formatState, setFormatState] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+  })
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (isOpen && editorRef.current) {
       editorRef.current.focus()
     }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handler = () => updateFormatState()
+    document.addEventListener('selectionchange', handler)
+    return () => document.removeEventListener('selectionchange', handler)
+  }, [])
+
+  useEffect(() => {
+    updateFormatState()
   }, [isOpen])
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -117,6 +132,8 @@ export function AddTextModal({
       // Optionally, clear selection after formatting
       if (selection) selection.removeAllRanges()
 
+      updateFormatState()
+
     } catch (error) {
       console.error('❌ Format operation failed:', {
         command,
@@ -148,6 +165,16 @@ export function AddTextModal({
         underline: document.queryCommandState('underline')
       })
     }
+
+    updateFormatState()
+  }
+
+  const updateFormatState = () => {
+    setFormatState({
+      bold: document.queryCommandState('bold'),
+      italic: document.queryCommandState('italic'),
+      underline: document.queryCommandState('underline'),
+    })
   }
 
   // Convert hex color to rgba
@@ -216,7 +243,7 @@ export function AddTextModal({
                     onClick={() => handleFormat('bold')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
-                      document.queryCommandState('bold') && 'bg-gray-100'
+                      formatState.bold && 'bg-gray-100'
                     )}
                     title="Bold"
                   >
@@ -227,7 +254,7 @@ export function AddTextModal({
                     onClick={() => handleFormat('italic')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
-                      document.queryCommandState('italic') && 'bg-gray-100'
+                      formatState.italic && 'bg-gray-100'
                     )}
                     title="Italic"
                   >
@@ -238,7 +265,7 @@ export function AddTextModal({
                     onClick={() => handleFormat('underline')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
-                      document.queryCommandState('underline') && 'bg-gray-100'
+                      formatState.underline && 'bg-gray-100'
                     )}
                     title="Underline"
                   >
