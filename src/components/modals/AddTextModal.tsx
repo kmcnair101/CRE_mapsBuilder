@@ -208,25 +208,31 @@ export function AddTextModal({
             <h3 className="text-sm font-medium text-gray-700 mb-4">Preview</h3>
             <MapPreviewBackground>
               <div
-                className="inline-block"
                 style={{
-                  color,
-                  fontSize: `${fontSize}px`,
-                  fontFamily,
-                  backgroundColor: getRgbaColor(backgroundColor, backgroundOpacity),
-                  border: `${borderWidth}px solid ${getRgbaColor(borderColor, borderOpacity)}`,
-                  padding: `${padding}px`,
-                  borderRadius: '4px',
-                  textAlign: 'center',
-                  minWidth: 'min-content',
-                  whiteSpace: 'pre',
-                  display: 'inline-block',
-                  transform: 'scale(0.9)',
-                  transformOrigin: 'center center',
+                  width: '100%',
                   overflowX: 'auto',
                 }}
-                dangerouslySetInnerHTML={{ __html: text || 'Preview Text' }}
-              />
+              >
+                <div
+                  className="inline-block"
+                  style={{
+                    color,
+                    fontSize: `${fontSize}px`,
+                    fontFamily,
+                    backgroundColor: getRgbaColor(backgroundColor, backgroundOpacity),
+                    border: `${borderWidth}px solid ${getRgbaColor(borderColor, borderOpacity)}`,
+                    padding: `${padding}px`,
+                    borderRadius: '4px',
+                    textAlign: 'center',
+                    minWidth: 'min-content',
+                    whiteSpace: 'pre',
+                    display: 'inline-block',
+                    transform: 'scale(0.9)',
+                    transformOrigin: 'center center',
+                  }}
+                  dangerouslySetInnerHTML={{ __html: text || 'Preview Text' }}
+                />
+              </div>
             </MapPreviewBackground>
           </div>
 
