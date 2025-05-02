@@ -11,7 +11,6 @@ export function useMapDownload() {
     if (!forThumbnail && !hasAccess()) {
       return null
     }
-
     if (!mapRef.current) return null
 
     try {
