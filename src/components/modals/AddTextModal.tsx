@@ -83,7 +83,7 @@ export function AddTextModal({
     }
     
     console.log('🔍 Selection Details')
-    console.log('Selection state:', selectionState)
+    console.log('Selection object:', selectionState)
 
     // Check if we have access to the editable region
     const hasEditableAccess = editorRef.current?.isContentEditable
@@ -92,13 +92,10 @@ export function AddTextModal({
       return
     }
 
-    // Get the current format state before applying the command
+    // Get the current format state
     const isFormatted = document.queryCommandState(command)
-    console.log('Current format state:', {
-      command,
-      isFormatted,
-      canExecute: document.queryCommandEnabled(command)
-    })
+    console.log('Current content:', beforeContent)
+    console.log('Is formatted:', isFormatted)
 
     // Apply the formatting command
     try {
@@ -107,28 +104,30 @@ export function AddTextModal({
       const afterContent = editorRef.current?.innerHTML || ''
       const formatTag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u'
       
-      console.log('✅ Format operation result:', {
-        command,
+      console.log('✅ Format toggle result:', {
         before: beforeContent,
         after: afterContent,
         tag: formatTag,
-        wasFormatted: isFormatted,
-        hasChanged: beforeContent !== afterContent,
-        selectionRestored: !!window.getSelection()?.rangeCount
+        wasFormatted: isFormatted
       })
 
-      // Force update the button states
-      const newFormatState = document.queryCommandState(command)
-      console.log('Updated format state:', {
-        command,
-        newState: newFormatState,
-        buttonShouldBeActive: newFormatState
+      // Log detailed formatting analysis
+      console.log('📊 Formatting Analysis:', {
+        beforeTags: beforeContent.match(/<\/?[^>]+(>|$)/g) || [],
+        afterTags: afterContent.match(/<\/?[^>]+(>|$)/g) || [],
+        activeFormats: {
+          bold: document.queryCommandState('bold'),
+          italic: document.queryCommandState('italic'),
+          underline: document.queryCommandState('underline')
+        },
+        contentChanged: beforeContent !== afterContent
       })
+
     } catch (error) {
       console.error('❌ Format operation failed:', {
         command,
         error: error instanceof Error ? error.message : 'Unknown error',
-        content: beforeContent
+        currentContent: beforeContent
       })
     }
   }
@@ -139,25 +138,20 @@ export function AddTextModal({
     
     console.log('📝 Content Update')
     console.log(`Timestamp: ${new Date().toISOString()}`)
-    console.log('New content:', content)
+    console.log('Current content:', content)
     console.log('Content length:', content.length)
-    console.log('Has formatting:', content.includes('<'))
     
-    // Enhanced formatting detection
-    if (content.includes('<')) {
+    // Enhanced formatting analysis
+    const hasFormatting = content.includes('<')
+    console.log('Has formatting:', hasFormatting)
+    
+    if (hasFormatting) {
       const tags = content.match(/<\/?[^>]+(>|$)/g) || []
-      console.log('Formatting analysis:', {
+      console.log('Active formatting:', {
         tags,
-        activeTags: {
-          bold: document.queryCommandState('bold'),
-          italic: document.queryCommandState('italic'),
-          underline: document.queryCommandState('underline')
-        },
-        structure: {
-          hasNesting: /<[^>]*><[^>]*>/.test(content),
-          tagCount: tags.length,
-          isBalanced: tags.length % 2 === 0
-        }
+        bold: document.queryCommandState('bold'),
+        italic: document.queryCommandState('italic'),
+        underline: document.queryCommandState('underline')
       })
     }
   }
