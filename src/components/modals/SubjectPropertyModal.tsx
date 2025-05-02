@@ -102,30 +102,32 @@ export function SubjectPropertyModal({
     console.log('Command:', command);
     console.log('Timestamp:', new Date().toISOString());
 
-    // Check editor reference
     if (!editorRef.current) {
-      console.warn('❌ Editor reference not available', {
-        editorRef: editorRef.current,
-        documentActiveElement: document.activeElement
-      });
+      console.warn('❌ Editor reference not available');
       console.groupEnd();
       return;
     }
 
-    // Log initial editor state
-    console.group('📝 Initial Editor State');
-    console.log('Content:', {
-      innerHTML: editorRef.current.innerHTML,
-      textContent: editorRef.current.textContent,
-      childNodes: Array.from(editorRef.current.childNodes).map(node => ({
-        nodeType: node.nodeType,
-        nodeName: node.nodeName,
-        nodeValue: node.nodeValue
-      }))
-    });
-    console.groupEnd();
+    const hasFormatting = (content: string, tag: string) => {
+      const regex = new RegExp(`<${tag}[^>]*>.*?</${tag}>`, 'i');
+      return regex.test(content);
+    };
 
-    // Get and log selection state
+    const removeFormatting = (content: string, tag: string) => {
+      const regex = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 'gi');
+      return content.replace(regex, '$1');
+    };
+
+    const cleanNestedTags = (content: string) => {
+      ['b', 'i', 'u'].forEach(tag => {
+        const regex = new RegExp(`<${tag}[^>]*><${tag}[^>]*>(.*?)</${tag}></${tag}>`, 'gi');
+        while (regex.test(content)) {
+          content = content.replace(regex, `<${tag}>$1</${tag}>`);
+        }
+      });
+      return content;
+    };
+
     const selection = window.getSelection();
     console.group('🔍 Selection Details');
     console.log('Selection object:', {
@@ -139,125 +141,89 @@ export function SubjectPropertyModal({
     });
     console.groupEnd();
 
-    // Handle case when no text is selected
+    const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
+    let newContent = '';
+
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-      console.group('⚠️ No Selection - Formatting Entire Content');
+      console.group('⚠️ No Selection - Toggle Format State');
       
       try {
         const currentContent = editorRef.current.innerHTML;
-        const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
-        
-        console.log('Formatting attempt:', {
-          currentContent,
-          tag,
-          command
-        });
+        console.log('Current content:', currentContent);
 
-        // Create a range for the entire content
-        const range = document.createRange();
-        range.selectNodeContents(editorRef.current);
+        const isFormatted = hasFormatting(currentContent, tag);
+        console.log('Is formatted:', isFormatted);
+
+        if (isFormatted) {
+          newContent = removeFormatting(currentContent, tag);
+        } else {
+          newContent = `<${tag}>${currentContent}</${tag}>`;
+        }
+
+        newContent = cleanNestedTags(newContent);
         
-        // Apply formatting
-        const formattedText = `<${tag}>${currentContent}</${tag}>`;
-        editorRef.current.innerHTML = formattedText;
-        
-        // Update state
-        setName(formattedText);
-        
-        console.log('✅ Full content formatting result:', {
-          beforeHTML: currentContent,
-          afterHTML: editorRef.current.innerHTML,
-          appliedTag: tag
+        editorRef.current.innerHTML = newContent;
+        setName(newContent);
+
+        console.log('✅ Format toggle result:', {
+          before: currentContent,
+          after: newContent,
+          tag,
+          wasFormatted: isFormatted
         });
 
       } catch (error) {
-        console.error('❌ Full content formatting error:', {
-          error,
-          errorMessage: error.message,
-          errorStack: error.stack
-        });
+        console.error('❌ Format toggle error:', error);
       }
       
       console.groupEnd();
-      console.groupEnd(); // End main group
+      console.groupEnd();
       return;
     }
 
-    // Handle selected text formatting
     console.group('✂️ Selected Text Formatting');
     
     try {
       const range = selection.getRangeAt(0);
       const selectedText = range.toString();
-      const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
       
       console.log('Selection range details:', {
-        startContainer: range.startContainer.nodeName,
-        endContainer: range.endContainer.nodeName,
-        startOffset: range.startOffset,
-        endOffset: range.endOffset,
         selectedText,
         selectedHTML: range.cloneContents().textContent
       });
 
-      // Create the formatted HTML
-      const formattedText = `<${tag}>${selectedText}</${tag}>`;
-      console.log('Generated formatted text:', formattedText);
-      
-      // Log state before modification
-      console.log('Pre-modification state:', {
-        editorHTML: editorRef.current.innerHTML,
-        selectionText: selectedText
-      });
+      const selectedHtml = range.cloneContents();
+      const tempDiv = document.createElement('div');
+      tempDiv.appendChild(selectedHtml);
+      const isFormatted = hasFormatting(tempDiv.innerHTML, tag);
 
-      // Apply formatting
+      if (isFormatted) {
+        newContent = removeFormatting(selectedText, tag);
+      } else {
+        newContent = `<${tag}>${selectedText}</${tag}>`;
+      }
+
       range.deleteContents();
-      const fragment = range.createContextualFragment(formattedText);
+      const fragment = range.createContextualFragment(newContent);
       range.insertNode(fragment);
       
-      // Update state and normalize content
-      const newContent = editorRef.current.innerHTML;
-      editorRef.current.normalize(); // Merge adjacent text nodes
-      setName(newContent);
+      editorRef.current.innerHTML = cleanNestedTags(editorRef.current.innerHTML);
+      setName(editorRef.current.innerHTML);
       
-      console.log('Post-modification state:', {
-        newContent,
-        editorHTML: editorRef.current.innerHTML,
-        normalizedHTML: editorRef.current.innerHTML
+      console.log('✅ Selection formatting result:', {
+        before: selectedText,
+        after: newContent,
+        finalEditorContent: editorRef.current.innerHTML
       });
 
-      // Restore focus
       editorRef.current.focus();
-      console.log('✅ Editor focus restored');
 
     } catch (error) {
-      console.error('❌ Selection formatting error:', {
-        error,
-        errorMessage: error.message,
-        errorStack: error.stack,
-        selectionState: {
-          rangeCount: selection.rangeCount,
-          type: selection.type
-        }
-      });
+      console.error('❌ Selection formatting error:', error);
     }
     
-    console.groupEnd(); // End Selected Text Formatting group
-
-    // Log final editor state
-    console.group('📊 Final Editor State');
-    console.log('Content:', {
-      innerHTML: editorRef.current.innerHTML,
-      textContent: editorRef.current.textContent,
-      formattingTags: {
-        boldCount: (editorRef.current.innerHTML.match(/<b>/g) || []).length,
-        italicCount: (editorRef.current.innerHTML.match(/<i>/g) || []).length,
-        underlineCount: (editorRef.current.innerHTML.match(/<u>/g) || []).length
-      }
-    });
     console.groupEnd();
-
-    console.groupEnd(); // End main group
+    console.groupEnd();
   };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
