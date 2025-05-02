@@ -30,19 +30,39 @@ export function Auth() {
       }
     } catch (err) {
       if (err instanceof Error) {
-        if (err.message.includes('invalid_credentials')) {
-          setError('Invalid email or password')
-        } else if (err.message.includes('Email not confirmed')) {
-          setError('Please confirm your email address')
-        } else if (err.message.includes('User already registered')) {
-          setError('An account with this email already exists')
-        } else if (err.message.includes('Password should be at least')) {
-          setError('Password should be at least 6 characters long')
-        } else if (err.message.includes('Invalid email')) {
-          setError('Please enter a valid email address')
+        // Supabase auth error messages can vary, so we'll check for common patterns
+        const message = err.message.toLowerCase()
+        if (message.includes('invalid login credentials') || 
+            message.includes('invalid_credentials') ||
+            message.includes('auth/invalid-credential')) {
+          setError('Incorrect email or password. Please try again.')
+        } else if (message.includes('user not found') || 
+                   message.includes('no user found') ||
+                   message.includes('auth/user-not-found')) {
+          setError('We couldn't find your account. Please re-enter your email or sign up.')
+        } else if (message.includes('email not confirmed') || 
+                   message.includes('not verified')) {
+          setError('Account pending verification. Check your email for the verification link.')
+        } else if (message.includes('too many requests') || 
+                   message.includes('rate limit') ||
+                   message.includes('temporarily disabled')) {
+          setError('We're experiencing technical difficulties. Please wait a moment and try again.')
+        } else if (message.includes('password')) {
+          if (message.includes('should be at least')) {
+            setError('Password should be at least 6 characters long')
+          } else {
+            setError('Incorrect password. Please try again or reset your password.')
+          }
+        } else if (message.includes('email')) {
+          if (message.includes('already registered')) {
+            setError('An account with this email already exists')
+          } else if (message.includes('invalid')) {
+            setError('Please enter a valid email address')
+          }
         } else {
           setError('An error occurred. Please try again.')
         }
+        console.error('Auth error:', err)
       } else {
         setError('An unexpected error occurred')
       }
