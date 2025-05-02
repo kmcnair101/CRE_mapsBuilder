@@ -219,11 +219,11 @@ export function AddTextModal({
                   borderRadius: '4px',
                   textAlign: 'center',
                   minWidth: 'min-content',
-                  maxWidth: '100%',
                   whiteSpace: 'pre',
                   display: 'inline-block',
                   transform: 'scale(0.9)',
-                  transformOrigin: 'center center'
+                  transformOrigin: 'center center',
+                  overflowX: 'auto',
                 }}
                 dangerouslySetInnerHTML={{ __html: text || 'Preview Text' }}
               />
