@@ -72,7 +72,6 @@ export function AddTextModal({
     console.log(`Command: ${command}`)
     console.log(`Timestamp: ${timestamp}`)
     
-    // Get the current selection state
     const selectionState = {
       exists: !!selection,
       rangeCount: selection?.rangeCount || 0,
@@ -85,19 +84,23 @@ export function AddTextModal({
     console.log('🔍 Selection Details')
     console.log('Selection object:', selectionState)
 
-    // Check if we have access to the editable region
-    const hasEditableAccess = editorRef.current?.isContentEditable
-    if (!hasEditableAccess) {
-      console.log('🚫 No access to editable region')
-      return
+    // If caret only (no selection), select all text
+    if (
+      editorRef.current &&
+      selection &&
+      (selection.rangeCount === 0 || (selection.rangeCount === 1 && selection.isCollapsed))
+    ) {
+      const range = document.createRange()
+      range.selectNodeContents(editorRef.current)
+      selection.removeAllRanges()
+      selection.addRange(range)
+      console.log('⚠️ No Selection - Auto-selected all content for formatting')
     }
 
-    // Get the current format state
     const isFormatted = document.queryCommandState(command)
     console.log('Current content:', beforeContent)
     console.log('Is formatted:', isFormatted)
 
-    // Apply the formatting command
     try {
       document.execCommand(command, false)
       
@@ -111,17 +114,8 @@ export function AddTextModal({
         wasFormatted: isFormatted
       })
 
-      // Log detailed formatting analysis
-      console.log('📊 Formatting Analysis:', {
-        beforeTags: beforeContent.match(/<\/?[^>]+(>|$)/g) || [],
-        afterTags: afterContent.match(/<\/?[^>]+(>|$)/g) || [],
-        activeFormats: {
-          bold: document.queryCommandState('bold'),
-          italic: document.queryCommandState('italic'),
-          underline: document.queryCommandState('underline')
-        },
-        contentChanged: beforeContent !== afterContent
-      })
+      // Optionally, clear selection after formatting
+      if (selection) selection.removeAllRanges()
 
     } catch (error) {
       console.error('❌ Format operation failed:', {
