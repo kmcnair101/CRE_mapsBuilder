@@ -372,8 +372,8 @@ export function MapList() {
                       <h3 className="text-lg font-medium text-gray-900 line-clamp-1">{map.title}</h3>
                       {subjectProperty?.name && subjectProperty.name !== 'Subject Property' && (
                         <p className="text-sm text-gray-600 font-medium mt-1 line-clamp-1">
-                          {subjectProperty.name}
-                        </p>
+                        {subjectProperty.name.replace(/<[^>]+>/g, '')}
+                      </p>
                       )}
                       {subjectProperty?.address && (
                         <p className="text-sm text-gray-500 mt-1 line-clamp-1">
