@@ -148,6 +148,13 @@ export function useMapDownload() {
           keyboardShortcuts: false
         })
 
+        // Wait for the map to be idle before adding overlays
+        await new Promise<void>(resolve => {
+          google.maps.event.addListenerOnce(map, 'idle', () => {
+            resolve()
+          })
+        })
+
         // Apply map style
         if (mapData.mapStyle) {
           if (mapData.mapStyle.type === 'satellite') {
@@ -163,90 +170,16 @@ export function useMapDownload() {
           }
         }
 
-        // Wait for map to load
-        await new Promise(resolve => {
-          google.maps.event.addListenerOnce(map, 'idle', resolve)
+        // Now add overlays after map is ready
+        mapData.overlays.forEach(overlay => {
+          addOverlayToMap(overlay, map)
         })
 
-        // Add subject property marker
         if (mapData.subject_property) {
-          new google.maps.Marker({
-            position: { 
-              lat: mapData.subject_property.lat, 
-              lng: mapData.subject_property.lng 
-            },
-            map,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#3B82F6',
-              fillOpacity: 0.7,
-              strokeColor: '#2563EB',
-              strokeWeight: 2
-            },
-            title: mapData.subject_property.name || 'Subject Property'
-          })
+          await updateSubjectProperty()
         }
 
-        // Add overlays
-        if (mapData.overlays?.length) {
-          for (const overlay of mapData.overlays) {
-            try {
-              if (overlay.type === 'business' && overlay.properties.logo) {
-                new google.maps.Marker({
-                  position: { lat: overlay.position.lat, lng: overlay.position.lng },
-                  map,
-                  icon: {
-                    url: overlay.properties.logo,
-                    scaledSize: new google.maps.Size(40, 40),
-                    origin: new google.maps.Point(0, 0),
-                    anchor: new google.maps.Point(20, 20)
-                  },
-                  title: overlay.properties.businessName
-                })
-              } else if (overlay.type === 'shape') {
-                const shapeOptions = {
-                  map,
-                  fillColor: overlay.properties.fill || '#FF0000',
-                  fillOpacity: overlay.properties.shapeOpacity || 0.5,
-                  strokeColor: overlay.properties.stroke || '#000000',
-                  strokeWeight: overlay.properties.strokeWidth || 2
-                }
-
-                if (overlay.properties.shapeType === 'rect') {
-                  new google.maps.Rectangle({
-                    ...shapeOptions,
-                    bounds: new google.maps.LatLngBounds(
-                      new google.maps.LatLng(
-                        overlay.position.lat - 0.001,
-                        overlay.position.lng - 0.001
-                      ),
-                      new google.maps.LatLng(
-                        overlay.position.lat + 0.001,
-                        overlay.position.lng + 0.001
-                      )
-                    )
-                  })
-                } else if (overlay.properties.shapeType === 'circle') {
-                  new google.maps.Circle({
-                    ...shapeOptions,
-                    center: { lat: overlay.position.lat, lng: overlay.position.lng },
-                    radius: overlay.properties.radius || 100
-                  })
-                } else if (overlay.properties.shapeType === 'polygon' && overlay.properties.points) {
-                  new google.maps.Polygon({
-                    ...shapeOptions,
-                    paths: overlay.properties.points
-                  })
-                }
-              }
-            } catch (err) {
-              console.warn('Error adding overlay to download map:', err)
-            }
-          }
-        }
-
-        // Wait for overlays to load
+        // Wait for map to load
         await new Promise(resolve => {
           google.maps.event.addListenerOnce(map, 'idle', resolve)
         })
