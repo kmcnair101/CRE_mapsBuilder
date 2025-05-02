@@ -220,7 +220,7 @@ export function AddTextModal({
                   textAlign: 'center',
                   minWidth: 'min-content',
                   maxWidth: '100%',
-                  whiteSpace: 'pre-wrap',
+                  whiteSpace: 'pre',
                   display: 'inline-block',
                   transform: 'scale(0.9)',
                   transformOrigin: 'center center'
