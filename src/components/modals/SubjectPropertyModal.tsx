@@ -98,98 +98,203 @@ export function SubjectPropertyModal({
   }
 
   const handleFormat = (command: string) => {
+    console.group('🎯 Text Formatting Operation');
+    console.log('Command:', command);
+    console.log('Timestamp:', new Date().toISOString());
+
+    // Check editor reference
     if (!editorRef.current) {
-      console.log('❌ Editor ref is not available');
+      console.warn('❌ Editor reference not available', {
+        editorRef: editorRef.current,
+        documentActiveElement: document.activeElement
+      });
+      console.groupEnd();
       return;
     }
-    
-    console.log('🎯 Format command received:', command);
-    
+
+    // Log initial editor state
+    console.group('📝 Initial Editor State');
+    console.log('Content:', {
+      innerHTML: editorRef.current.innerHTML,
+      textContent: editorRef.current.textContent,
+      childNodes: Array.from(editorRef.current.childNodes).map(node => ({
+        nodeType: node.nodeType,
+        nodeName: node.nodeName,
+        nodeValue: node.nodeValue
+      }))
+    });
+    console.groupEnd();
+
+    // Get and log selection state
     const selection = window.getSelection();
-    const range = selection?.getRangeAt(0);
-    
-    console.log('📑 Selection state:', {
-      hasSelection: !!selection,
-      hasRange: !!range,
+    console.group('🔍 Selection Details');
+    console.log('Selection object:', {
+      exists: !!selection,
+      rangeCount: selection?.rangeCount,
+      type: selection?.type,
       isCollapsed: selection?.isCollapsed,
-      selectedText: selection?.toString(),
-      rangeContent: range?.toString()
+      anchorNode: selection?.anchorNode?.nodeName,
+      focusNode: selection?.focusNode?.nodeName,
+      selectedText: selection?.toString()
     });
-    
-    if (!selection || !range || selection.isCollapsed) {
-      console.log('❌ No valid selection found');
+    console.groupEnd();
+
+    // Handle case when no text is selected
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      console.group('⚠️ No Selection - Formatting Entire Content');
+      
+      try {
+        const currentContent = editorRef.current.innerHTML;
+        const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
+        
+        console.log('Formatting attempt:', {
+          currentContent,
+          tag,
+          command
+        });
+
+        // Create a range for the entire content
+        const range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        
+        // Apply formatting
+        const formattedText = `<${tag}>${currentContent}</${tag}>`;
+        editorRef.current.innerHTML = formattedText;
+        
+        // Update state
+        setName(formattedText);
+        
+        console.log('✅ Full content formatting result:', {
+          beforeHTML: currentContent,
+          afterHTML: editorRef.current.innerHTML,
+          appliedTag: tag
+        });
+
+      } catch (error) {
+        console.error('❌ Full content formatting error:', {
+          error,
+          errorMessage: error.message,
+          errorStack: error.stack
+        });
+      }
+      
+      console.groupEnd();
+      console.groupEnd(); // End main group
       return;
     }
-    
-    // Save the selected text and its range
-    const selectedText = range.toString();
-    const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
-    
-    console.log('🏷️ Creating formatted text:', {
-      selectedText,
-      tag,
-      command
-    });
-    
-    // Create the formatted HTML
-    const formattedText = `<${tag}>${selectedText}</${tag}>`;
-    console.log('📝 Generated HTML:', formattedText);
-    
-    // Log the state before modification
-    console.log('📄 Editor content before:', editorRef.current.innerHTML);
+
+    // Handle selected text formatting
+    console.group('✂️ Selected Text Formatting');
     
     try {
-      // Delete the selected text and insert the formatted version
+      const range = selection.getRangeAt(0);
+      const selectedText = range.toString();
+      const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
+      
+      console.log('Selection range details:', {
+        startContainer: range.startContainer.nodeName,
+        endContainer: range.endContainer.nodeName,
+        startOffset: range.startOffset,
+        endOffset: range.endOffset,
+        selectedText,
+        selectedHTML: range.cloneContents().textContent
+      });
+
+      // Create the formatted HTML
+      const formattedText = `<${tag}>${selectedText}</${tag}>`;
+      console.log('Generated formatted text:', formattedText);
+      
+      // Log state before modification
+      console.log('Pre-modification state:', {
+        editorHTML: editorRef.current.innerHTML,
+        selectionText: selectedText
+      });
+
+      // Apply formatting
       range.deleteContents();
       const fragment = range.createContextualFragment(formattedText);
       range.insertNode(fragment);
       
-      // Update the text state
+      // Update state and normalize content
       const newContent = editorRef.current.innerHTML;
+      editorRef.current.normalize(); // Merge adjacent text nodes
       setName(newContent);
       
-      console.log('✅ Formatting applied successfully:', {
+      console.log('Post-modification state:', {
         newContent,
-        editorContent: editorRef.current.innerHTML
+        editorHTML: editorRef.current.innerHTML,
+        normalizedHTML: editorRef.current.innerHTML
       });
-      
-      // Force focus back to the editor
+
+      // Restore focus
       editorRef.current.focus();
-      
+      console.log('✅ Editor focus restored');
+
     } catch (error) {
-      console.error('❌ Error applying formatting:', error);
+      console.error('❌ Selection formatting error:', {
+        error,
+        errorMessage: error.message,
+        errorStack: error.stack,
+        selectionState: {
+          rangeCount: selection.rangeCount,
+          type: selection.type
+        }
+      });
     }
     
-    // Log final state
-    console.log('🔍 Final editor state:', {
+    console.groupEnd(); // End Selected Text Formatting group
+
+    // Log final editor state
+    console.group('📊 Final Editor State');
+    console.log('Content:', {
       innerHTML: editorRef.current.innerHTML,
       textContent: editorRef.current.textContent,
-      hasFormattingTags: {
-        bold: editorRef.current.innerHTML.includes('<b>'),
-        italic: editorRef.current.innerHTML.includes('<i>'),
-        underline: editorRef.current.innerHTML.includes('<u>')
+      formattingTags: {
+        boldCount: (editorRef.current.innerHTML.match(/<b>/g) || []).length,
+        italicCount: (editorRef.current.innerHTML.match(/<i>/g) || []).length,
+        underlineCount: (editorRef.current.innerHTML.match(/<u>/g) || []).length
       }
     });
+    console.groupEnd();
+
+    console.groupEnd(); // End main group
   };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    console.log('📥 Input event received');
+    console.group('📥 Input Event Handler');
+    console.log('Timestamp:', new Date().toISOString());
     
     const content = e.currentTarget.innerHTML;
-    console.log('📝 New content:', {
+    
+    console.log('Input event details:', {
+      type: e.type,
+      target: e.target,
+      currentTarget: e.currentTarget,
+      bubbles: e.bubbles,
+      eventPhase: e.eventPhase
+    });
+
+    console.log('Content analysis:', {
       innerHTML: content,
       textContent: e.currentTarget.textContent,
-      hasFormattingTags: {
-        bold: content.includes('<b>'),
-        italic: content.includes('<i>'),
-        underline: content.includes('<u>')
-      }
+      length: content.length,
+      formattingTags: {
+        bold: (content.match(/<b>/g) || []).length,
+        italic: (content.match(/<i>/g) || []).length,
+        underline: (content.match(/<u>/g) || []).length
+      },
+      nodeStructure: Array.from(e.currentTarget.childNodes).map(node => ({
+        type: node.nodeType,
+        name: node.nodeName,
+        value: node.nodeValue
+      }))
     });
-    
+
     setName(content);
-    
     console.log('✅ State updated with new content');
-  }
+
+    console.groupEnd();
+  };
 
   const getRgbaColor = (hex: string, opacity: number) => {
     const r = parseInt(hex.slice(1, 3), 16)
@@ -300,10 +405,46 @@ export function SubjectPropertyModal({
                     contentEditable
                     onInput={handleInput}
                     className="min-h-[60px] max-h-[100px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto [&>b]:font-bold [&>i]:italic [&>u]:underline"
+                    onFocus={(e) => {
+                      console.group('📍 Editor Focus Event');
+                      console.log('Focus details:', {
+                        timestamp: new Date().toISOString(),
+                        activeElement: document.activeElement === e.target,
+                        selection: window.getSelection()?.toString(),
+                        editorContent: editorRef.current?.innerHTML
+                      });
+                      console.groupEnd();
+                    }}
+                    onBlur={(e) => {
+                      console.group('👻 Editor Blur Event');
+                      console.log('Blur details:', {
+                        timestamp: new Date().toISOString(),
+                        relatedTarget: e.relatedTarget,
+                        editorContent: editorRef.current?.innerHTML
+                      });
+                      console.groupEnd();
+                    }}
+                    onMouseUp={(e) => {
+                      console.group('🖱️ Mouse Up Event');
+                      console.log('Selection details:', {
+                        timestamp: new Date().toISOString(),
+                        selection: window.getSelection()?.toString(),
+                        button: e.button,
+                        buttons: e.buttons
+                      });
+                      console.groupEnd();
+                    }}
+                    onKeyUp={() => {
+                      console.log('⌨️ Key up on editor:', {
+                        hasSelection: !!window.getSelection()?.toString(),
+                        selectionContent: window.getSelection()?.toString()
+                      });
+                    }}
                     onPaste={(e) => {
-                      e.preventDefault()
-                      const text = e.clipboardData.getData('text/plain')
-                      document.execCommand('insertText', false, text)
+                      e.preventDefault();
+                      const text = e.clipboardData.getData('text/plain');
+                      document.execCommand('insertText', false, text);
+                      console.log('📋 Pasted content:', text);
                     }}
                   />
                 </div>
