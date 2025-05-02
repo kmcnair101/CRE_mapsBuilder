@@ -303,7 +303,7 @@ export function SubjectPropertyModal({
                   textAlign: 'center',
                   minWidth: 'min-content',
                   maxWidth: '100%',
-                  whiteSpace: 'pre-wrap',
+                  whiteSpace: 'nowrap',
                   display: 'inline-block',
                   transform: 'scale(0.9)',
                   transformOrigin: 'center center'
