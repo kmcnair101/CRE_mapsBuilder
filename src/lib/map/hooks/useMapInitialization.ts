@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { loader } from '@/lib/google-maps'
 import { createSubjectPropertyOverlay } from '../overlays/SubjectPropertyOverlay'
 import type { MapData, MapOverlay } from '@/lib/types'
+import { useMapStyle } from './useMapStyle'
 
 interface MapInitializationProps {
   setMapData: (updater: (prev: MapData) => MapData) => void
@@ -17,6 +18,7 @@ export function useMapInitialization(
   const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null)
   const subjectPropertyOverlayRef = useRef<google.maps.OverlayView | null>(null)
   const isInitializedRef = useRef(false)
+  const { handleMapStyleChange } = useMapStyle()
 
   const cleanupSubjectProperty = useCallback(() => {
     if (subjectPropertyOverlayRef.current) {
@@ -196,17 +198,7 @@ export function useMapInitialization(
 
   useEffect(() => {
     if (googleMapRef.current && mapData.mapStyle) {
-      if (mapData.mapStyle.type === 'satellite') {
-        googleMapRef.current.setMapTypeId('satellite')
-      } else if (mapData.mapStyle.type === 'terrain') {
-        googleMapRef.current.setMapTypeId('terrain')
-      } else {
-        googleMapRef.current.setMapTypeId('roadmap')
-      }
-
-      if (mapData.mapStyle.customStyles) {
-        googleMapRef.current.setOptions({ styles: mapData.mapStyle.customStyles })
-      }
+      handleMapStyleChange(googleMapRef.current, mapData.mapStyle)
     }
   }, [mapData.mapStyle])
 

@@ -160,6 +160,7 @@ export function MapStyle({
               <div className="grid grid-cols-4 gap-2">
                 {[
                   { id: 'default', label: 'Default' },
+                  { id: 'subtle', label: 'Subtle' },
                   { id: 'light', label: 'Light' },
                   { id: 'dark', label: 'Dark' },
                   { id: 'retro', label: 'Retro' },

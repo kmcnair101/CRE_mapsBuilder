@@ -10,6 +10,7 @@ import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
 import { DownloadButton } from './DownloadButton'
 import { cn } from '@/lib/utils'
 import type { MapData, MapOverlay, MapStyleName } from '@/lib/types'
+import { useMapStyle } from '@/lib/map/hooks/useMapStyle'
 
 export default function MapEditor() {
   const { id } = useParams()
@@ -165,6 +166,8 @@ export default function MapEditor() {
 
   const { handleDownload, downloadMapFromData } = useMapDownload()
 
+  const { handleMapStyleChange: applyMapStyle } = useMapStyle()
+
   const handleMapStyleChange = (style: {
     type: MapStyleName | 'satellite' | 'terrain'
     hideLabels?: boolean
@@ -181,14 +184,8 @@ export default function MapEditor() {
   }) => {
     if (!googleMapRef.current) return
 
-    // Apply style to the map
-    if (style.type === 'satellite') {
-      googleMapRef.current.setMapTypeId('satellite')
-    } else if (style.type === 'terrain') {
-      googleMapRef.current.setMapTypeId('terrain')
-    } else {
-      googleMapRef.current.setMapTypeId('roadmap')
-    }
+    // Apply style to the map using the useMapStyle hook
+    applyMapStyle(googleMapRef.current, style)
 
     // Update map data with new style
     setMapData(prev => ({
