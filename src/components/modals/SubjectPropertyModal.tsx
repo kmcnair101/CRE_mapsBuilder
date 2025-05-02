@@ -99,11 +99,15 @@ export function SubjectPropertyModal({
 
   const handleFormat = (command: string) => {
     document.execCommand(command, false)
+    // Log the formatted content for debugging
+    console.log('Formatted content:', editorRef.current?.innerHTML)
   }
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
     setName(content)
+    // Log the content when it changes
+    console.log('Content changed:', content)
   }
 
   const getRgbaColor = (hex: string, opacity: number) => {

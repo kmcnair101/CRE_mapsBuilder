@@ -309,6 +309,11 @@ export function createCustomTextOverlay(
         const scaled = this.calculateScaledValues(this.currentWidth)
         
         this.contentDiv.innerHTML = this.content
+        // Preserve text formatting styles
+        this.contentDiv.style.fontWeight = 'inherit'
+        this.contentDiv.style.fontStyle = 'inherit'
+        this.contentDiv.style.textDecoration = 'inherit'
+        // Set other styles
         this.contentDiv.style.color = this.style.color || '#000000'
         this.contentDiv.style.fontSize = `${scaled.fontSize}px`
         this.contentDiv.style.fontFamily = this.style.fontFamily || 'Arial'

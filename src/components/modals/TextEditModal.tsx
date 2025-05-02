@@ -78,11 +78,15 @@ export function TextEditModal({
 
   const handleFormat = (command: string) => {
     document.execCommand(command, false)
+    // Log the formatted content for debugging
+    console.log('Formatted content:', editorRef.current?.innerHTML)
   }
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
     setText(content)
+    // Log the content when it changes
+    console.log('Content changed:', content)
   }
 
   // Convert hex color to rgba
