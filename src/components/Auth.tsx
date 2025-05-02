@@ -31,7 +31,6 @@ export function Auth() {
     } catch (err) {
       console.error('Auth error:', err)
       
-      // Type guard for Error object
       if (err instanceof Error) {
         const errorMessage = err.message.toLowerCase()
         
@@ -44,7 +43,7 @@ export function Auth() {
         
         // User not found
         if (errorMessage.includes('user not found')) {
-          setError('We couldn't find your account. Please re-enter your email or sign up.')
+          setError('We could not find your account. Please re-enter your email or sign up.')
           return
         }
         
@@ -56,7 +55,7 @@ export function Auth() {
         
         // Rate limiting / Technical issues
         if (errorMessage.includes('too many requests')) {
-          setError('We're experiencing technical difficulties. Please wait a moment and try again.')
+          setError('We are experiencing technical difficulties. Please wait a moment and try again.')
           return
         }
         
