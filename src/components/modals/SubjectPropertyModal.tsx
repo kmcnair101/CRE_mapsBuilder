@@ -107,7 +107,6 @@ export function SubjectPropertyModal({
       console.groupEnd();
       return;
     }
-
     const hasFormatting = (content: string, tag: string) => {
       const regex = new RegExp(`<${tag}[^>]*>.*?</${tag}>`, 'i');
       return regex.test(content);
