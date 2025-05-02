@@ -207,15 +207,12 @@ export function AddTextModal({
           <div className="w-2/5 p-6 border-r">
             <h3 className="text-sm font-medium text-gray-700 mb-4">Preview</h3>
             <MapPreviewBackground>
-              <div
-                style={{
-                  width: '100%',
-                  overflowX: 'auto',
-                }}
-              >
+              <div className="w-full overflow-x-auto overflow-y-hidden">
                 <div
                   className="inline-block"
                   style={{
+                    minWidth: 'max-content',
+                    whiteSpace: 'pre',
                     color,
                     fontSize: `${fontSize}px`,
                     fontFamily,
@@ -224,8 +221,6 @@ export function AddTextModal({
                     padding: `${padding}px`,
                     borderRadius: '4px',
                     textAlign: 'center',
-                    minWidth: 'min-content',
-                    whiteSpace: 'pre',
                     display: 'inline-block',
                     transform: 'scale(0.9)',
                     transformOrigin: 'center center',
