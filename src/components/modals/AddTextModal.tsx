@@ -72,31 +72,65 @@ export function AddTextModal({
     console.log(`Command: ${command}`)
     console.log(`Timestamp: ${timestamp}`)
     
-    console.log('🔍 Selection Details')
-    console.log('Selection object:', {
+    // Get the current selection state
+    const selectionState = {
       exists: !!selection,
-      rangeCount: selection?.rangeCount,
-      type: selection?.type,
-      isCollapsed: selection?.isCollapsed,
-      anchorNode: selection?.anchorNode
-    })
+      rangeCount: selection?.rangeCount || 0,
+      type: selection?.type || 'None',
+      isCollapsed: selection?.isCollapsed || true,
+      hasRange: selection?.rangeCount > 0,
+      selectedText: selection?.toString() || ''
+    }
+    
+    console.log('🔍 Selection Details')
+    console.log('Selection state:', selectionState)
 
-    if (!selection || selection.rangeCount === 0) {
-      console.log('⚠️ No Selection - Toggle Format State')
-      console.log('Current content:', beforeContent)
-      const isFormatted = document.queryCommandState(command)
-      console.log('Is formatted:', isFormatted)
+    // Check if we have access to the editable region
+    const hasEditableAccess = editorRef.current?.isContentEditable
+    if (!hasEditableAccess) {
+      console.log('🚫 No access to editable region')
+      return
     }
 
-    document.execCommand(command, false)
-    
-    const afterContent = editorRef.current?.innerHTML || ''
-    console.log('✅ Format toggle result:', {
-      before: beforeContent,
-      after: afterContent,
-      tag: command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u',
-      wasFormatted: document.queryCommandState(command)
+    // Get the current format state before applying the command
+    const isFormatted = document.queryCommandState(command)
+    console.log('Current format state:', {
+      command,
+      isFormatted,
+      canExecute: document.queryCommandEnabled(command)
     })
+
+    // Apply the formatting command
+    try {
+      document.execCommand(command, false)
+      
+      const afterContent = editorRef.current?.innerHTML || ''
+      const formatTag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u'
+      
+      console.log('✅ Format operation result:', {
+        command,
+        before: beforeContent,
+        after: afterContent,
+        tag: formatTag,
+        wasFormatted: isFormatted,
+        hasChanged: beforeContent !== afterContent,
+        selectionRestored: !!window.getSelection()?.rangeCount
+      })
+
+      // Force update the button states
+      const newFormatState = document.queryCommandState(command)
+      console.log('Updated format state:', {
+        command,
+        newState: newFormatState,
+        buttonShouldBeActive: newFormatState
+      })
+    } catch (error) {
+      console.error('❌ Format operation failed:', {
+        command,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        content: beforeContent
+      })
+    }
   }
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
@@ -108,8 +142,23 @@ export function AddTextModal({
     console.log('New content:', content)
     console.log('Content length:', content.length)
     console.log('Has formatting:', content.includes('<'))
+    
+    // Enhanced formatting detection
     if (content.includes('<')) {
-      console.log('Formatting tags:', content.match(/<\/?[^>]+(>|$)/g))
+      const tags = content.match(/<\/?[^>]+(>|$)/g) || []
+      console.log('Formatting analysis:', {
+        tags,
+        activeTags: {
+          bold: document.queryCommandState('bold'),
+          italic: document.queryCommandState('italic'),
+          underline: document.queryCommandState('underline')
+        },
+        structure: {
+          hasNesting: /<[^>]*><[^>]*>/.test(content),
+          tagCount: tags.length,
+          isBalanced: tags.length % 2 === 0
+        }
+      })
     }
   }
 
