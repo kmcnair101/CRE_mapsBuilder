@@ -20,12 +20,12 @@ export function SubscriptionDetails() {
         .eq('user_id', user.id)
         .maybeSingle()
 
-      if (error) {
+      /* if (error) {
         console.error('Error fetching subscription:', error)
         setError('Failed to load subscription.')
       } else {
         setSubscription(data)
-      }
+      } */
     }
 
     fetchSubscription()
