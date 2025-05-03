@@ -334,7 +334,6 @@ export function createCustomTextOverlay(
 
       this.draw()
     }
-
     onAdd() {
       const div = document.createElement('div')
       div.style.position = 'absolute'
