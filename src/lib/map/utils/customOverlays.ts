@@ -40,6 +40,7 @@ export function createCustomImageOverlay(
       this.url = config.url
       this.width = config.width
       this.style = config.style
+      console.log('[ImageOverlay] Constructor config:', config)
     }
 
     private getRgbaColor(hex: string, opacity: number) {
@@ -50,11 +51,13 @@ export function createCustomImageOverlay(
     }
 
     updateStyle(style: ContainerStyle) {
+      console.log('[ImageOverlay] updateStyle called with:', style)
       this.style = style
       if (this.container) {
         this.container.style.backgroundColor = this.getRgbaColor(style.backgroundColor, style.backgroundOpacity)
         this.container.style.border = `${style.borderWidth}px solid ${this.getRgbaColor(style.borderColor, style.borderOpacity)}`
         this.container.style.padding = `${style.padding}px`
+        console.log('[ImageOverlay] Updated container style:', this.container.style.cssText)
       }
     }
     onAdd() {
@@ -96,6 +99,7 @@ export function createCustomImageOverlay(
         if (this.imageWrapper) {
           this.imageWrapper.style.height = 'auto'
         }
+        console.log('[ImageOverlay] Image loaded, aspectRatio:', this.aspectRatio)
       }
 
       imageWrapper.appendChild(img)
@@ -205,6 +209,8 @@ export function createCustomImageOverlay(
 
       const panes = this.getPanes()
       panes?.overlayMouseTarget.appendChild(div)
+
+      console.log('[ImageOverlay] onAdd position:', this.position, 'style:', this.style)
     }
 
     draw() {
@@ -216,6 +222,7 @@ export function createCustomImageOverlay(
         const height = this.div.offsetHeight
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
+        console.log('[ImageOverlay] draw position:', this.position, 'div style:', this.div.style.cssText)
       }
     }
 
@@ -280,6 +287,7 @@ export function createCustomTextOverlay(
       this.baseWidth = style.width || 80
       this.currentWidth = this.baseWidth
       this.baseFontSize = style.fontSize || 14
+      console.log('[TextOverlay] Constructor position:', position, 'content:', content, 'style:', style)
     }
 
     private getRgbaColor(hex: string, opacity: number) {
@@ -299,6 +307,7 @@ export function createCustomTextOverlay(
     }
 
     updateContent(content: string, style: any) {
+      console.log('[TextOverlay] updateContent called with:', content, style)
       this.content = content
       this.style = style
       this.baseWidth = style.width || this.baseWidth
@@ -330,6 +339,7 @@ export function createCustomTextOverlay(
         this.contentDiv.style.boxSizing = 'border-box'
         this.contentDiv.style.lineHeight = '1.2'
         this.contentDiv.style.verticalAlign = 'middle'
+        console.log('[TextOverlay] Updated contentDiv style:', this.contentDiv.style.cssText)
       }
 
       this.draw()
@@ -518,6 +528,8 @@ export function createCustomTextOverlay(
       this.div = div
       const panes = this.getPanes()
       panes?.overlayMouseTarget.appendChild(div)
+
+      console.log('[TextOverlay] onAdd position:', this.position, 'content:', this.content, 'style:', this.style)
     }
 
     draw() {
@@ -529,6 +541,7 @@ export function createCustomTextOverlay(
         const height = this.div.offsetHeight
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
+        console.log('[TextOverlay] draw position:', this.position, 'div style:', this.div.style.cssText)
       }
     }
 
