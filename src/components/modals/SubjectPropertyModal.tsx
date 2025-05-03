@@ -514,7 +514,6 @@ export function SubjectPropertyModal({
                   </div>
                 </div>
               )}
-
               <div className="space-y-4">
                 <h3 className="text-sm font-medium text-gray-700">
                   Container Style
