@@ -665,6 +665,9 @@ export default function MapEditor() {
         return overlay
       })
 
+      // Generate thumbnail before saving
+      const thumbnail = await handleDownload(mapRef, true)
+
       // Simplify the map style object
       const simplifiedMapStyle = {
         type: mapType as MapStyleName | 'satellite' | 'terrain',
