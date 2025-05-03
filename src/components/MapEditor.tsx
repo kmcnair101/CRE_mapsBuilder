@@ -59,6 +59,7 @@ export default function MapEditor() {
         if (error) throw error
 
         if (data) {
+          console.log('Loaded map data:', JSON.stringify(data, null, 2))
           setMapData({
             title: data.title,
             center_lat: data.center_lat,
@@ -671,6 +672,8 @@ export default function MapEditor() {
         
         return overlay
       })
+
+      console.log('Current overlay state before save:', JSON.stringify(updatedOverlays, null, 2))
   
       // Prepare complete map data
       const mapUpdate = {
@@ -688,6 +691,8 @@ export default function MapEditor() {
           customStyles: styles
         }
       }
+
+      console.log('Saving map data:', JSON.stringify(mapUpdate, null, 2))
   
       if (id) {
         const { error } = await supabase
