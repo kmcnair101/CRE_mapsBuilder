@@ -578,7 +578,6 @@ export function createCustomTextOverlay(
     borderOpacity: overlay.properties.borderOpacity || 1,
     width: overlay.properties.width || 80
   }
-
   const textOverlay = new CustomTextOverlay(
     new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
     overlay.properties.content || '',
