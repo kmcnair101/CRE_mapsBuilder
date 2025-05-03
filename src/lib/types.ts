@@ -6,6 +6,53 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface MapOverlay {
+  id: string
+  type: 'image' | 'text' | 'business' | 'group' | 'shape'
+  position: {
+    lat: number
+    lng: number
+  }
+  properties: {
+    // Common properties
+    width?: number
+    draggable?: boolean
+    zIndex?: number
+    
+    // Type-specific properties
+    url?: string
+    content?: string
+    businessName?: string
+    logo?: string
+    paths?: google.maps.LatLngLiteral[]
+    children?: MapOverlay[]
+    
+    // Style properties
+    containerStyle?: {
+      backgroundColor: string
+      borderColor: string
+      borderWidth: number
+      padding: number
+      backgroundOpacity: number
+      borderOpacity: number
+    }
+    textStyle?: {
+      color: string
+      fontSize: number
+      fontFamily: string
+      fontWeight: string
+      textAlign: 'left' | 'center' | 'right'
+    }
+    style?: {
+      strokeColor: string
+      strokeOpacity: number
+      strokeWeight: number
+      fillColor: string
+      fillOpacity: number
+    }
+  }
+}
+
 export type Database = {
   public: {
     Tables: {
