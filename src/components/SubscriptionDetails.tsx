@@ -27,7 +27,6 @@ export function SubscriptionDetails() {
         setSubscription(data)
       } */
     }
-
     fetchSubscription()
   }, [user])
 
