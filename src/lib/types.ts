@@ -1,3 +1,5 @@
+import type { MapStyleName } from '@/lib/map/styles'
+
 export type Json =
   | string
   | number
@@ -50,6 +52,47 @@ export interface MapOverlay {
       fillColor: string
       fillOpacity: number
     }
+  }
+}
+
+export interface MapData {
+  title: string
+  center_lat: number
+  center_lng: number
+  zoom_level: number
+  overlays: MapOverlay[]
+  subject_property: {
+    lat: number
+    lng: number
+    name: string
+    image: string | null
+    style?: {
+      color: string
+      fontSize: number
+      fontFamily: string
+      backgroundColor: string
+      borderColor: string
+      borderWidth: number
+      padding: number
+      backgroundOpacity: number
+      borderOpacity: number
+    }
+    address: string
+  } | null
+  mapStyle?: {
+    type: MapStyleName | 'satellite' | 'terrain'
+    hideLabels?: boolean
+    hideStreetNames?: boolean
+    hideHighwayLabels?: boolean
+    hideAreaLabels?: boolean
+    hideBusinessLabels?: boolean
+    hideTransitLabels?: boolean
+    hideWaterLabels?: boolean
+    highlightHighways?: {
+      color: string
+      weight: number
+    }
+    customStyles?: google.maps.MapTypeStyle[]
   }
 }
 

@@ -606,24 +606,16 @@ export default function MapEditor() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !mapData.subject_property || !googleMapRef.current) return
-  
+    if (!googleMapRef.current || !user) return
+
+    setSaving(true)
+
     try {
-      setSaving(true)
-  
-      // Get current map state
-      const map = googleMapRef.current
-      const center = map.getCenter()
-      const zoom = map.getZoom()
-      const mapType = map.getMapTypeId()
-      const styles = map.get('styles')
-  
-      // Generate thumbnail
-      const thumbnail = await handleDownload(mapRef, true)
-      if (!thumbnail) {
-        throw new Error('Failed to generate thumbnail')
-      }
-  
+      const center = googleMapRef.current.getCenter()
+      const zoom = googleMapRef.current.getZoom()
+      const mapType = googleMapRef.current.getMapTypeId()
+      const styles = googleMapRef.current.get('styles')
+
       // Capture current positions and properties of all overlays
       const updatedOverlays = mapData.overlays.map(overlay => {
         const currentOverlay = overlaysRef.current[overlay.id]
@@ -673,9 +665,17 @@ export default function MapEditor() {
         return overlay
       })
 
-      console.log('Current overlay state before save:', JSON.stringify(updatedOverlays, null, 2))
-  
-      // Prepare complete map data
+      // Simplify the map style object
+      const simplifiedMapStyle = {
+        type: mapType as MapStyleName | 'satellite' | 'terrain',
+        customStyles: styles ? styles.map((style: any) => ({
+          featureType: style.featureType,
+          elementType: style.elementType,
+          stylers: style.stylers
+        })) : []
+      }
+
+      // Prepare complete map data with simplified structure
       const mapUpdate = {
         user_id: user.id,
         title: mapData.title,
@@ -685,11 +685,7 @@ export default function MapEditor() {
         overlays: updatedOverlays,
         subject_property: mapData.subject_property,
         thumbnail,
-        map_style: {
-          ...mapData.mapStyle,
-          type: mapType as MapStyleName | 'satellite' | 'terrain',
-          customStyles: styles
-        }
+        map_style: simplifiedMapStyle
       }
 
       console.log('Saving map data:', JSON.stringify(mapUpdate, null, 2))
