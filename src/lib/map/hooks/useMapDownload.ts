@@ -192,20 +192,28 @@ export function useMapDownload() {
         }
 
         // Now add overlays after map is ready
-        mapData.overlays.forEach(overlay => {
-          addOverlayToMap(overlay, map)
-        })
-        /*
-        if (mapData.subject_property) {
-          await updateSubjectProperty()
-        }
+        const overlaysWithProxiedUrls = mapData.overlays.map(overlay => {
+          if (overlay.type === 'image' && overlay.properties.url) {
+            return {
+              ...overlay,
+              properties: {
+                ...overlay.properties,
+                url: `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`
+              }
+            };
+          }
+          return overlay;
+        });
 
-        // Wait for map to load
-        await new Promise(resolve => {
-          google.maps.event.addListenerOnce(map, 'idle', resolve)
-        })
-        */
-        // Additional wait to ensure all tiles and overlays are rendered
+        overlaysWithProxiedUrls.forEach(overlay => {
+          addOverlayToMap(overlay, map);
+        });
+
+        // if (mapData.subject_property) {
+        //   await updateSubjectProperty()
+        // }
+
+        // Wait a bit to ensure all tiles and overlays are rendered
         await new Promise(resolve => setTimeout(resolve, 2000))
 
         // Generate image
