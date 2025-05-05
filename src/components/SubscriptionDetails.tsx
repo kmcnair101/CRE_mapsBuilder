@@ -8,24 +8,37 @@ export function SubscriptionDetails() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [subscription, setSubscription] = useState<any>(null)
+  const [portalUrl, setPortalUrl] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     if (!user) return
 
     const fetchSubscription = async () => {
+      setLoading(true)
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
+        .eq('status', 'active')
         .maybeSingle()
 
-      /* if (error) {
-        console.error('Error fetching subscription:', error)
+      if (error) {
         setError('Failed to load subscription.')
-      } else {
-        setSubscription(data)
-      } */
+        setLoading(false)
+        return
+      }
+      setSubscription(data)
+
+      if (data) {
+        const res = await fetch('/api/create-portal-link', {
+          method: 'POST',
+          body: JSON.stringify({ userId: user.id }),
+        })
+        const json = await res.json()
+        if (json?.url) setPortalUrl(json.url)
+      }
+      setLoading(false)
     }
     fetchSubscription()
   }, [user])
@@ -103,6 +116,16 @@ export function SubscriptionDetails() {
           <p><strong>Plan:</strong> {subscription.stripe_price_id}</p>
           <p><strong>Period Start:</strong> {new Date(subscription.current_period_start).toLocaleDateString()}</p>
           <p><strong>Period End:</strong> {new Date(subscription.current_period_end).toLocaleDateString()}</p>
+          {portalUrl && (
+            <a
+              href={portalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Manage Subscription
+            </a>
+          )}
         </div>
       )}
     </div>
