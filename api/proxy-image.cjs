@@ -1,12 +1,9 @@
-import https from 'https'
-import http from 'http'
-import { parse } from 'url'
+// /api/proxy-image.js
+const https = require('https')
+const http = require('http')
+const { parse } = require('url')
 
-export const config = {
-    runtime: 'nodejs', // ensures it won't use the edge runtime
-  }
-
-export default function handler(req, res) {
+module.exports = (req, res) => {
   const { url } = req.query
 
   if (!url || typeof url !== 'string') {
