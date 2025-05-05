@@ -28,6 +28,7 @@ export function MapList() {
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
   const [mapToDelete, setMapToDelete] = useState<string | null>(null)
+  const [portalUrl, setPortalUrl] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadMaps() {
@@ -117,6 +118,16 @@ export function MapList() {
         subject_property: data.subject_property as any,
         mapStyle: data.map_style as any
       }, `${data.title || 'map'}.png`)
+
+      if (data) {
+        const res = await fetch('/api/create-portal-link', {
+          method: 'POST',
+          body: JSON.stringify({ userId: profile.id }),
+        })
+        const json = await res.json()
+        console.log('Portal link response:', json)
+        if (json?.url) setPortalUrl(json.url)
+      }
     } catch (error) {
       console.error('Error downloading map:', error)
       alert('Failed to download map. Please try again.')
