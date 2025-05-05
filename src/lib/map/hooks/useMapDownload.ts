@@ -138,7 +138,9 @@ export function useMapDownload() {
       document.body.appendChild(loadingIndicator)
 
       try {
+        console.log('Loading Google Maps API...')
         await loader.load()
+        console.log('Google Maps API loaded')
 
         // Initialize map
         const map = new google.maps.Map(container, {
@@ -148,10 +150,11 @@ export function useMapDownload() {
           gestureHandling: 'none',
           keyboardShortcuts: false
         })
+        console.log('Map initialized')
 
-        // Wait for the map to be idle before adding overlays
         await new Promise<void>(resolve => {
           google.maps.event.addListenerOnce(map, 'idle', () => {
+            console.log('Map idle (first)')
             resolve()
           })
         })
