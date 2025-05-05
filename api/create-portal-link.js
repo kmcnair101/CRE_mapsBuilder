@@ -4,45 +4,59 @@ import { supabase } from '@/lib/supabase/client'
 
 export default function SubscriptionPage() {
   const { user } = useAuthStore()
-  const [portalUrl, setPortalUrl] = useState(null)
+  const [portalUrl, setPortalUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchPortalLink = async () => {
       if (!user) return
 
-      // Check if user has an active subscription
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('status', 'active') // Optional: filter for active subscriptions
-        .single()
+      try {
+        // Check if user has an active subscription
+        const { data: subscription, error: subError } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'active') // Optional: only fetch active subscriptions
+          .single()
 
-      if (!subscription) {
+        if (subError || !subscription) {
+          setLoading(false)
+          return
+        }
+
+        // Fetch the Stripe customer portal link
+        const res = await fetch('/api/create-portal-link', {
+          method: 'POST',
+          body: JSON.stringify({ userId: user.id }),
+        })
+
+        if (!res.ok) {
+          const text = await res.text()
+          console.error('Error creating portal link:', text)
+          setError('Failed to create portal link.')
+          return
+        }
+
+        const { url } = await res.json()
+        if (url) setPortalUrl(url)
+      } catch (err) {
+        console.error('Unexpected error:', err)
+        setError('An unexpected error occurred.')
+      } finally {
         setLoading(false)
-        return
       }
-
-      // If subscribed, get portal link
-      const res = await fetch('/api/create-portal-link', {
-        method: 'POST',
-        body: JSON.stringify({ userId: user.id }),
-      })
-
-      const json = await res.json()
-      if (json?.url) setPortalUrl(json.url)
-
-      setLoading(false)
     }
 
     fetchPortalLink()
   }, [user])
 
-  if (loading) return <div>Loading subscription...</div>
+  if (loading) return <div className="text-gray-600 mt-6">Loading subscription...</div>
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 max-w-md mx-auto">
+      {error && <p className="text-red-600 mb-4">{error}</p>}
       {portalUrl ? (
         <a
           href={portalUrl}
