@@ -195,11 +195,11 @@ export function useMapDownload() {
         mapData.overlays.forEach(overlay => {
           addOverlayToMap(overlay, map)
         })
-
+        /*
         if (mapData.subject_property) {
           await updateSubjectProperty()
         }
-
+        */
         // Wait for map to load
         await new Promise(resolve => {
           google.maps.event.addListenerOnce(map, 'idle', resolve)
