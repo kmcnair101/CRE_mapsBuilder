@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Save } from 'lucide-react'
+import { Save, Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '@/lib/supabase/client'
 import { MapControls } from './MapControls'
@@ -8,6 +8,7 @@ import { useMapInitialization } from '@/lib/map/hooks/useMapInitialization'
 import { useMapOverlays } from '@/lib/map/hooks/useMapOverlays'
 import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
 import { DownloadButton } from './DownloadButton'
+import { DeleteMapModal } from './modals/DeleteMapModal'
 import { cn } from '@/lib/utils'
 import type { MapData, MapOverlay, MapStyleName } from '@/lib/types'
 import { useMapStyle } from '@/lib/map/hooks/useMapStyle'
@@ -25,6 +26,7 @@ export default function MapEditor() {
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null)
   const [activeDrawingShape, setActiveDrawingShape] = useState<'rect' | 'circle' | 'polygon' | null>(null)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const [mapData, setMapData] = useState<MapData>(() => {
     const initialTitle = location.state?.subject_property?.name || 
@@ -716,6 +718,24 @@ export default function MapEditor() {
     }
   }
 
+  const handleDeleteMap = async () => {
+    if (!id || !user) return
+
+    try {
+      const { error } = await supabase
+        .from('maps')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      navigate('/maps')
+    } catch (error) {
+      console.error('Error deleting map:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -822,6 +842,20 @@ export default function MapEditor() {
           </div>
         </div>
       </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          className="p-2 text-gray-500 hover:text-red-500 transition-colors"
+          title="Delete Map"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      </div>
+      <DeleteMapModal
+        open={showDeleteModal}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteMap}
+      />
     </div>
   )
 }
