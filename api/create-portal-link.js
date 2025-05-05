@@ -1,3 +1,5 @@
+// pages/api/create-portal-link.ts
+
 import { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -12,18 +14,15 @@ const supabase = createClient(
 )
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' })
-  }
-
   try {
+    if (req.method !== 'POST') return res.status(405).end('Method Not Allowed')
+
     const { userId } = JSON.parse(req.body)
 
     if (!userId) {
-      return res.status(400).json({ error: 'Missing userId in request body' })
+      return res.status(400).json({ error: 'Missing userId' })
     }
 
-    // Retrieve the subscription record
     const { data, error } = await supabase
       .from('subscriptions')
       .select('stripe_subscription_id')
@@ -31,21 +30,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single()
 
     if (error || !data?.stripe_subscription_id) {
-      return res.status(400).json({ error: 'No valid subscription found for user' })
+      console.error('Subscription lookup error:', error)
+      return res.status(400).json({ error: 'No active subscription found' })
     }
 
-    // Retrieve subscription to get the customer ID
     const subscription = await stripe.subscriptions.retrieve(data.stripe_subscription_id)
 
-    // Create a Stripe billing portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.customer as string,
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/account/subscription`,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
     })
 
     return res.status(200).json({ url: portalSession.url })
   } catch (err: any) {
-    console.error('Error creating Stripe portal session:', err)
-    return res.status(500).json({ error: 'Internal server error', detail: err.message })
+    console.error('Server error:', err)
+    return res.status(500).json({ error: 'Internal Server Error' })
   }
 }
