@@ -130,6 +130,5 @@ export function useMapOverlays(
       console.error('Error adding overlay to map:', error)
     }
   }
-
   return { overlaysRef, addOverlayToMap, removeOverlay }
 }
