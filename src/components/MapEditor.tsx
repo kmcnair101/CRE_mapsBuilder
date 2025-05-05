@@ -29,27 +29,6 @@ export default function MapEditor() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const [mapData, setMapData] = useState<MapData>(() => {
-    // Check for saved map state
-    const pendingMapId = localStorage.getItem('pendingMapId')
-    const pendingEdits = localStorage.getItem('pendingMapEdits')
-    
-    if (pendingMapId === id && pendingEdits) {
-      const { state } = JSON.parse(pendingEdits)
-      localStorage.removeItem('pendingMapId')
-      localStorage.removeItem('pendingMapEdits')
-      return {
-        title: state?.subject_property?.name || 
-               state?.subject_property?.address || 
-               'New Map',
-        center_lat: state?.center_lat || 40.7128,
-        center_lng: state?.center_lng || -74.0060,
-        zoom_level: state?.zoom_level || 12,
-        overlays: state?.overlays || [],
-        subject_property: state?.subject_property || null,
-        mapStyle: state?.mapStyle
-      }
-    }
-
     // Default initialization
     const initialTitle = location.state?.subject_property?.name || 
                         location.state?.subject_property?.address || 
@@ -65,6 +44,43 @@ export default function MapEditor() {
       mapStyle: location.state?.mapStyle
     }
   })
+
+  // Add useEffect to check for saved state on mount and when browser back button is used
+  useEffect(() => {
+    const checkForSavedState = () => {
+      const pendingMapId = localStorage.getItem('pendingMapId')
+      const pendingEdits = localStorage.getItem('pendingMapEdits')
+      
+      if (pendingMapId === id && pendingEdits) {
+        const { state } = JSON.parse(pendingEdits)
+        localStorage.removeItem('pendingMapId')
+        localStorage.removeItem('pendingMapEdits')
+        
+        setMapData({
+          title: state?.subject_property?.name || 
+                 state?.subject_property?.address || 
+                 'New Map',
+          center_lat: state?.center_lat || 40.7128,
+          center_lng: state?.center_lng || -74.0060,
+          zoom_level: state?.zoom_level || 12,
+          overlays: state?.overlays || [],
+          subject_property: state?.subject_property || null,
+          mapStyle: state?.mapStyle
+        })
+      }
+    }
+
+    // Check on mount
+    checkForSavedState()
+
+    // Add event listener for popstate (browser back/forward)
+    window.addEventListener('popstate', checkForSavedState)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', checkForSavedState)
+    }
+  }, [id])
 
   useEffect(() => {
     async function loadMapData() {
