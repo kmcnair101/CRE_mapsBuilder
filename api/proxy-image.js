@@ -2,6 +2,10 @@ import https from 'https'
 import http from 'http'
 import { parse } from 'url'
 
+export const config = {
+    runtime: 'nodejs', // ensures it won't use the edge runtime
+  }
+
 export default function handler(req, res) {
   const { url } = req.query
 
