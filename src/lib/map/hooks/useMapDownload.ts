@@ -199,12 +199,12 @@ export function useMapDownload() {
         if (mapData.subject_property) {
           await updateSubjectProperty()
         }
-        */
+
         // Wait for map to load
         await new Promise(resolve => {
           google.maps.event.addListenerOnce(map, 'idle', resolve)
         })
-
+        */
         // Additional wait to ensure all tiles and overlays are rendered
         await new Promise(resolve => setTimeout(resolve, 2000))
 
