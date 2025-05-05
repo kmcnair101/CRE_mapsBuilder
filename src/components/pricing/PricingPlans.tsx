@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
+import { useLocation } from 'react-router-dom'
 
 interface PricingPlanProps {
   isOpen: boolean
@@ -11,16 +12,31 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const location = useLocation()
 
   const handleSubscribe = async (plan: 'monthly' | 'annual') => {
     setLoading(true)
     setError('')
 
     try {
+      // If we're in the map editor, save the current map state
+      if (location.pathname.startsWith('/maps/')) {
+        const mapId = location.pathname.split('/')[2]
+        localStorage.setItem('pendingMapId', mapId)
+        localStorage.setItem('pendingMapEdits', JSON.stringify({
+          pathname: location.pathname,
+          state: location.state
+        }))
+      }
+
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, plan })
+        body: JSON.stringify({ 
+          userId: user?.id, 
+          plan,
+          returnUrl: location.pathname // Pass the current path as return URL
+        })
       })
 
       const data = await res.json()
