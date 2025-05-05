@@ -112,11 +112,13 @@ export function useMapDownload() {
         width: '1024px',
         height: '768px',
         position: 'fixed',
-        left: '-9999px',
-        top: '-9999px',
+        left: '0px',
+        top: '0px',
         zIndex: '-1',
         backgroundColor: 'white',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        opacity: '0',
+        pointerEvents: 'none'
       })
       document.body.appendChild(container)
 
@@ -138,6 +140,7 @@ export function useMapDownload() {
       document.body.appendChild(loadingIndicator)
 
       try {
+        console.log('mapData:', mapData)
         console.log('Loading Google Maps API...')
         await loader.load()
         console.log('Google Maps API loaded')
@@ -152,12 +155,19 @@ export function useMapDownload() {
         })
         console.log('Map initialized')
 
-        await new Promise<void>(resolve => {
-          google.maps.event.addListenerOnce(map, 'idle', () => {
-            console.log('Map idle (first)')
-            resolve()
-          })
-        })
+        // Wait for map to be idle, but with a timeout fallback
+        await Promise.race([
+          new Promise<void>(resolve => {
+            google.maps.event.addListenerOnce(map, 'idle', () => {
+              console.log('Map idle (first)')
+              resolve()
+            })
+          }),
+          new Promise<void>((_, reject) => setTimeout(() => {
+            console.error('Map idle event timed out')
+            reject(new Error('Map idle timeout'))
+          }, 7000))
+        ])
 
         // Apply map style
         if (mapData.mapStyle) {
