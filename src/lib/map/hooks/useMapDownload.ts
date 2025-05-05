@@ -2,10 +2,17 @@ import html2canvas from 'html2canvas'
 import { loader } from '@/lib/google-maps'
 import type { MapData } from '@/lib/types'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useMapOverlays } from './useMapOverlays'
 
 
 export function useMapDownload() {
   const { hasAccess } = useSubscription()
+  const { addOverlayToMap } = useMapOverlays(
+    () => {}, // no-op function for handleDeleteLayer
+    undefined, // handleTextEdit
+    undefined, // handleContainerEdit
+    undefined  // handleShapeEdit
+  )
 
   const handleDownload = async (mapRef: React.RefObject<HTMLDivElement>, forThumbnail = false) => {
     // Always allow thumbnails (they're used internally)
