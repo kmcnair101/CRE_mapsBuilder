@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { useSubscription } from '@/hooks/useSubscription'
 import { PricingPlans } from './pricing/PricingPlans'
+import { DeleteMapModal } from './modals/DeleteMapModal'
 
 type Map = Database['public']['Tables']['maps']['Row']
 type SortOption = 'updated_at' | 'created_at' | 'title'
@@ -26,6 +27,7 @@ export function MapList() {
   const { downloadMapFromData } = useMapDownload()
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
+  const [mapToDelete, setMapToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadMaps() {
@@ -65,19 +67,25 @@ export function MapList() {
   }, [activeMapMenu])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this map?')) return;
+    setMapToDelete(id)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!mapToDelete) return
     
     try {
       const { error } = await supabase
         .from('maps')
         .delete()
-        .eq('id', id)
+        .eq('id', mapToDelete)
 
       if (error) throw error
-      setMaps(maps.filter(map => map.id !== id))
+      setMaps(maps.filter(map => map.id !== mapToDelete))
       setActiveMapMenu(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete map')
+    } finally {
+      setMapToDelete(null)
     }
   }
 
@@ -388,6 +396,11 @@ export function MapList() {
           </div>
         )}
       </div>
+      <DeleteMapModal
+        open={!!mapToDelete}
+        onCancel={() => setMapToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+      />
       <PricingPlans 
         isOpen={showPricingPlans} 
         onClose={() => setShowPricingPlans(false)} 
