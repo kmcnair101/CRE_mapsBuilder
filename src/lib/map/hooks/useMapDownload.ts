@@ -3,6 +3,7 @@ import { loader } from '@/lib/google-maps'
 import type { MapData } from '@/lib/types'
 import { useSubscription } from '@/hooks/useSubscription'
 
+
 export function useMapDownload() {
   const { hasAccess } = useSubscription()
 
