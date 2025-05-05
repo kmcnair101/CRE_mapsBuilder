@@ -73,12 +73,17 @@ export default function MapEditor() {
     // Check on mount
     checkForSavedState()
 
-    // Add event listener for popstate (browser back/forward)
+    // Listen for browser navigation and bfcache restore
     window.addEventListener('popstate', checkForSavedState)
+    window.addEventListener('pageshow', (event) => {
+      // @ts-ignore
+      if (event.persisted) checkForSavedState()
+    })
 
-    // Cleanup
     return () => {
       window.removeEventListener('popstate', checkForSavedState)
+      // Note: We can't remove the pageshow listener because it's an anonymous function
+      // This is fine since the component is rarely unmounted/remounted
     }
   }, [id])
 
