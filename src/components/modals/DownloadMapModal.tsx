@@ -33,14 +33,14 @@ export function DownloadMapModal({
           <div
             className="border border-gray-300 rounded shadow"
             style={{
-              width: width + 'px',
-              height: height + 'px',
+              width: Math.min(width, 1000) + 'px',
+              height: Math.min(height, 1000) + 'px',
               overflow: 'hidden',
               background: '#eee'
             }}
           />
           <span className="text-xs text-gray-500 mt-1">
-            Preview ({width} × {height})
+            Preview ({Math.min(width, 1000)} × {Math.min(height, 1000)})
           </span>
         </div>
         <div className="mb-4">
@@ -48,10 +48,10 @@ export function DownloadMapModal({
           <input
             type="range"
             min={400}
-            max={3000}
+            max={1000}
             step={10}
             value={width}
-            onChange={(e) => onWidthChange(Number(e.target.value))}
+            onChange={(e) => onWidthChange(Math.min(Number(e.target.value), 1000))}
             className="w-full"
           />
         </div>
@@ -60,10 +60,10 @@ export function DownloadMapModal({
           <input
             type="range"
             min={300}
-            max={2000}
+            max={1000}
             step={10}
             value={height}
-            onChange={(e) => onHeightChange(Number(e.target.value))}
+            onChange={(e) => onHeightChange(Math.min(Number(e.target.value), 1000))}
             className="w-full"
           />
         </div>
