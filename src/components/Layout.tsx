@@ -10,11 +10,13 @@ import {
 } from 'lucide-react'
 import { Menu, Transition } from '@headlessui/react'
 import { cn } from '@/lib/utils'
+import { useSubscription } from '@/hooks/useSubscription'
 
 export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { signOut, profile } = useAuthStore()
+  const { hasAccess } = useSubscription()
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard }
@@ -25,15 +27,17 @@ export function Layout() {
     { name: 'Subscription', href: '/subscription', icon: CreditCard },
   ]
 
-  // Add a function to handle Stripe portal redirection
+  // Updated function to handle Stripe portal redirection
   async function handleStripePortalRedirect() {
-    // Replace with your actual API call to get the Stripe portal URL
-    const res = await fetch('/api/stripe-portal', { method: 'POST' })
+    if (!profile?.id) return
+    const res = await fetch('/api/create-portal-link', {
+      method: 'POST',
+      body: JSON.stringify({ userId: profile.id }),
+    })
     const data = await res.json()
     if (data.url) {
       window.location.href = data.url
     } else {
-      // handle error
       alert('Could not redirect to Stripe portal.')
     }
   }
@@ -122,7 +126,7 @@ export function Layout() {
                       <Menu.Item key={item.name}>
                         {({ active }) => {
                           // Special handling for Subscription link
-                          if (item.name === 'Subscription' && profile?.is_subscribed) {
+                          if (item.name === 'Subscription' && hasAccess()) {
                             return (
                               <button
                                 onClick={handleStripePortalRedirect}
