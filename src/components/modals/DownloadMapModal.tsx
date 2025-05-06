@@ -29,6 +29,20 @@ export function DownloadMapModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
         <h2 className="text-xl font-bold mb-4">Download Map</h2>
+        <div className="mb-4 flex flex-col items-center">
+          <div
+            className="border border-gray-300 rounded shadow"
+            style={{
+              width: width + 'px',
+              height: height + 'px',
+              overflow: 'hidden',
+              background: '#eee'
+            }}
+          />
+          <span className="text-xs text-gray-500 mt-1">
+            Preview ({width} × {height})
+          </span>
+        </div>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Width (px): <span className="font-mono">{width}</span></label>
           <input
