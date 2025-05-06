@@ -347,6 +347,7 @@ export function MapList() {
                               <Edit className="h-4 w-4 mr-3 text-gray-500" />
                               Edit
                             </Link>
+                            {/* 
                             <button
                               onClick={() => handleMapDownload(map.id)}
                               disabled={downloadingMap === map.id}
@@ -373,6 +374,7 @@ export function MapList() {
                                 </>
                               )}
                             </button>
+                            */}
                             <button
                               onClick={() => handleDelete(map.id)}
                               className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
