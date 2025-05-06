@@ -1,4 +1,3 @@
-// /api/proxy-image.js
 const https = require('https')
 const http = require('http')
 const { parse } = require('url')
@@ -7,8 +6,11 @@ module.exports = (req, res) => {
   const { url } = req.query
 
   if (!url || typeof url !== 'string') {
-    res.status(400).json({ error: 'Missing or invalid `url` query parameter' })
-    return
+    return res.status(400).json({ error: 'Missing or invalid `url` query parameter' })
+  }
+
+  if (url.startsWith('data:')) {
+    return res.status(400).json({ error: 'Cannot proxy data URLs' })
   }
 
   try {
@@ -17,8 +19,7 @@ module.exports = (req, res) => {
 
     client.get(url, (proxyRes) => {
       if (proxyRes.statusCode !== 200) {
-        res.status(proxyRes.statusCode).json({ error: 'Failed to fetch image' })
-        return
+        return res.status(proxyRes.statusCode).json({ error: 'Failed to fetch image' })
       }
 
       res.setHeader('Access-Control-Allow-Origin', '*')
