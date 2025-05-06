@@ -359,6 +359,7 @@ export function MapList() {
                                   : "text-gray-400 cursor-not-allowed"
                               )}
                             >
+                              
                               {downloadingMap === map.id ? (
                                 <>
                                   <div className="animate-spin h-4 w-4 mr-3 border-b-2 border-gray-600 rounded-full" />
