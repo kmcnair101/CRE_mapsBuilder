@@ -12,6 +12,7 @@ import { DeleteMapModal } from './modals/DeleteMapModal'
 import { cn } from '@/lib/utils'
 import type { MapData, MapOverlay, MapStyleName } from '@/lib/types'
 import { useMapStyle } from '@/lib/map/hooks/useMapStyle'
+import { DownloadMapModal } from './modals/DownloadMapModal'
 
 export default function MapEditor() {
   const { id } = useParams()
@@ -27,6 +28,9 @@ export default function MapEditor() {
   const [activeDrawingShape, setActiveDrawingShape] = useState<'rect' | 'circle' | 'polygon' | null>(null)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false)
+  const [downloadWidth, setDownloadWidth] = useState(1280)
+  const [downloadHeight, setDownloadHeight] = useState(720)
 
   const [mapData, setMapData] = useState<MapData>(() => {
     // Default initialization
@@ -828,7 +832,7 @@ export default function MapEditor() {
               <span>{saving ? 'Saving...' : 'Save'}</span>
             </button>
             <DownloadButton
-              onDownload={handleMapDownload}
+              onDownload={() => setDownloadModalOpen(true)}
               loading={downloading}
               className="flex-1 flex items-center justify-center px-2 py-1.5 rounded-md text-sm font-medium bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
             />
@@ -886,6 +890,28 @@ export default function MapEditor() {
           </div>
         </div>
       </div>
+
+      <DownloadMapModal
+        open={downloadModalOpen}
+        width={downloadWidth}
+        height={downloadHeight}
+        onWidthChange={setDownloadWidth}
+        onHeightChange={setDownloadHeight}
+        onClose={() => setDownloadModalOpen(false)}
+        onDownload={async () => {
+          setDownloading(true)
+          try {
+            await handleDownload(mapRef, false, downloadWidth, downloadHeight)
+            setDownloadModalOpen(false)
+          } catch (error) {
+            // handle error
+          } finally {
+            setDownloading(false)
+          }
+        }}
+        mapRef={mapRef}
+        mapData={mapData}
+      />
     </div>
   )
 }
