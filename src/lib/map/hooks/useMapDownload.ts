@@ -116,12 +116,12 @@ export function useMapDownload() {
       // Create a temporary container for the map
       const container = document.createElement('div')
       Object.assign(container.style, {
-        width: '1024px',
-        height: '768px',
         position: 'fixed',
         left: '-9999px',
-        top: '0px',
-        zIndex: '-1',
+        top: '0',
+        width: '800px',
+        height: '600px',
+        opacity: '1',
         backgroundColor: 'white',
         overflow: 'hidden'
       })
@@ -161,6 +161,9 @@ export function useMapDownload() {
         })
         console.log('Map initialized:', map);
 
+        // After initializing the map, force a resize
+        google.maps.event.trigger(map, 'resize');
+
         // Wait for map to be idle, but with a timeout fallback
         await Promise.race([
           new Promise<void>(resolve => {
@@ -169,10 +172,12 @@ export function useMapDownload() {
               resolve()
             })
           }),
-          new Promise<void>((_, reject) => setTimeout(() => {
-            console.error('Map idle event timed out')
-            reject(new Error('Map idle timeout'))
-          }, 7000))
+          new Promise<void>((_, reject) => {
+            const idleTimeout = setTimeout(() => {
+              console.error('Map idle event timed out')
+              reject(new Error('Map idle timeout'))
+            }, 10000)
+          })
         ])
 
         // Apply map style
