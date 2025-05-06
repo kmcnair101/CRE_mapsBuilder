@@ -62,6 +62,7 @@ export function Layout() {
               </div>
             </div>
 
+
             {/* Right side navigation */}
             <div className="flex items-center space-x-4">
               {/* User Menu */}
