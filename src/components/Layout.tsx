@@ -25,6 +25,19 @@ export function Layout() {
     { name: 'Subscription', href: '/subscription', icon: CreditCard },
   ]
 
+  // Add a function to handle Stripe portal redirection
+  async function handleStripePortalRedirect() {
+    // Replace with your actual API call to get the Stripe portal URL
+    const res = await fetch('/api/stripe-portal', { method: 'POST' })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+    } else {
+      // handle error
+      alert('Could not redirect to Stripe portal.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-sm relative z-50">
@@ -107,18 +120,36 @@ export function Layout() {
                   <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                     {userNavigation.map((item) => (
                       <Menu.Item key={item.name}>
-                        {({ active }) => (
-                          <Link
-                            to={item.href}
-                            className={cn(
-                              active ? 'bg-gray-100' : '',
-                              'flex px-4 py-2 text-sm text-gray-700'
-                            )}
-                          >
-                            <item.icon className="h-4 w-4 mr-2" />
-                            {item.name}
-                          </Link>
-                        )}
+                        {({ active }) => {
+                          // Special handling for Subscription link
+                          if (item.name === 'Subscription' && profile?.is_subscribed) {
+                            return (
+                              <button
+                                onClick={handleStripePortalRedirect}
+                                className={cn(
+                                  active ? 'bg-gray-100' : '',
+                                  'flex w-full px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                <item.icon className="h-4 w-4 mr-2" />
+                                {item.name}
+                              </button>
+                            )
+                          }
+                          // Default: regular Link
+                          return (
+                            <Link
+                              to={item.href}
+                              className={cn(
+                                active ? 'bg-gray-100' : '',
+                                'flex px-4 py-2 text-sm text-gray-700'
+                              )}
+                            >
+                              <item.icon className="h-4 w-4 mr-2" />
+                              {item.name}
+                            </Link>
+                          )
+                        }}
                       </Menu.Item>
                     ))}
                     <Menu.Item>
