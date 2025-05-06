@@ -9,6 +9,7 @@ import type { Database } from '@/lib/supabase/types'
 import { useSubscription } from '@/hooks/useSubscription'
 import { PricingPlans } from './pricing/PricingPlans'
 import { DeleteMapModal } from './modals/DeleteMapModal'
+import { MapPreview } from './MapPreview'
 
 type Map = Database['public']['Tables']['maps']['Row']
 type SortOption = 'updated_at' | 'created_at' | 'title'
