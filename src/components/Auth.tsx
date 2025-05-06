@@ -377,7 +377,7 @@ export function Auth() {
                   setIsLogin(!isLogin)
                   setError('')
                 }}
-                className="text-sm text-blue-600 hover:text-blue-500"
+                className="text-base text-blue-600 hover:text-blue-500"
               >
                 {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
               </button>
