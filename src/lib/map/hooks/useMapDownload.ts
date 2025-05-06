@@ -119,15 +119,14 @@ export function useMapDownload() {
         width: '1024px',
         height: '768px',
         position: 'fixed',
-        left: '0px',
+        left: '-9999px',
         top: '0px',
         zIndex: '-1',
         backgroundColor: 'white',
-        overflow: 'hidden',
-        opacity: '0',
-        pointerEvents: 'none'
+        overflow: 'hidden'
       })
       document.body.appendChild(container)
+      console.log('Container appended to DOM');
 
       // Create loading indicator
       const loadingIndicator = document.createElement('div')
@@ -160,7 +159,7 @@ export function useMapDownload() {
           gestureHandling: 'none',
           keyboardShortcuts: false
         })
-        console.log('Map initialized')
+        console.log('Map initialized:', map);
 
         // Wait for map to be idle, but with a timeout fallback
         await Promise.race([
@@ -204,6 +203,7 @@ export function useMapDownload() {
           }
           return overlay;
         });
+        console.log('Adding overlays:', overlaysWithProxiedUrls);
 
         overlaysWithProxiedUrls.forEach(overlay => {
           addOverlayToMap(overlay, map);
@@ -214,9 +214,12 @@ export function useMapDownload() {
         // }
 
         // Wait a bit to ensure all tiles and overlays are rendered
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        console.log('Waiting for tiles and overlays to render...');
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        console.log('Wait complete, capturing screenshot...');
 
         // Generate image
+        console.log('Calling html2canvas...');
         const canvas = await html2canvas(container, {
           useCORS: true,
           allowTaint: true,
@@ -249,8 +252,10 @@ export function useMapDownload() {
             }))
           }
         })
+        console.log('html2canvas complete, canvas:', canvas);
 
         // Trigger download
+        console.log('Triggering download...');
         const link = document.createElement('a')
         link.download = filename || `${mapData.title || 'map'}.png`
         link.href = canvas.toDataURL('image/png', 1.0)
