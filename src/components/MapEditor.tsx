@@ -847,6 +847,7 @@ export default function MapEditor() {
             onMapStyleChange={handleMapStyleChange}
             onSubjectPropertyEdit={handleSubjectPropertyEdit}
             onCenterSubjectProperty={handleCenterSubjectProperty}
+            onDeleteMap={handleDeleteMap}
             subjectProperty={mapData.subject_property ? {
               name: mapData.subject_property.name || 'Subject Property',
               image: mapData.subject_property.image || null,
@@ -885,20 +886,6 @@ export default function MapEditor() {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setShowDeleteModal(true)}
-          className="p-2 text-gray-500 hover:text-red-500 transition-colors"
-          title="Delete Map"
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
-      </div>
-      <DeleteMapModal
-        open={showDeleteModal}
-        onCancel={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteMap}
-      />
     </div>
   )
 }

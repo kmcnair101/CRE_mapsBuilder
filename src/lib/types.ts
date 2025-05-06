@@ -1,4 +1,4 @@
-import type { MapStyleName } from '@/lib/map/styles'
+// import type { MapStyleName } from './map/styles'
 
 export type Json =
   | string
@@ -263,3 +263,5 @@ export type Database = {
     }
   }
 }
+
+export type MapStyleName = 'default' | 'subtle' | 'light' | 'dark' | 'retro' | 'silver' | 'night';

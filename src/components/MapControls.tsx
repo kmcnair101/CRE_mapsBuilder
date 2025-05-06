@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Type, Image, MapPin, Target, ImagePlus, FolderPlus, Square, Map } from 'lucide-react'
+import { Search, Type, Image, MapPin, Target, ImagePlus, FolderPlus, Square, Map, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BusinessLayer } from './layers/BusinessLayer'
 import { TextLayer } from './layers/TextLayer'
@@ -91,6 +91,7 @@ interface MapControlsProps {
     }
   }) => void
   onCenterSubjectProperty: () => void
+  onDeleteMap: () => void
   subjectProperty: {
     name: string
     image: string | null
@@ -140,6 +141,7 @@ export function MapControls({
   onMapStyleChange,
   onSubjectPropertyEdit,
   onCenterSubjectProperty,
+  onDeleteMap,
   subjectProperty,
   mapBounds,
   subjectPropertyLocation,
@@ -296,13 +298,22 @@ export function MapControls({
         ))}
 
         {subjectPropertyLocation && (
-          <button
-            onClick={onCenterSubjectProperty}
-            className="w-full p-2 flex items-center gap-2.5 rounded-md text-gray-300 hover:bg-gray-800 hover:text-white"
-          >
-            <Target className="h-4 w-4" />
-            <span className="text-sm font-medium">Center Map</span>
-          </button>
+          <>
+            <button
+              onClick={onCenterSubjectProperty}
+              className="w-full p-2 flex items-center gap-2.5 rounded-md text-gray-300 hover:bg-gray-800 hover:text-white"
+            >
+              <Target className="h-4 w-4" />
+              <span className="text-sm font-medium">Center Map</span>
+            </button>
+            <button
+              onClick={onDeleteMap}
+              className="w-full p-2 flex items-center gap-2.5 rounded-md text-gray-300 hover:bg-red-600 hover:text-white mt-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="text-sm font-medium">Delete Map</span>
+            </button>
+          </>
         )}
       </div>
 
