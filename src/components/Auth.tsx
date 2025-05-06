@@ -308,13 +308,13 @@ export function Auth() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-500">
+                {/* <span className="px-2 bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-500">
                   Or continue with
-                </span>
+                </span> */}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            {/* <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => handleSocialLogin('google')}
@@ -368,7 +368,7 @@ export function Auth() {
                 </svg>
                 LinkedIn
               </button>
-            </div>
+            </div> */}
 
             <div className="text-center">
               <button
