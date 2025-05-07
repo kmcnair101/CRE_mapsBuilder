@@ -26,21 +26,31 @@ export function DownloadMapModal({
   if (!open) return null
 
   // Increased maximum dimensions for the preview
-  const maxPreviewWidth = 600 // Increased from 400 to 600
-  const maxPreviewHeight = 450 // Increased from 300 to 450
-  const scale = Math.min(
-    maxPreviewWidth / width,
-    maxPreviewHeight / height,
-    1 // Don't scale up, only down
-  )
+  const maxPreviewWidth = 800 // Increased from 600 to 800
+  const maxPreviewHeight = 600 // Increased from 450 to 600
+
+  // Calculate dimensions while maintaining aspect ratio
+  const aspectRatio = width / height
+  let previewWidth = width
+  let previewHeight = height
+
+  if (width > maxPreviewWidth || height > maxPreviewHeight) {
+    if (aspectRatio > maxPreviewWidth / maxPreviewHeight) {
+      previewWidth = maxPreviewWidth
+      previewHeight = maxPreviewWidth / aspectRatio
+    } else {
+      previewHeight = maxPreviewHeight
+      previewWidth = maxPreviewHeight * aspectRatio
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-5xl w-full">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full">
         <h2 className="text-xl font-bold mb-4">Download Map</h2>
         <div className="flex gap-6">
           {/* Controls Section - Left Side */}
-          <div className="w-2/5">
+          <div className="w-1/3">
             <div className="space-y-6">
               <div>
                 <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-2">
@@ -94,17 +104,15 @@ export function DownloadMapModal({
           </div>
 
           {/* Preview Section - Right Side */}
-          <div className="w-3/5">
+          <div className="w-2/3">
             <h3 className="text-sm font-medium text-gray-700 mb-4">Preview</h3>
             <div className="flex items-center justify-center">
               <div
                 className="border border-gray-300 rounded shadow overflow-hidden"
                 style={{
-                  width: width * scale,
-                  height: height * scale,
-                  background: '#eee',
-                  transform: `scale(${scale})`,
-                  transformOrigin: 'center center'
+                  width: previewWidth,
+                  height: previewHeight,
+                  background: '#eee'
                 }}
               >
                 <div ref={mapRef} className="w-full h-full" />
