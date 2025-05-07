@@ -25,6 +25,15 @@ export function DownloadMapModal({
 }: DownloadMapModalProps) {
   if (!open) return null
 
+  // Calculate the scale factor to fit the preview in the container
+  const maxPreviewWidth = 400 // Maximum width for the preview container
+  const maxPreviewHeight = 300 // Maximum height for the preview container
+  const scale = Math.min(
+    maxPreviewWidth / width,
+    maxPreviewHeight / height,
+    1 // Don't scale up, only down
+  )
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full">
@@ -85,20 +94,22 @@ export function DownloadMapModal({
           {/* Preview Section - Right Side */}
           <div className="w-1/2">
             <h3 className="text-sm font-medium text-gray-700 mb-4">Preview</h3>
-            <div
-              className="border border-gray-300 rounded shadow overflow-hidden"
-              style={{
-                width: Math.min(width, 1000) + 'px',
-                height: Math.min(height, 1000) + 'px',
-                maxWidth: '100%',
-                maxHeight: '100%',
-                background: '#eee'
-              }}
-            >
-              <div ref={mapRef} className="w-full h-full" />
+            <div className="flex items-center justify-center">
+              <div
+                className="border border-gray-300 rounded shadow overflow-hidden"
+                style={{
+                  width: width * scale,
+                  height: height * scale,
+                  background: '#eee',
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'center center'
+                }}
+              >
+                <div ref={mapRef} className="w-full h-full" />
+              </div>
             </div>
-            <span className="text-xs text-gray-500 mt-1 block">
-              Preview ({Math.min(width, 1000)} × {Math.min(height, 1000)})
+            <span className="text-xs text-gray-500 mt-1 block text-center">
+              Preview ({width} × {height})
             </span>
           </div>
         </div>
