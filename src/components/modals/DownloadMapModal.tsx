@@ -27,7 +27,7 @@ export function DownloadMapModal({
 
   // Increased maximum dimensions for the preview
   const maxPreviewWidth = 800 // Increased from 600 to 800
-  const maxPreviewHeight = 600 // Increased from 450 to 600
+  const maxPreviewHeight = 800 // Increased from 450 to 600
 
   // Calculate dimensions while maintaining aspect ratio
   const aspectRatio = width / height
