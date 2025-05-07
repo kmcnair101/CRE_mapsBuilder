@@ -27,7 +27,7 @@ export function DownloadMapModal({
 
   // Increased maximum dimensions for the preview
   const maxPreviewWidth = 800 // Increased from 600 to 800
-  const maxPreviewHeight = 800 // Increased from 450 to 600
+  const maxPreviewHeight = 600 // Increased from 450 to 600
 
   // Calculate dimensions while maintaining aspect ratio
   const aspectRatio = width / height
@@ -46,7 +46,7 @@ export function DownloadMapModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full h-[800px]">
         <h2 className="text-xl font-bold mb-4">Download Map</h2>
         <div className="flex gap-6">
           {/* Controls Section - Left Side */}
