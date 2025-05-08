@@ -1,4 +1,6 @@
-import React from 'react'
+import React, { useRef } from 'react'
+import { useMapInitialization } from '@/lib/map/hooks/useMapInitialization'
+import { useMapOverlays } from '@/lib/map/hooks/useMapOverlays'
 
 interface DownloadMapModalProps {
   open: boolean
@@ -24,6 +26,21 @@ export function DownloadMapModal({
   mapData
 }: DownloadMapModalProps) {
   if (!open) return null
+
+  const previewMapRef = useRef<HTMLDivElement>(null)
+  const { addOverlayToMap } = useMapOverlays(
+    () => {}, // no-op for handleDeleteLayer
+    undefined, // handleTextEdit
+    undefined, // handleContainerEdit
+    undefined  // handleShapeEdit
+  )
+
+  const { googleMapRef } = useMapInitialization(
+    previewMapRef,
+    mapData,
+    addOverlayToMap,
+    { setMapData: () => {} }
+  )
 
   // Increased maximum dimensions for the preview
   const maxPreviewWidth = 800 // Increased from 600 to 800
@@ -115,7 +132,7 @@ export function DownloadMapModal({
                   background: '#eee'
                 }}
               >
-                <div ref={mapRef} className="w-full h-full" />
+                <div ref={previewMapRef} className="w-full h-full" />
               </div>
             </div>
             <span className="text-xs text-gray-500 mt-1 block text-center">
