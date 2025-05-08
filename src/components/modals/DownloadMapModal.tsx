@@ -40,7 +40,7 @@ export function DownloadMapModal({
       previewHeight = maxPreviewWidth / aspectRatio
     } else {
       previewHeight = maxPreviewHeight
-      previewWidth = maxPreviewHeight * aspectRatio
+      previewWidth = Math.max(width, maxPreviewHeight * aspectRatio)
     }
   }
 
