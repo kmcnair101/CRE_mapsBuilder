@@ -14,7 +14,12 @@ export function useMapDownload() {
     undefined  // handleShapeEdit
   )
 
-  const handleDownload = async (mapRef: React.RefObject<HTMLDivElement>, forThumbnail = false) => {
+  const handleDownload = async (
+    mapRef: React.RefObject<HTMLDivElement>, 
+    forThumbnail = false,
+    width?: number,
+    height?: number
+  ) => {
     // Always allow thumbnails (they're used internally)
     if (!forThumbnail && !hasAccess()) {
       return null
@@ -22,6 +27,16 @@ export function useMapDownload() {
     if (!mapRef.current) return null
 
     try {
+      // Store original dimensions
+      const originalWidth = mapRef.current.style.width
+      const originalHeight = mapRef.current.style.height
+
+      // Set new dimensions if provided
+      if (width && height) {
+        mapRef.current.style.width = `${width}px`
+        mapRef.current.style.height = `${height}px`
+      }
+
       // Hide all Google Maps controls
       const mapElement = mapRef.current
       const controls = mapElement.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
@@ -46,8 +61,8 @@ export function useMapDownload() {
         backgroundColor: null,
         scale: forThumbnail ? 0.5 : 2,
         logging: false,
-        width: mapElement.offsetWidth,
-        height: mapElement.offsetHeight,
+        width: width || mapElement.offsetWidth,
+        height: height || mapElement.offsetHeight,
         onclone: (clonedDoc) => {
           // Hide controls in the cloned document as well
           const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
@@ -79,6 +94,12 @@ export function useMapDownload() {
           }))
         }
       })
+
+      // Restore original dimensions
+      if (width && height) {
+        mapRef.current.style.width = originalWidth
+        mapRef.current.style.height = originalHeight
+      }
 
       // Restore visibility of controls
       controls.forEach(control => {
