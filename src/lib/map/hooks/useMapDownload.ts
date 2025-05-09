@@ -15,7 +15,7 @@ export function useMapDownload() {
   )
 
   const handleDownload = async (
-    mapElement: HTMLElement,
+    mapRef: React.RefObject<HTMLDivElement>,
     forThumbnail = false,
     width?: number,
     height?: number
@@ -24,38 +24,43 @@ export function useMapDownload() {
       return null
     }
 
+    if (!mapRef.current) {
+      console.error('Map element not found')
+      return null
+    }
+
     try {
       // Store original dimensions
-      const originalWidth = mapElement.style.width
-      const originalHeight = mapElement.style.height
+      const originalWidth = mapRef.current.style.width
+      const originalHeight = mapRef.current.style.height
 
       // Set dimensions for capture if provided
       if (width && height) {
-        mapElement.style.width = `${width}px`
-        mapElement.style.height = `${height}px`
+        mapRef.current.style.width = `${width}px`
+        mapRef.current.style.height = `${height}px`
       }
 
       // Hide controls temporarily
-      const controls = mapElement.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
+      const controls = mapRef.current.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
       controls.forEach(control => {
         if (control instanceof HTMLElement) {
           control.style.visibility = 'hidden'
         }
       })
 
-      const logo = mapElement.querySelector('.gm-style a[href*="maps.google.com"]')
+      const logo = mapRef.current.querySelector('.gm-style a[href*="maps.google.com"]')
       if (logo instanceof HTMLElement) {
         logo.style.visibility = 'hidden'
       }
 
-      const canvas = await html2canvas(mapElement, {
+      const canvas = await html2canvas(mapRef.current, {
         useCORS: true,
         allowTaint: true,
         backgroundColor: null,
         scale: forThumbnail ? 0.5 : 2,
         logging: true,
-        width: width || mapElement.offsetWidth,
-        height: height || mapElement.offsetHeight,
+        width: width || mapRef.current.offsetWidth,
+        height: height || mapRef.current.offsetHeight,
         onclone: async (clonedDoc) => {
           // Hide controls in the cloned document as well
           const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
@@ -82,7 +87,7 @@ export function useMapDownload() {
           const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
             if (img.complete) {
               console.log('Image already complete:', img.src)
-              return
+              return Promise.resolve()
             }
 
             // If the image is from an external source, proxy it
@@ -129,8 +134,8 @@ export function useMapDownload() {
 
       // Restore original dimensions
       if (width && height) {
-        mapElement.style.width = originalWidth
-        mapElement.style.height = originalHeight
+        mapRef.current.style.width = originalWidth
+        mapRef.current.style.height = originalHeight
       }
 
       // Restore visibility of controls
