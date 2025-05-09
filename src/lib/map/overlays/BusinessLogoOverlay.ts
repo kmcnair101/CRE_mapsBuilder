@@ -60,6 +60,15 @@ export function createBusinessLogoOverlay(
       return `rgba(${r}, ${g}, ${b}, ${opacity})`
     }
 
+    private getProxiedImageUrl(url: string): string {
+      // If it's already a data URL or already proxied, return as is
+      if (url.startsWith('data:') || url.startsWith('/api/proxy-image')) {
+        return url
+      }
+      // Otherwise, proxy through our endpoint
+      return `/api/proxy-image?url=${encodeURIComponent(url)}`
+    }
+
     updateStyle(style: ContainerStyle) {
       this.style = style
       if (this.container) {
@@ -97,7 +106,7 @@ export function createBusinessLogoOverlay(
         this.imageWrapper = imageWrapper
 
         const img = document.createElement('img')
-        img.src = this.logo
+        img.src = this.getProxiedImageUrl(this.logo)
         img.style.width = '100%'
         img.style.height = 'auto'
         img.style.display = 'block'
