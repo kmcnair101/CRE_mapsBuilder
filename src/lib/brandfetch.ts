@@ -14,7 +14,9 @@ const logoResponseSchema = z.array(z.object({
 
 async function fetchLogoFromBrandfetch(domain: string, path: string): Promise<string | null> {
   // Add format=png to ensure PNG format
-  const url = `https://cdn.brandfetch.io/${encodeURIComponent(domain)}/fallback/404${path}?c=${BRANDFETCH_API_KEY}&format=png`
+  const originalUrl = `https://cdn.brandfetch.io/${encodeURIComponent(domain)}/fallback/404${path}?c=${BRANDFETCH_API_KEY}&format=png`
+  // Proxy the URL through our endpoint
+  const url = `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`
   console.log('Trying to fetch logo from Brandfetch:', url)
 
   try {
@@ -32,7 +34,9 @@ async function fetchLogoFromBrandfetch(domain: string, path: string): Promise<st
 
 async function fetchLogoFromLogoDev(domain: string, size: number): Promise<string | null> {
   // Logo.dev already has format=png in the URL
-  const url = `https://img.logo.dev/${encodeURIComponent(domain)}?token=${LOGODEV_API_KEY}&size=${size}&format=png`
+  const originalUrl = `https://img.logo.dev/${encodeURIComponent(domain)}?token=${LOGODEV_API_KEY}&size=${size}&format=png`
+  // Proxy the URL through our endpoint
+  const url = `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`
   console.log('Trying to fetch logo from Logo.dev:', url)
 
   try {
@@ -100,10 +104,12 @@ export async function fetchLogos(businessName: string, location?: google.maps.La
       .filter((logo): logo is NonNullable<typeof logo> => {
         if (!logo) return false
         
-        // Validate logo URL
+        // Validate logo URL - allow both direct and proxied URLs
         try {
-          new URL(logo.url)
-          return true
+          const url = new URL(logo.url, window.location.origin)
+          return url.pathname.startsWith('/api/proxy-image') || 
+                 url.hostname === 'img.logo.dev' || 
+                 url.hostname === 'cdn.brandfetch.io'
         } catch {
           return false
         }
