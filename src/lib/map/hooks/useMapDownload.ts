@@ -218,29 +218,36 @@ export function useMapDownload() {
 
         // Now add overlays after map is ready
         const overlaysWithProxiedUrls = mapData.overlays.map(overlay => {
+          console.log('Processing overlay:', overlay.type, overlay.properties);
+          
           if (overlay.type === 'image' && overlay.properties.url) {
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`;
+            console.log('Proxying image URL:', overlay.properties.url, 'to:', proxiedUrl);
             return {
               ...overlay,
               properties: {
                 ...overlay.properties,
-                url: `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`
+                url: proxiedUrl
               }
             };
           }
           if (overlay.type === 'business' && overlay.properties.logo) {
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.logo)}`;
+            console.log('Proxying business logo URL:', overlay.properties.logo, 'to:', proxiedUrl);
             return {
               ...overlay,
               properties: {
                 ...overlay.properties,
-                logo: `/api/proxy-image?url=${encodeURIComponent(overlay.properties.logo)}`
+                logo: proxiedUrl
               }
             };
           }
           return overlay;
         });
-        console.log('Adding overlays:', overlaysWithProxiedUrls);
+        console.log('All overlays with proxied URLs:', overlaysWithProxiedUrls);
 
         overlaysWithProxiedUrls.forEach(overlay => {
+          console.log('Adding overlay to map:', overlay.type, overlay.properties);
           addOverlayToMap(overlay, map);
         });
 
@@ -260,8 +267,10 @@ export function useMapDownload() {
           allowTaint: true,
           backgroundColor: 'white',
           scale: 2,
-          logging: false,
+          logging: true, // Enable html2canvas logging
           onclone: (clonedDoc) => {
+            console.log('Cloning document for html2canvas...');
+            
             // Hide all Google Maps controls in the cloned document
             const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
             clonedControls.forEach(control => {
@@ -277,12 +286,27 @@ export function useMapDownload() {
 
             // Ensure all images are loaded
             const images = clonedDoc.getElementsByTagName('img')
+            console.log('Found images in cloned document:', images.length);
+            
             return Promise.all(Array.from(images).map(img => {
-              if (img.complete) return Promise.resolve()
+              console.log('Processing image:', img.src);
+              if (img.complete) {
+                console.log('Image already complete:', img.src);
+                return Promise.resolve();
+              }
               return new Promise(resolve => {
-                img.onload = resolve
-                img.onerror = resolve
-                setTimeout(resolve, 3000)
+                img.onload = () => {
+                  console.log('Image loaded successfully:', img.src);
+                  resolve();
+                }
+                img.onerror = (error) => {
+                  console.error('Error loading image:', img.src, error);
+                  resolve();
+                }
+                setTimeout(() => {
+                  console.log('Image load timeout:', img.src);
+                  resolve();
+                }, 3000)
               })
             }))
           }
