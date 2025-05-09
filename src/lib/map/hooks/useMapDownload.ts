@@ -4,6 +4,59 @@ import type { MapData } from '@/lib/types'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useMapOverlays } from './useMapOverlays'
 
+// Helper function to load images with retries
+const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
+  if (img.complete) {
+    console.log('[Canvas Draw] Image already complete:', img.src)
+    return Promise.resolve()
+  }
+
+  // If the image is from an external source and not already proxied, proxy it
+  if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
+    const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
+    console.log('[Canvas Draw] Proxying image URL:', img.src, 'to:', proxiedUrl)
+    img.src = proxiedUrl
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (retries > 0) {
+        console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
+        loadImage(img, retries - 1).then(resolve).catch(reject)
+      } else {
+        console.error('[Canvas Draw] Image load timeout after retries:', img.src)
+        resolve() // Resolve anyway to continue with the process
+      }
+    }, 5000)
+
+    img.onload = () => {
+      clearTimeout(timeout)
+      console.log('[Canvas Draw] Image loaded successfully:', img.src)
+      resolve()
+    }
+
+    img.onerror = (error) => {
+      clearTimeout(timeout)
+      console.error('[Canvas Draw] Error loading image:', img.src, error)
+      if (retries > 0) {
+        console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
+        loadImage(img, retries - 1).then(resolve).catch(reject)
+      } else {
+        resolve() // Resolve anyway to continue with the process
+      }
+    }
+  })
+}
+
+// Helper function to check if canvas is tainted
+const checkTaintedCanvas = (canvas: HTMLCanvasElement) => {
+  try {
+    canvas.getContext('2d')?.getImageData(0, 0, 1, 1)
+    console.log('[Canvas Check] Canvas is NOT tainted')
+  } catch (err) {
+    console.warn('[Canvas Check] Canvas is TAINTED:', err)
+  }
+}
 
 export function useMapDownload() {
   const { hasAccess } = useSubscription()
@@ -62,88 +115,39 @@ export function useMapDownload() {
         width: width || mapRef.current.offsetWidth,
         height: height || mapRef.current.offsetHeight,
         onclone: async (clonedDoc) => {
-          // Hide controls in the cloned document as well
-          const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
-          clonedControls.forEach(control => {
-            if (control instanceof HTMLElement) {
-              control.style.visibility = 'hidden'
-            }
-          })
-
-          const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
-          if (clonedLogo instanceof HTMLElement) {
-            clonedLogo.style.visibility = 'hidden'
-          }
-
-          const clonedMap = clonedDoc.querySelector('.gm-style') as HTMLElement
-          if (clonedMap) {
-            clonedMap.style.background = 'transparent'
-          }
-
-          // Ensure all images are loaded with retries
-          const images = clonedDoc.getElementsByTagName('img')
-          console.log('Found images in cloned document:', images.length)
-          
-          const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
-            if (img.complete) {
-              console.log('[Canvas Draw] Image already complete:', img.src)
-              return Promise.resolve()
-            }
-
-            // If the image is from an external source and not already proxied, proxy it
-            if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
-              const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
-              console.log('[Canvas Draw] Proxying image URL:', img.src, 'to:', proxiedUrl)
-              img.src = proxiedUrl
-            }
-
-            return new Promise<void>((resolve, reject) => {
-              const timeout = setTimeout(() => {
-                if (retries > 0) {
-                  console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
-                  loadImage(img, retries - 1).then(resolve).catch(reject)
-                } else {
-                  console.error('[Canvas Draw] Image load timeout after retries:', img.src)
-                  resolve() // Resolve anyway to continue with the process
-                }
-              }, 5000)
-
-              img.onload = () => {
-                clearTimeout(timeout)
-                console.log('[Canvas Draw] Image loaded successfully:', img.src)
-                resolve()
-              }
-
-              img.onerror = (error) => {
-                clearTimeout(timeout)
-                console.error('[Canvas Draw] Error loading image:', img.src, error)
-                if (retries > 0) {
-                  console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
-                  loadImage(img, retries - 1).then(resolve).catch(reject)
-                } else {
-                  resolve() // Resolve anyway to continue with the process
-                }
+          try {
+            // Hide controls in the cloned document as well
+            const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
+            clonedControls.forEach(control => {
+              if (control instanceof HTMLElement) {
+                control.style.visibility = 'hidden'
               }
             })
-          }
 
-          // Load all images in parallel with retries
-          await Promise.all(Array.from(images).map(img => loadImage(img)))
-
-          // Check if canvas is tainted before export
-          const checkTaintedCanvas = (canvas: HTMLCanvasElement) => {
-            try {
-              canvas.getContext('2d')?.getImageData(0, 0, 1, 1)
-              console.log('[Canvas Check] Canvas is NOT tainted')
-            } catch (err) {
-              console.warn('[Canvas Check] Canvas is TAINTED:', err)
+            const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
+            if (clonedLogo instanceof HTMLElement) {
+              clonedLogo.style.visibility = 'hidden'
             }
-          }
 
-          // Check canvas after it's initialized
-          checkTaintedCanvas(canvas)
+            const clonedMap = clonedDoc.querySelector('.gm-style') as HTMLElement
+            if (clonedMap) {
+              clonedMap.style.background = 'transparent'
+            }
+
+            // Ensure all images are loaded with retries
+            const images = clonedDoc.getElementsByTagName('img')
+            console.log('Found images in cloned document:', images.length)
+            
+            // Load all images in parallel with retries
+            await Promise.all(Array.from(images).map(img => loadImage(img)))
+          } catch (error) {
+            console.error('Error in onclone:', error)
+          }
         }
       })
+
+      // Check canvas after it's initialized
+      checkTaintedCanvas(canvas)
 
       // Restore original dimensions
       if (width && height) {
