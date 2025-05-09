@@ -104,12 +104,10 @@ export async function fetchLogos(businessName: string, location?: google.maps.La
       .filter((logo): logo is NonNullable<typeof logo> => {
         if (!logo) return false
         
-        // Validate logo URL - allow both direct and proxied URLs
+        // Validate logo URL - only allow proxied URLs
         try {
           const url = new URL(logo.url, window.location.origin)
-          return url.pathname.startsWith('/api/proxy-image') || 
-                 url.hostname === 'img.logo.dev' || 
-                 url.hostname === 'cdn.brandfetch.io'
+          return url.pathname.startsWith('/api/proxy-image')
         } catch {
           return false
         }
