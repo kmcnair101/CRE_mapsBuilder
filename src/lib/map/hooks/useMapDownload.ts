@@ -86,39 +86,39 @@ export function useMapDownload() {
           
           const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
             if (img.complete) {
-              console.log('Image already complete:', img.src)
+              console.log('[Canvas Draw] Image already complete:', img.src)
               return Promise.resolve()
             }
 
             // If the image is from an external source and not already proxied, proxy it
             if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
               const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
-              console.log('Proxying image URL:', img.src, 'to:', proxiedUrl)
+              console.log('[Canvas Draw] Proxying image URL:', img.src, 'to:', proxiedUrl)
               img.src = proxiedUrl
             }
 
             return new Promise<void>((resolve, reject) => {
               const timeout = setTimeout(() => {
                 if (retries > 0) {
-                  console.log(`Retrying image load (${retries} attempts left):`, img.src)
+                  console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
                   loadImage(img, retries - 1).then(resolve).catch(reject)
                 } else {
-                  console.error('Image load timeout after retries:', img.src)
+                  console.error('[Canvas Draw] Image load timeout after retries:', img.src)
                   resolve() // Resolve anyway to continue with the process
                 }
               }, 5000)
 
               img.onload = () => {
                 clearTimeout(timeout)
-                console.log('Image loaded successfully:', img.src)
+                console.log('[Canvas Draw] Image loaded successfully:', img.src)
                 resolve()
               }
 
               img.onerror = (error) => {
                 clearTimeout(timeout)
-                console.error('Error loading image:', img.src, error)
+                console.error('[Canvas Draw] Error loading image:', img.src, error)
                 if (retries > 0) {
-                  console.log(`Retrying image load (${retries} attempts left):`, img.src)
+                  console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
                   loadImage(img, retries - 1).then(resolve).catch(reject)
                 } else {
                   resolve() // Resolve anyway to continue with the process
@@ -129,6 +129,19 @@ export function useMapDownload() {
 
           // Load all images in parallel with retries
           await Promise.all(Array.from(images).map(img => loadImage(img)))
+
+          // Check if canvas is tainted before export
+          const checkTaintedCanvas = (canvas: HTMLCanvasElement) => {
+            try {
+              canvas.getContext('2d')?.getImageData(0, 0, 1, 1)
+              console.log('[Canvas Check] Canvas is NOT tainted')
+            } catch (err) {
+              console.warn('[Canvas Check] Canvas is TAINTED:', err)
+            }
+          }
+
+          // Check canvas before export
+          checkTaintedCanvas(canvas)
         }
       })
 
@@ -149,16 +162,31 @@ export function useMapDownload() {
       }
 
       if (forThumbnail) {
-        return canvas.toDataURL('image/jpeg', 0.8)
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+          console.log('[Canvas Export] Successfully exported thumbnail')
+          return dataUrl
+        } catch (err) {
+          console.error('[Canvas Export] Error exporting thumbnail:', err)
+          return null
+        }
       }
 
-      const link = document.createElement('a')
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-      link.download = `map-${timestamp}.png`
-      link.href = canvas.toDataURL('image/png', 1.0)
-      link.click()
+      try {
+        const dataUrl = canvas.toDataURL('image/png', 1.0)
+        console.log('[Canvas Export] Successfully exported PNG')
+        
+        const link = document.createElement('a')
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+        link.download = `map-${timestamp}.png`
+        link.href = dataUrl
+        link.click()
 
-      return null
+        return null
+      } catch (err) {
+        console.error('[Canvas Export] Error exporting PNG:', err)
+        return null
+      }
     } catch (error) {
       console.error('Error downloading map:', error)
       return null

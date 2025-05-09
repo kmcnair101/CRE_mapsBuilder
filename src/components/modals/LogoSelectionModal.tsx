@@ -27,7 +27,18 @@ export function LogoSelectionModal({
   const [selectedLogo, setSelectedLogo] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const getProxiedImageUrl = (url: string): string => {
+    if (url.startsWith('data:') || url.startsWith('/api/proxy-image')) {
+      console.log('[Logo Render] Using already proxied URL:', url)
+      return url
+    }
+    const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`
+    console.log('[Logo Render] Proxying URL:', url, 'to:', proxiedUrl)
+    return proxiedUrl
+  }
+
   const handleLogoSelect = (logo: string) => {
+    console.log('[Logo Select] Selected logo URL:', logo)
     setSelectedLogo(logo)
   }
 
@@ -141,12 +152,16 @@ export function LogoSelectionModal({
                         {logo.url && (
                           <img
                             key={logo.url}
-                            src={logo.url}
+                            src={getProxiedImageUrl(logo.url)}
                             alt={`Logo option ${index + 1}`}
                             className="max-w-full max-h-full object-contain"
+                            crossOrigin="anonymous"
                             onError={(e) => {
-                              console.error('Error loading logo:', e)
+                              console.error('[Logo Render] Image load error:', e.currentTarget.src, e)
                               e.currentTarget.parentElement?.parentElement?.remove()
+                            }}
+                            onLoad={(e) => {
+                              console.log('[Logo Render] Image loaded successfully:', e.currentTarget.src)
                             }}
                             loading="lazy"
                           />
