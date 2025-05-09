@@ -90,8 +90,8 @@ export function useMapDownload() {
               return Promise.resolve()
             }
 
-            // If the image is from an external source, proxy it
-            if (img.src.startsWith('http')) {
+            // If the image is from an external source and not already proxied, proxy it
+            if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
               const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
               console.log('Proxying image URL:', img.src, 'to:', proxiedUrl)
               img.src = proxiedUrl
