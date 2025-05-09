@@ -60,7 +60,7 @@ export function useMapDownload() {
         allowTaint: true,
         backgroundColor: null,
         scale: forThumbnail ? 0.5 : 2,
-        logging: false,
+        logging: true,
         width: width || mapElement.offsetWidth,
         height: height || mapElement.offsetHeight,
         onclone: (clonedDoc) => {
@@ -84,12 +84,36 @@ export function useMapDownload() {
 
           // Ensure all images are loaded
           const images = clonedDoc.getElementsByTagName('img')
+          console.log('Found images in cloned document:', images.length);
+          
           return Promise.all(Array.from(images).map(img => {
-            if (img.complete) return Promise.resolve()
+            console.log('Processing image:', img.src);
+            
+            // If the image is from an external source, proxy it
+            if (img.src.startsWith('http')) {
+              const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`;
+              console.log('Proxying image URL:', img.src, 'to:', proxiedUrl);
+              img.src = proxiedUrl;
+            }
+
+            if (img.complete) {
+              console.log('Image already complete:', img.src);
+              return Promise.resolve();
+            }
+
             return new Promise(resolve => {
-              img.onload = resolve
-              img.onerror = resolve
-              setTimeout(resolve, 3000)
+              img.onload = () => {
+                console.log('Image loaded successfully:', img.src);
+                resolve();
+              }
+              img.onerror = (error) => {
+                console.error('Error loading image:', img.src, error);
+                resolve();
+              }
+              setTimeout(() => {
+                console.log('Image load timeout:', img.src);
+                resolve();
+              }, 3000)
             })
           }))
         }
