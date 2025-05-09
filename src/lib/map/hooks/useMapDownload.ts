@@ -227,6 +227,15 @@ export function useMapDownload() {
               }
             };
           }
+          if (overlay.type === 'business' && overlay.properties.logo) {
+            return {
+              ...overlay,
+              properties: {
+                ...overlay.properties,
+                logo: `/api/proxy-image?url=${encodeURIComponent(overlay.properties.logo)}`
+              }
+            };
+          }
           return overlay;
         });
         console.log('Adding overlays:', overlaysWithProxiedUrls);
