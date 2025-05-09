@@ -140,7 +140,7 @@ export function useMapDownload() {
             }
           }
 
-          // Check canvas before export
+          // Check canvas after it's initialized
           checkTaintedCanvas(canvas)
         }
       })
@@ -357,9 +357,9 @@ export function useMapDownload() {
               console.log('Processing image:', img.src);
               if (img.complete) {
                 console.log('Image already complete:', img.src);
-                return Promise.resolve();
+                return Promise.resolve<void>();
               }
-              return new Promise(resolve => {
+              return new Promise<void>(resolve => {
                 img.onload = () => {
                   console.log('Image loaded successfully:', img.src);
                   resolve();
