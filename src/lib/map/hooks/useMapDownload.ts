@@ -361,7 +361,7 @@ export function useMapDownload() {
               console.log('Processing image:', img.src);
               if (img.complete) {
                 console.log('Image already complete:', img.src);
-                return Promise.resolve<void>();
+                return Promise.resolve<void>(undefined);
               }
               return new Promise<void>(resolve => {
                 img.onload = () => {
