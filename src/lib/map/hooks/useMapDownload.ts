@@ -15,30 +15,27 @@ export function useMapDownload() {
   )
 
   const handleDownload = async (
-    mapRef: React.RefObject<HTMLDivElement>, 
+    mapElement: HTMLElement,
     forThumbnail = false,
     width?: number,
     height?: number
   ) => {
-    // Always allow thumbnails (they're used internally)
-    if (!forThumbnail && !hasAccess()) {
+    if (!hasAccess()) {
       return null
     }
-    if (!mapRef.current) return null
 
     try {
       // Store original dimensions
-      const originalWidth = mapRef.current.style.width
-      const originalHeight = mapRef.current.style.height
+      const originalWidth = mapElement.style.width
+      const originalHeight = mapElement.style.height
 
-      // Set new dimensions if provided
+      // Set dimensions for capture if provided
       if (width && height) {
-        mapRef.current.style.width = `${width}px`
-        mapRef.current.style.height = `${height}px`
+        mapElement.style.width = `${width}px`
+        mapElement.style.height = `${height}px`
       }
 
-      // Hide all Google Maps controls
-      const mapElement = mapRef.current
+      // Hide controls temporarily
       const controls = mapElement.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
       controls.forEach(control => {
         if (control instanceof HTMLElement) {
@@ -46,14 +43,10 @@ export function useMapDownload() {
         }
       })
 
-      // Also hide the Google logo
       const logo = mapElement.querySelector('.gm-style a[href*="maps.google.com"]')
       if (logo instanceof HTMLElement) {
         logo.style.visibility = 'hidden'
       }
-
-      // Wait for any pending map updates
-      await new Promise(resolve => setTimeout(resolve, 1000))
 
       const canvas = await html2canvas(mapElement, {
         useCORS: true,
@@ -63,7 +56,7 @@ export function useMapDownload() {
         logging: true,
         width: width || mapElement.offsetWidth,
         height: height || mapElement.offsetHeight,
-        onclone: (clonedDoc) => {
+        onclone: async (clonedDoc) => {
           // Hide controls in the cloned document as well
           const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
           clonedControls.forEach(control => {
@@ -82,47 +75,62 @@ export function useMapDownload() {
             clonedMap.style.background = 'transparent'
           }
 
-          // Ensure all images are loaded
+          // Ensure all images are loaded with retries
           const images = clonedDoc.getElementsByTagName('img')
-          console.log('Found images in cloned document:', images.length);
+          console.log('Found images in cloned document:', images.length)
           
-          return Promise.all(Array.from(images).map(img => {
-            console.log('Processing image:', img.src);
-            
+          const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
+            if (img.complete) {
+              console.log('Image already complete:', img.src)
+              return
+            }
+
             // If the image is from an external source, proxy it
             if (img.src.startsWith('http')) {
-              const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`;
-              console.log('Proxying image URL:', img.src, 'to:', proxiedUrl);
-              img.src = proxiedUrl;
+              const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
+              console.log('Proxying image URL:', img.src, 'to:', proxiedUrl)
+              img.src = proxiedUrl
             }
 
-            if (img.complete) {
-              console.log('Image already complete:', img.src);
-              return Promise.resolve();
-            }
+            return new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                if (retries > 0) {
+                  console.log(`Retrying image load (${retries} attempts left):`, img.src)
+                  loadImage(img, retries - 1).then(resolve).catch(reject)
+                } else {
+                  console.error('Image load timeout after retries:', img.src)
+                  resolve() // Resolve anyway to continue with the process
+                }
+              }, 5000)
 
-            return new Promise(resolve => {
               img.onload = () => {
-                console.log('Image loaded successfully:', img.src);
-                resolve();
+                clearTimeout(timeout)
+                console.log('Image loaded successfully:', img.src)
+                resolve()
               }
+
               img.onerror = (error) => {
-                console.error('Error loading image:', img.src, error);
-                resolve();
+                clearTimeout(timeout)
+                console.error('Error loading image:', img.src, error)
+                if (retries > 0) {
+                  console.log(`Retrying image load (${retries} attempts left):`, img.src)
+                  loadImage(img, retries - 1).then(resolve).catch(reject)
+                } else {
+                  resolve() // Resolve anyway to continue with the process
+                }
               }
-              setTimeout(() => {
-                console.log('Image load timeout:', img.src);
-                resolve();
-              }, 3000)
             })
-          }))
+          }
+
+          // Load all images in parallel with retries
+          await Promise.all(Array.from(images).map(img => loadImage(img)))
         }
       })
 
       // Restore original dimensions
       if (width && height) {
-        mapRef.current.style.width = originalWidth
-        mapRef.current.style.height = originalHeight
+        mapElement.style.width = originalWidth
+        mapElement.style.height = originalHeight
       }
 
       // Restore visibility of controls
