@@ -103,11 +103,6 @@ export async function fetchLogos(businessName: string, location?: google.maps.La
     const allLogos = [...logoDevLogos, ...brandfetchLogos]
       .filter((logo): logo is NonNullable<typeof logo> => {
         if (!logo) return false
-        
-        // Ensure URL is proxied
-        if (!logo.url.startsWith('/api/proxy-image')) {
-          logo.url = `/api/proxy-image?url=${encodeURIComponent(logo.url)}`
-        }
         return true
       })
       // Sort by size (larger first) and source (Logo.dev first as it might be faster)

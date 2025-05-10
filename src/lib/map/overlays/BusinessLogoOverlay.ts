@@ -111,12 +111,23 @@ export function createBusinessLogoOverlay(
         img.style.height = 'auto'
         img.style.display = 'block'
         img.draggable = false
+        img.crossOrigin = 'anonymous'
 
         // Update aspect ratio when image loads
         img.onload = () => {
           this.aspectRatio = img.naturalWidth / img.naturalHeight
           if (this.imageWrapper) {
             this.imageWrapper.style.height = 'auto'
+          }
+        }
+
+        img.onerror = (error) => {
+          console.error('[BusinessLogoOverlay] Image load error:', img.src)
+          // If direct URL fails, try proxying it
+          if (!img.src.includes('/api/proxy-image')) {
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
+            console.log('[BusinessLogoOverlay] Retrying with proxied URL:', proxiedUrl)
+            img.src = proxiedUrl
           }
         }
 
