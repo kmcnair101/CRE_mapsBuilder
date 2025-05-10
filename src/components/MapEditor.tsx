@@ -190,10 +190,12 @@ export default function MapEditor() {
           ...o,
           properties: {
             ...o.properties,
-            fill: style.fillColor,
-            stroke: style.strokeColor,
-            strokeWidth: style.strokeWeight,
-            shapeOpacity: style.fillOpacity
+            style: {
+              fillColor: style.fillColor,
+              strokeColor: style.strokeColor,
+              strokeWeight: style.strokeWeight,
+              fillOpacity: style.fillOpacity
+            }
           }
         } : o
       )
@@ -571,10 +573,12 @@ export default function MapEditor() {
         },
         properties: {
           shapeType: shape.type,
-          fill: shape.fill,
-          stroke: shape.stroke,
-          strokeWidth: shape.strokeWidth,
-          shapeOpacity: shape.opacity,
+          style: {
+            fillColor: shape.fill,
+            strokeColor: shape.stroke,
+            strokeWeight: shape.strokeWidth,
+            fillOpacity: shape.opacity
+          },
           ...(e.type === google.maps.drawing.OverlayType.RECTANGLE && {
             shapeWidth,
             shapeHeight

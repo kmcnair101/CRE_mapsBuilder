@@ -87,11 +87,11 @@ export function createShapeOverlay(
               this.deselectShape()
             },
             initialStyle: {
-              fillColor: this.properties.fill,
-              fillOpacity: this.properties.shapeOpacity,
-              strokeColor: this.properties.stroke,
+              fillColor: this.properties.style?.fillColor || this.properties.fill,
+              fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
+              strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
               strokeOpacity: 1,
-              strokeWeight: this.properties.strokeWidth
+              strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth
             },
             onSave: (style) => {
               if (this.shape) {
@@ -104,10 +104,13 @@ export function createShapeOverlay(
                 
                 this.properties = {
                   ...this.properties,
-                  fill: style.fillColor,
-                  stroke: style.strokeColor,
-                  strokeWidth: style.strokeWeight,
-                  shapeOpacity: style.fillOpacity
+                  style: {
+                    ...this.properties.style,
+                    fillColor: style.fillColor,
+                    strokeColor: style.strokeColor,
+                    strokeWeight: style.strokeWeight,
+                    fillOpacity: style.fillOpacity
+                  }
                 }
 
                 if (onEdit) onEdit(this.properties)
@@ -175,7 +178,7 @@ export function createShapeOverlay(
 
         // Highlight shape
         this.shape.setOptions({
-          strokeWeight: (this.properties.strokeWidth || 2) + 1,
+          strokeWeight: (this.properties.style?.strokeWeight || this.properties.strokeWidth || 2) + 1,
           zIndex: 1
         })
 
@@ -201,7 +204,7 @@ export function createShapeOverlay(
 
         // Restore shape appearance
         this.shape.setOptions({
-          strokeWeight: this.properties.strokeWidth || 2,
+          strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth || 2,
           zIndex: 0
         })
       }
@@ -234,10 +237,10 @@ export function createShapeOverlay(
           this.shape = new google.maps.Rectangle({
             bounds,
             map: this.getMap(),
-            fillColor: this.properties.fill,
-            fillOpacity: this.properties.shapeOpacity,
-            strokeColor: this.properties.stroke,
-            strokeWeight: this.properties.strokeWidth,
+            fillColor: this.properties.style?.fillColor || this.properties.fill,
+            fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
+            strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
+            strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth,
             draggable: true,
             editable: false,
             zIndex: 0
@@ -249,10 +252,10 @@ export function createShapeOverlay(
             center: this.position,
             radius: this.properties.radius || 50,
             map: this.getMap(),
-            fillColor: this.properties.fill,
-            fillOpacity: this.properties.shapeOpacity,
-            strokeColor: this.properties.stroke,
-            strokeWeight: this.properties.strokeWidth,
+            fillColor: this.properties.style?.fillColor || this.properties.fill,
+            fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
+            strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
+            strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth,
             draggable: true,
             editable: false,
             zIndex: 0
@@ -267,10 +270,10 @@ export function createShapeOverlay(
               google.maps.geometry.spherical.computeOffset(this.position, 100, 240)
             ],
             map: this.getMap(),
-            fillColor: this.properties.fill,
-            fillOpacity: this.properties.shapeOpacity,
-            strokeColor: this.properties.stroke,
-            strokeWeight: this.properties.strokeWidth,
+            fillColor: this.properties.style?.fillColor || this.properties.fill,
+            fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
+            strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
+            strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth,
             draggable: true,
             editable: false,
             zIndex: 0
