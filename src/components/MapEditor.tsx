@@ -182,7 +182,13 @@ export default function MapEditor() {
     }))
   }
 
-  const handleShapeEdit = (id: string, style: any) => {
+  const handleShapeEdit = (id: string, style: {
+    fillColor: string
+    strokeColor: string
+    strokeWeight: number
+    fillOpacity: number
+    strokeOpacity: number
+  }) => {
     setMapData(prev => ({
       ...prev,
       overlays: prev.overlays.map(o => 
@@ -194,7 +200,8 @@ export default function MapEditor() {
               fillColor: style.fillColor,
               strokeColor: style.strokeColor,
               strokeWeight: style.strokeWeight,
-              fillOpacity: style.fillOpacity
+              fillOpacity: style.fillOpacity,
+              strokeOpacity: style.strokeOpacity
             }
           }
         } : o
@@ -688,35 +695,18 @@ export default function MapEditor() {
             }
           }
           
-          // Get current container properties
-          if (currentOverlay.container && currentOverlay.container.style) {
-            const width = parseInt(currentOverlay.container.style.width, 10)
-            if (!isNaN(width)) {
-              updatedProperties.width = width
-            }
-  
-            // Capture container style properties
-            if (overlay.type === 'business' || overlay.type === 'image' || overlay.type === 'group') {
-              updatedProperties.containerStyle = {
-                backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
-                borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
-                borderWidth: overlay.properties.containerStyle?.borderWidth || 1,
-                padding: overlay.properties.containerStyle?.padding || 8,
-                backgroundOpacity: overlay.properties.containerStyle?.backgroundOpacity || 1,
-                borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
-              }
-            }
-          }
-          
           // For shapes, ensure the style object is preserved
-          if (overlay.type === 'shape') {
+          if (overlay.type === 'shape' && 'shape' in currentOverlay) {
+            const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
+            const options = shape.getOptions()
             updatedProperties = {
               ...updatedProperties,
               style: {
-                fillColor: updatedProperties.style?.fillColor || updatedProperties.fill,
-                strokeColor: updatedProperties.style?.strokeColor || updatedProperties.stroke,
-                strokeWeight: updatedProperties.style?.strokeWeight || updatedProperties.strokeWidth,
-                fillOpacity: updatedProperties.style?.fillOpacity || updatedProperties.shapeOpacity
+                fillColor: options.fillColor || '#FFFFFF',
+                strokeColor: options.strokeColor || '#000000',
+                strokeWeight: options.strokeWeight || 2,
+                fillOpacity: options.fillOpacity || 0.5,
+                strokeOpacity: options.strokeOpacity || 1
               }
             }
           }
@@ -748,9 +738,9 @@ export default function MapEditor() {
       const mapUpdate = {
         user_id: user.id,
         title: mapData.title,
-        center_lat: center.lat(),
-        center_lng: center.lng(),
-        zoom_level: zoom,
+        center_lat: center?.lat() || 0,
+        center_lng: center?.lng() || 0,
+        zoom_level: zoom || 12,
         overlays: updatedOverlays,
         subject_property: mapData.subject_property,
         thumbnail,

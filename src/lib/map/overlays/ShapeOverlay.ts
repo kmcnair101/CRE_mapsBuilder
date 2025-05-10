@@ -6,13 +6,28 @@ import type { MapOverlay } from '@/lib/types'
 // Keep track of currently selected shape
 let selectedShape: google.maps.OverlayView | null = null
 
+interface ShapeProperties {
+  shapeType: 'rect' | 'circle' | 'polygon'
+  style: {
+    fillColor: string
+    strokeColor: string
+    strokeWeight: number
+    fillOpacity: number
+    strokeOpacity: number
+  }
+  shapeWidth?: number
+  shapeHeight?: number
+  radius?: number
+  points?: Array<{ lat: number; lng: number }>
+}
+
 export function createShapeOverlay(
   overlay: MapOverlay,
   map: google.maps.Map,
   onDelete: () => void,
   createDeleteButton: (container: HTMLElement | null, onDelete: () => void) => (() => void) | null,
   createEditButton: (container: HTMLElement | null, onEdit: () => void) => (() => void) | null,
-  onEdit?: (style: any) => void
+  onEdit?: (properties: ShapeProperties) => void
 ) {
   class ShapeOverlay extends google.maps.OverlayView {
     private shape: google.maps.Rectangle | google.maps.Circle | google.maps.Polygon | null = null
@@ -20,11 +35,11 @@ export function createShapeOverlay(
     private modalRoot: HTMLDivElement | null = null
     private modalReactRoot: ReturnType<typeof createRoot> | null = null
     private position: google.maps.LatLng
-    private properties: any
+    private properties: ShapeProperties
     private cleanupFunctions: Array<() => void> = []
     private isSelected = false
 
-    constructor(position: google.maps.LatLng, properties: any) {
+    constructor(position: google.maps.LatLng, properties: ShapeProperties) {
       super()
       this.position = position
       this.properties = properties
@@ -87,11 +102,11 @@ export function createShapeOverlay(
               this.deselectShape()
             },
             initialStyle: {
-              fillColor: this.properties.style?.fillColor || this.properties.fill,
-              fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
-              strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
-              strokeOpacity: 1,
-              strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth
+              fillColor: this.properties.style.fillColor,
+              fillOpacity: this.properties.style.fillOpacity,
+              strokeColor: this.properties.style.strokeColor,
+              strokeOpacity: this.properties.style.strokeOpacity,
+              strokeWeight: this.properties.style.strokeWeight
             },
             onSave: (style) => {
               if (this.shape) {
@@ -99,7 +114,8 @@ export function createShapeOverlay(
                   fillColor: style.fillColor,
                   fillOpacity: style.fillOpacity,
                   strokeColor: style.strokeColor,
-                  strokeWeight: style.strokeWeight
+                  strokeWeight: style.strokeWeight,
+                  strokeOpacity: style.strokeOpacity
                 })
                 
                 this.properties = {
@@ -108,7 +124,8 @@ export function createShapeOverlay(
                     fillColor: style.fillColor,
                     strokeColor: style.strokeColor,
                     strokeWeight: style.strokeWeight,
-                    fillOpacity: style.fillOpacity
+                    fillOpacity: style.fillOpacity,
+                    strokeOpacity: style.strokeOpacity
                   }
                 }
 
@@ -177,7 +194,7 @@ export function createShapeOverlay(
 
         // Highlight shape
         this.shape.setOptions({
-          strokeWeight: (this.properties.style?.strokeWeight || this.properties.strokeWidth || 2) + 1,
+          strokeWeight: (this.properties.style.strokeWeight || 2) + 1,
           zIndex: 1
         })
 
@@ -203,7 +220,7 @@ export function createShapeOverlay(
 
         // Restore shape appearance
         this.shape.setOptions({
-          strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth || 2,
+          strokeWeight: this.properties.style.strokeWeight || 2,
           zIndex: 0
         })
       }
@@ -235,11 +252,12 @@ export function createShapeOverlay(
 
           this.shape = new google.maps.Rectangle({
             bounds,
-            map: this.getMap(),
-            fillColor: this.properties.style?.fillColor || this.properties.fill,
-            fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
-            strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
-            strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth,
+            map: this.getMap() as google.maps.Map,
+            fillColor: this.properties.style.fillColor,
+            fillOpacity: this.properties.style.fillOpacity,
+            strokeColor: this.properties.style.strokeColor,
+            strokeWeight: this.properties.style.strokeWeight,
+            strokeOpacity: this.properties.style.strokeOpacity,
             draggable: true,
             editable: false,
             zIndex: 0
@@ -250,11 +268,12 @@ export function createShapeOverlay(
           this.shape = new google.maps.Circle({
             center: this.position,
             radius: this.properties.radius || 50,
-            map: this.getMap(),
-            fillColor: this.properties.style?.fillColor || this.properties.fill,
-            fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
-            strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
-            strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth,
+            map: this.getMap() as google.maps.Map,
+            fillColor: this.properties.style.fillColor,
+            fillOpacity: this.properties.style.fillOpacity,
+            strokeColor: this.properties.style.strokeColor,
+            strokeWeight: this.properties.style.strokeWeight,
+            strokeOpacity: this.properties.style.strokeOpacity,
             draggable: true,
             editable: false,
             zIndex: 0
@@ -268,11 +287,12 @@ export function createShapeOverlay(
               google.maps.geometry.spherical.computeOffset(this.position, 100, 120),
               google.maps.geometry.spherical.computeOffset(this.position, 100, 240)
             ],
-            map: this.getMap(),
-            fillColor: this.properties.style?.fillColor || this.properties.fill,
-            fillOpacity: this.properties.style?.fillOpacity || this.properties.shapeOpacity,
-            strokeColor: this.properties.style?.strokeColor || this.properties.stroke,
-            strokeWeight: this.properties.style?.strokeWeight || this.properties.strokeWidth,
+            map: this.getMap() as google.maps.Map,
+            fillColor: this.properties.style.fillColor,
+            fillOpacity: this.properties.style.fillOpacity,
+            strokeColor: this.properties.style.strokeColor,
+            strokeWeight: this.properties.style.strokeWeight,
+            strokeOpacity: this.properties.style.strokeOpacity,
             draggable: true,
             editable: false,
             zIndex: 0
@@ -283,7 +303,7 @@ export function createShapeOverlay(
 
       if (this.shape) {
         // Add click handler to select/deselect
-        google.maps.event.addListener(this.shape, 'click', (e) => {
+        google.maps.event.addListener(this.shape, 'click', (e: google.maps.MapMouseEvent) => {
           if (e) {
             e.stop()
             e.domEvent?.stopPropagation()
@@ -318,9 +338,12 @@ export function createShapeOverlay(
       }
 
       // Handle map clicks to deselect
-      google.maps.event.addListener(this.getMap(), 'click', () => {
-        this.deselectShape()
-      })
+      const map = this.getMap()
+      if (map) {
+        google.maps.event.addListener(map, 'click', () => {
+          this.deselectShape()
+        })
+      }
     }
 
     draw() {
@@ -382,7 +405,7 @@ export function createShapeOverlay(
 
   const shapeOverlay = new ShapeOverlay(
     new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
-    overlay.properties
+    overlay.properties as ShapeProperties
   )
 
   shapeOverlay.setMap(map)
