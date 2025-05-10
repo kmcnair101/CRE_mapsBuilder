@@ -698,15 +698,14 @@ export default function MapEditor() {
           // For shapes, ensure the style object is preserved
           if (overlay.type === 'shape' && 'shape' in currentOverlay) {
             const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
-            const options = shape.getOptions()
             updatedProperties = {
               ...updatedProperties,
               style: {
-                fillColor: options.fillColor || '#FFFFFF',
-                strokeColor: options.strokeColor || '#000000',
-                strokeWeight: options.strokeWeight || 2,
-                fillOpacity: options.fillOpacity || 0.5,
-                strokeOpacity: options.strokeOpacity || 1
+                fillColor: shape.fillColor || '#FFFFFF',
+                strokeColor: shape.strokeColor || '#000000',
+                strokeWeight: shape.strokeWeight || 2,
+                fillOpacity: shape.fillOpacity || 0.5,
+                strokeOpacity: shape.strokeOpacity || 1
               }
             }
           }
