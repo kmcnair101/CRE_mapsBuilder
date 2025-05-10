@@ -7,39 +7,32 @@ import { useMapOverlays } from './useMapOverlays'
 // Helper function to load images with retries
 const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
   if (img.complete) {
-    console.log('[Canvas Draw] Image already complete:', img.src)
     return Promise.resolve()
   }
 
   // If the image is from an external source and not already proxied, proxy it
   if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
     const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
-    console.log('[Canvas Draw] Proxying image URL:', img.src, 'to:', proxiedUrl)
     img.src = proxiedUrl
   }
 
   return new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (retries > 0) {
-        console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
         loadImage(img, retries - 1).then(resolve).catch(reject)
       } else {
-        console.error('[Canvas Draw] Image load timeout after retries:', img.src)
         resolve() // Resolve anyway to continue with the process
       }
     }, 5000)
 
     img.onload = () => {
       clearTimeout(timeout)
-      console.log('[Canvas Draw] Image loaded successfully:', img.src)
       resolve()
     }
 
-    img.onerror = (error) => {
+    img.onerror = () => {
       clearTimeout(timeout)
-      console.error('[Canvas Draw] Error loading image:', img.src, error)
       if (retries > 0) {
-        console.log(`[Canvas Draw] Retrying image load (${retries} attempts left):`, img.src)
         loadImage(img, retries - 1).then(resolve).catch(reject)
       } else {
         resolve() // Resolve anyway to continue with the process
@@ -52,9 +45,8 @@ const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
 const checkTaintedCanvas = (canvas: HTMLCanvasElement) => {
   try {
     canvas.getContext('2d')?.getImageData(0, 0, 1, 1)
-    console.log('[Canvas Check] Canvas is NOT tainted')
   } catch (err) {
-    console.warn('[Canvas Check] Canvas is TAINTED:', err)
+    // Canvas is tainted
   }
 }
 
@@ -78,7 +70,6 @@ export function useMapDownload() {
     }
 
     if (!mapRef.current) {
-      console.error('Map element not found')
       return null
     }
 
@@ -111,7 +102,7 @@ export function useMapDownload() {
         allowTaint: true,
         backgroundColor: null,
         scale: forThumbnail ? 0.5 : 2,
-        logging: true,
+        logging: false,
         width: width || mapRef.current.offsetWidth,
         height: height || mapRef.current.offsetHeight,
         onclone: async (clonedDoc) => {
@@ -136,24 +127,25 @@ export function useMapDownload() {
 
             // Ensure all images are loaded with retries
             const images = clonedDoc.getElementsByTagName('img')
-            console.log('[Export] Found images in cloned document:', images.length)
             
             // Load all images in parallel with retries
             await Promise.all(Array.from(images).map(async (img) => {
               // Set crossOrigin for all images
               img.crossOrigin = 'anonymous'
               
-              // Proxy any external URLs
-              if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
+              // Proxy any external URLs, including Google Maps tiles
+              if (img.src.includes('vt?pb=') || (img.src.startsWith('http') && !img.src.includes('/api/proxy-image'))) {
                 const originalSrc = img.src
                 img.src = `/api/proxy-image?url=${encodeURIComponent(originalSrc)}`
-                console.log('[Export] Proxied image:', { from: originalSrc, to: img.src })
               }
               
               return loadImage(img)
             }))
+
+            // Wait a bit to ensure all images are loaded
+            await new Promise(resolve => setTimeout(resolve, 1000))
           } catch (error) {
-            console.error('[Export] Error in onclone:', error)
+            // Error in onclone
           }
         }
       })
@@ -180,17 +172,14 @@ export function useMapDownload() {
       if (forThumbnail) {
         try {
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-          console.log('[Canvas Export] Successfully exported thumbnail')
           return dataUrl
         } catch (err) {
-          console.error('[Canvas Export] Error exporting thumbnail:', err)
           return null
         }
       }
 
       try {
         const dataUrl = canvas.toDataURL('image/png', 1.0)
-        console.log('[Canvas Export] Successfully exported PNG')
         
         const link = document.createElement('a')
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -200,11 +189,9 @@ export function useMapDownload() {
 
         return null
       } catch (err) {
-        console.error('[Canvas Export] Error exporting PNG:', err)
         return null
       }
     } catch (error) {
-      console.error('Error downloading map:', error)
       return null
     }
   }
@@ -228,7 +215,6 @@ export function useMapDownload() {
         overflow: 'hidden'
       })
       document.body.appendChild(container)
-      console.log('Container appended to DOM');
 
       // Create loading indicator
       const loadingIndicator = document.createElement('div')
@@ -248,10 +234,7 @@ export function useMapDownload() {
       document.body.appendChild(loadingIndicator)
 
       try {
-        console.log('mapData:', mapData)
-        console.log('Loading Google Maps API...')
         await loader.load()
-        console.log('Google Maps API loaded')
 
         // Initialize map
         const map = new google.maps.Map(container, {
@@ -261,22 +244,19 @@ export function useMapDownload() {
           gestureHandling: 'none',
           keyboardShortcuts: false
         })
-        console.log('Map initialized:', map);
 
         // After initializing the map, force a resize
-        google.maps.event.trigger(map, 'resize');
+        google.maps.event.trigger(map, 'resize')
 
         // Wait for map to be idle, but with a timeout fallback
         await Promise.race([
           new Promise<void>(resolve => {
             google.maps.event.addListenerOnce(map, 'idle', () => {
-              console.log('Map idle (first)')
               resolve()
             })
           }),
           new Promise<void>((_, reject) => {
             const idleTimeout = setTimeout(() => {
-              console.error('Map idle event timed out')
               reject(new Error('Map idle timeout'))
             }, 10000)
           })
@@ -299,59 +279,44 @@ export function useMapDownload() {
 
         // Now add overlays after map is ready
         const overlaysWithProxiedUrls = mapData.overlays.map(overlay => {
-          console.log('Processing overlay:', overlay.type, overlay.properties);
-          
           if (overlay.type === 'image' && overlay.properties.url) {
-            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`;
-            console.log('Proxying image URL:', overlay.properties.url, 'to:', proxiedUrl);
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`
             return {
               ...overlay,
               properties: {
                 ...overlay.properties,
                 url: proxiedUrl
               }
-            };
+            }
           }
           if (overlay.type === 'business' && overlay.properties.logo) {
-            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.logo)}`;
-            console.log('Proxying business logo URL:', overlay.properties.logo, 'to:', proxiedUrl);
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.logo)}`
             return {
               ...overlay,
               properties: {
                 ...overlay.properties,
                 logo: proxiedUrl
               }
-            };
+            }
           }
-          return overlay;
-        });
-        console.log('All overlays with proxied URLs:', overlaysWithProxiedUrls);
+          return overlay
+        })
 
         overlaysWithProxiedUrls.forEach(overlay => {
-          console.log('Adding overlay to map:', overlay.type, overlay.properties);
-          addOverlayToMap(overlay, map);
-        });
-
-        // if (mapData.subject_property) {
-        //   await updateSubjectProperty()
-        // }
+          addOverlayToMap(overlay, map)
+        })
 
         // Wait a bit to ensure all tiles and overlays are rendered
-        console.log('Waiting for tiles and overlays to render...');
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        console.log('Wait complete, capturing screenshot...');
+        await new Promise(resolve => setTimeout(resolve, 4000))
 
         // Generate image
-        console.log('Calling html2canvas...');
         const canvas = await html2canvas(container, {
           useCORS: true,
           allowTaint: true,
           backgroundColor: 'white',
           scale: 2,
-          logging: true, // Enable html2canvas logging
+          logging: false,
           onclone: (clonedDoc) => {
-            console.log('Cloning document for html2canvas...');
-            
             // Hide all Google Maps controls in the cloned document
             const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
             clonedControls.forEach(control => {
@@ -367,35 +332,21 @@ export function useMapDownload() {
 
             // Ensure all images are loaded
             const images = clonedDoc.getElementsByTagName('img')
-            console.log('Found images in cloned document:', images.length);
             
             return Promise.all(Array.from(images).map(img => {
-              console.log('Processing image:', img.src);
               if (img.complete) {
-                console.log('Image already complete:', img.src);
-                return Promise.resolve<void>(undefined);
+                return Promise.resolve<void>(undefined)
               }
               return new Promise<void>(resolve => {
-                img.onload = () => {
-                  console.log('Image loaded successfully:', img.src);
-                  resolve();
-                }
-                img.onerror = (error) => {
-                  console.error('Error loading image:', img.src, error);
-                  resolve();
-                }
-                setTimeout(() => {
-                  console.log('Image load timeout:', img.src);
-                  resolve();
-                }, 3000)
+                img.onload = () => resolve()
+                img.onerror = () => resolve()
+                setTimeout(() => resolve(), 3000)
               })
             }))
           }
         })
-        console.log('html2canvas complete, canvas:', canvas);
 
         // Trigger download
-        console.log('Triggering download...');
         const link = document.createElement('a')
         link.download = filename || `${mapData.title || 'map'}.png`
         link.href = canvas.toDataURL('image/png', 1.0)
@@ -412,7 +363,6 @@ export function useMapDownload() {
         }
       }
     } catch (error) {
-      console.error('Error downloading map from data:', error)
       alert('Failed to download map. Please try again.')
       return false
     }
