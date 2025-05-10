@@ -44,4 +44,5 @@ export default async function handler(req, res) {
     console.error('Error in proxy-image handler:', err)
     res.status(500).json({ error: 'Internal server error' })
   }
+  
 }
