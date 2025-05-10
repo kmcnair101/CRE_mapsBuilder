@@ -105,7 +105,6 @@ export function createShapeOverlay(
                 this.properties = {
                   ...this.properties,
                   style: {
-                    ...this.properties.style,
                     fillColor: style.fillColor,
                     strokeColor: style.strokeColor,
                     strokeWeight: style.strokeWeight,

@@ -708,6 +708,19 @@ export default function MapEditor() {
             }
           }
           
+          // For shapes, ensure the style object is preserved
+          if (overlay.type === 'shape') {
+            updatedProperties = {
+              ...updatedProperties,
+              style: {
+                fillColor: updatedProperties.style?.fillColor || updatedProperties.fill,
+                strokeColor: updatedProperties.style?.strokeColor || updatedProperties.stroke,
+                strokeWeight: updatedProperties.style?.strokeWeight || updatedProperties.strokeWidth,
+                fillOpacity: updatedProperties.style?.fillOpacity || updatedProperties.shapeOpacity
+              }
+            }
+          }
+          
           return {
             ...overlay,
             position: updatedPosition,
