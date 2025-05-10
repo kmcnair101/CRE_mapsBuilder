@@ -138,51 +138,20 @@ export function useMapDownload() {
             const images = clonedDoc.getElementsByTagName('img')
             console.log('[Export] Found images in cloned document:', images.length)
             
-            // Log all image sources before processing
-            Array.from(images).forEach((img, index) => {
-              console.log(`[Export] Image ${index + 1} source:`, {
-                src: img.src,
-                isProxied: img.src.includes('/api/proxy-image'),
-                crossOrigin: img.crossOrigin,
-                complete: img.complete
-              })
-            })
-            
             // Load all images in parallel with retries
-            await Promise.all(Array.from(images).map(async (img, index) => {
-              console.log(`[Export] Processing image ${index + 1}:`, {
-                originalSrc: img.src,
-                isProxied: img.src.includes('/api/proxy-image'),
-                crossOrigin: img.crossOrigin
-              })
-              
-              // Ensure crossOrigin is set
+            await Promise.all(Array.from(images).map(async (img) => {
+              // Set crossOrigin for all images
               img.crossOrigin = 'anonymous'
               
-              // If not already proxied, proxy the URL
+              // Proxy any external URLs
               if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
                 const originalSrc = img.src
                 img.src = `/api/proxy-image?url=${encodeURIComponent(originalSrc)}`
-                console.log(`[Export] Proxied image ${index + 1}:`, {
-                  from: originalSrc,
-                  to: img.src
-                })
+                console.log('[Export] Proxied image:', { from: originalSrc, to: img.src })
               }
               
               return loadImage(img)
             }))
-            
-            // Log final state of all images
-            Array.from(images).forEach((img, index) => {
-              console.log(`[Export] Final state of image ${index + 1}:`, {
-                src: img.src,
-                isProxied: img.src.includes('/api/proxy-image'),
-                crossOrigin: img.crossOrigin,
-                complete: img.complete,
-                naturalWidth: img.naturalWidth,
-                naturalHeight: img.naturalHeight
-              })
-            })
           } catch (error) {
             console.error('[Export] Error in onclone:', error)
           }
