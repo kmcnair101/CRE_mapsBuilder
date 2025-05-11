@@ -36,6 +36,8 @@ export function createCustomImageOverlay(
     private style: ContainerStyle
     private isMapReady = false
     private drawCount = 0
+    private lastWidth: number = 0
+    private lastHeight: number = 0
 
     constructor(config: ImageOverlayConfig) {
       super()
@@ -264,7 +266,19 @@ export function createCustomImageOverlay(
         return;
       }
       
+      const currentWidth = this.div.offsetWidth;
+      const currentHeight = this.div.offsetHeight;
+      
+      if (this.lastWidth === currentWidth && 
+          this.lastHeight === currentHeight && 
+          this.drawCount > 0) {
+        return;
+      }
+      
+      this.lastWidth = currentWidth;
+      this.lastHeight = currentHeight;
       this.drawCount++;
+      
       const overlayProjection = this.getProjection();
       const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
@@ -346,6 +360,8 @@ export function createCustomTextOverlay(
     private baseFontSize = 14
     private isMapReady = false
     private drawCount = 0
+    private lastWidth: number = 0
+    private lastHeight: number = 0
 
     constructor(position: google.maps.LatLng, content: string, style: any) {
       super()
@@ -642,7 +658,19 @@ export function createCustomTextOverlay(
         return;
       }
       
+      const currentWidth = this.div.offsetWidth;
+      const currentHeight = this.div.offsetHeight;
+      
+      if (this.lastWidth === currentWidth && 
+          this.lastHeight === currentHeight && 
+          this.drawCount > 0) {
+        return;
+      }
+      
+      this.lastWidth = currentWidth;
+      this.lastHeight = currentHeight;
       this.drawCount++;
+      
       const overlayProjection = this.getProjection();
       const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
