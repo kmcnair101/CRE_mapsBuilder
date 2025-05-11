@@ -412,7 +412,7 @@ export function createShapeOverlay(
     }
 
     private handleDragMove = (e: MouseEvent) => {
-      if (!this.isDragging) return
+      if (!this.isDragging || !this.shape) return
       e.preventDefault()
       const dx = e.clientX - this.startPos.x
       const dy = e.clientY - this.startPos.y
@@ -420,9 +420,42 @@ export function createShapeOverlay(
       const point = proj.fromLatLngToDivPixel(this.position)
       if (point) {
         const newPoint = new google.maps.Point(point.x + dx, point.y + dy)
-        this.position = proj.fromDivPixelToLatLng(newPoint)
-        this.draw()
-        this.startPos = { x: e.clientX, y: e.clientY }
+        const newPosition = proj.fromDivPixelToLatLng(newPoint)
+        if (newPosition) {
+          this.position = newPosition
+          
+          // Update the underlying shape based on its type
+          if ('setCenter' in this.shape) {
+            this.shape.setCenter(newPosition)
+          } else if ('setBounds' in this.shape) {
+            const bounds = this.shape.getBounds()
+            if (bounds) {
+              const ne = bounds.getNorthEast()
+              const sw = bounds.getSouthWest()
+              const width = google.maps.geometry.spherical.computeDistanceBetween(ne, new google.maps.LatLng(ne.lat(), sw.lng()))
+              const height = google.maps.geometry.spherical.computeDistanceBetween(ne, new google.maps.LatLng(sw.lat(), ne.lng()))
+              
+              const newBounds = new google.maps.LatLngBounds(
+                google.maps.geometry.spherical.computeOffset(newPosition, -height/2, 180),
+                google.maps.geometry.spherical.computeOffset(newPosition, height/2, 0)
+              )
+              this.shape.setBounds(newBounds)
+            }
+          } else if ('setPath' in this.shape) {
+            const path = this.shape.getPath()
+            const points = path.getArray()
+            const center = this.position
+            const newPoints = points.map(point => {
+              const offset = google.maps.geometry.spherical.computeDistanceBetween(center, point)
+              const heading = google.maps.geometry.spherical.computeHeading(center, point)
+              return google.maps.geometry.spherical.computeOffset(newPosition, offset, heading)
+            })
+            this.shape.setPath(newPoints)
+          }
+          
+          this.draw()
+          this.startPos = { x: e.clientX, y: e.clientY }
+        }
       }
     }
 
