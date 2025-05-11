@@ -21,6 +21,7 @@ interface ShapeProperties {
   points?: Array<{ lat: number; lng: number }>
 }
 
+
 export function createShapeOverlay(
   overlay: MapOverlay,
   map: google.maps.Map,
