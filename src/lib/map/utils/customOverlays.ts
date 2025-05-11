@@ -197,6 +197,11 @@ export function createCustomImageOverlay(
           point.y += e.movementY
           this.position = proj.fromDivPixelToLatLng(point)
           this.draw()
+          console.log('[Overlay] Drag - Position update:', {
+            oldPosition: this.position.toJSON(),
+            newPosition: proj.fromDivPixelToLatLng(point).toJSON(),
+            movement: { x: e.movementX, y: e.movementY }
+          })
         }
       }
 
@@ -224,7 +229,13 @@ export function createCustomImageOverlay(
       const panes = this.getPanes()
       panes?.overlayMouseTarget.appendChild(div)
 
-      console.log('[ImageOverlay] onAdd position:', this.position, 'style:', this.style)
+      console.log('[Overlay] onAdd - Map state:', {
+        hasMap: !!map,
+        isMapInstance: map instanceof google.maps.Map,
+        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
+        initialPosition: this.initialPosition.toJSON(),
+        isMapReady: this.isMapReady
+      })
     }
 
     draw() {
@@ -237,7 +248,18 @@ export function createCustomImageOverlay(
         const height = this.div.offsetHeight
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
-        console.log('[ImageOverlay] draw position:', this.initialPosition, 'div style:', this.div.style.cssText)
+        console.log('[Overlay] draw - Position calculation:', {
+          initialPosition: this.initialPosition.toJSON(),
+          calculatedPoint: point ? { x: point.x, y: point.y } : null,
+          divDimensions: {
+            width: this.div.offsetWidth,
+            height: this.div.offsetHeight
+          },
+          finalPosition: {
+            left: this.div.style.left,
+            top: this.div.style.top
+          }
+        })
       }
     }
 
@@ -535,6 +557,11 @@ export function createCustomTextOverlay(
         this.position = proj.fromDivPixelToLatLng(newPoint)
         this.draw()
         this.startPos = { x: e.clientX, y: e.clientY }
+        console.log('[Overlay] Drag - Position update:', {
+          oldPosition: this.position.toJSON(),
+          newPosition: proj.fromDivPixelToLatLng(point).toJSON(),
+          movement: { x: e.movementX, y: e.movementY }
+        })
       }
 
       const handleDragEnd = () => {
@@ -558,7 +585,13 @@ export function createCustomTextOverlay(
       const panes = this.getPanes()
       panes?.overlayMouseTarget.appendChild(div)
 
-      console.log('[TextOverlay] onAdd position:', this.position, 'content:', this.content, 'style:', this.style)
+      console.log('[Overlay] onAdd - Map state:', {
+        hasMap: !!map,
+        isMapInstance: map instanceof google.maps.Map,
+        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
+        initialPosition: this.initialPosition.toJSON(),
+        isMapReady: this.isMapReady
+      })
     }
 
     draw() {
@@ -571,7 +604,18 @@ export function createCustomTextOverlay(
         const height = this.div.offsetHeight
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
-        console.log('[TextOverlay] draw position:', this.initialPosition, 'div style:', this.div.style.cssText)
+        console.log('[Overlay] draw - Position calculation:', {
+          initialPosition: this.initialPosition.toJSON(),
+          calculatedPoint: point ? { x: point.x, y: point.y } : null,
+          divDimensions: {
+            width: this.div.offsetWidth,
+            height: this.div.offsetHeight
+          },
+          finalPosition: {
+            left: this.div.style.left,
+            top: this.div.style.top
+          }
+        })
       }
     }
 
