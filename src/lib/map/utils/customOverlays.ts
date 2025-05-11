@@ -201,25 +201,28 @@ export function createCustomImageOverlay(
 
       const handleDragMove = (e: MouseEvent) => {
         if (!this.isDragging) return;
-        e.preventDefault();
-        const proj = this.getProjection();
-        const point = proj.fromLatLngToDivPixel(this.position);
-        if (point) {
-          const oldPoint = { x: point.x, y: point.y };
-          point.x += e.movementX;
-          point.y += e.movementY;
-          const newPosition = proj.fromDivPixelToLatLng(point);
+        
+        const overlayProjection = this.getProjection();
+        const oldPoint = overlayProjection.fromLatLngToDivPixel(this.position);
+        
+        if (oldPoint) {
+          const newPoint = new google.maps.Point(
+            oldPoint.x + e.movementX,
+            oldPoint.y + e.movementY
+          );
+          const newPosition = overlayProjection.fromDivPixelToLatLng(newPoint);
           
-          console.log('[Overlay] Drag position update:', {
-            oldPosition: this.position.toJSON(),
-            newPosition: newPosition.toJSON(),
-            pixelDelta: { x: e.movementX, y: e.movementY },
-            oldPixelPoint: oldPoint,
-            newPixelPoint: { x: point.x, y: point.y }
-          });
-          
-          this.position = newPosition;
-          this.draw();
+          if (newPosition) {
+            this.position = newPosition;
+            console.log('[Overlay] Drag position update:', {
+              oldPosition: this.position.toJSON(),
+              newPosition: newPosition.toJSON(),
+              pixelDelta: { x: e.movementX, y: e.movementY },
+              oldPixelPoint: oldPoint,
+              newPixelPoint: { x: newPoint.x, y: newPoint.y }
+            });
+            this.draw();
+          }
         }
       }
 
@@ -270,20 +273,26 @@ export function createCustomImageOverlay(
       const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
       if (point) {
+        // Get the current dimensions
         const width = this.div.offsetWidth;
         const height = this.div.offsetHeight;
+        
+        // Calculate the position, ensuring we center the overlay
         const left = Math.round(point.x - width / 2);
         const top = Math.round(point.y - height / 2);
         
-        console.log('[Overlay] draw calculation:', {
-          initialPosition: this.initialPosition.toJSON(),
-          calculatedPoint: { x: point.x, y: point.y },
-          divDimensions: { width, height },
-          finalPosition: { left, top }
-        });
-        
-        this.div.style.left = `${left}px`;
-        this.div.style.top = `${top}px`;
+        // Only update if position has changed
+        if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
+          console.log('[Overlay] draw calculation:', {
+            initialPosition: this.initialPosition.toJSON(),
+            calculatedPoint: { x: point.x, y: point.y },
+            divDimensions: { width, height },
+            finalPosition: { left, top }
+          });
+          
+          this.div.style.left = `${left}px`;
+          this.div.style.top = `${top}px`;
+        }
       }
     }
 
@@ -644,20 +653,26 @@ export function createCustomTextOverlay(
       const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
       if (point) {
+        // Get the current dimensions
         const width = this.div.offsetWidth;
         const height = this.div.offsetHeight;
+        
+        // Calculate the position, ensuring we center the overlay
         const left = Math.round(point.x - width / 2);
         const top = Math.round(point.y - height / 2);
         
-        console.log('[Overlay] draw calculation:', {
-          initialPosition: this.initialPosition.toJSON(),
-          calculatedPoint: { x: point.x, y: point.y },
-          divDimensions: { width, height },
-          finalPosition: { left, top }
-        });
-        
-        this.div.style.left = `${left}px`;
-        this.div.style.top = `${top}px`;
+        // Only update if position has changed
+        if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
+          console.log('[Overlay] draw calculation:', {
+            initialPosition: this.initialPosition.toJSON(),
+            calculatedPoint: { x: point.x, y: point.y },
+            divDimensions: { width, height },
+            finalPosition: { left, top }
+          });
+          
+          this.div.style.left = `${left}px`;
+          this.div.style.top = `${top}px`;
+        }
       }
     }
 
