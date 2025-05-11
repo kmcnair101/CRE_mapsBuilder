@@ -566,6 +566,7 @@ export function createCustomTextOverlay(
     }
   }
 
+  
   const style = {
     color: overlay.properties.color || '#000000',
     fontSize: overlay.properties.fontSize || 14,
