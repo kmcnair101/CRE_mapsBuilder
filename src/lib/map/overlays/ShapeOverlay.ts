@@ -408,6 +408,11 @@ export function createShapeOverlay(
       e.stopPropagation()
       this.isDragging = true
       this.startPos = { x: e.clientX, y: e.clientY }
+      console.log('[ShapeOverlay] Drag start:', {
+        startPos: this.startPos,
+        currentPosition: this.position.toJSON(),
+        shapeType: this.properties.shapeType
+      })
       document.body.style.cursor = 'move'
     }
 
@@ -418,16 +423,31 @@ export function createShapeOverlay(
       const dy = e.clientY - this.startPos.y
       const proj = this.getProjection()
       const point = proj.fromLatLngToDivPixel(this.position)
+      
+      console.log('[ShapeOverlay] Drag move:', {
+        dx,
+        dy,
+        currentPoint: point?.toJSON(),
+        currentPosition: this.position.toJSON()
+      })
+      
       if (point) {
         const newPoint = new google.maps.Point(point.x + dx, point.y + dy)
         const newPosition = proj.fromDivPixelToLatLng(newPoint)
         if (newPosition) {
+          console.log('[ShapeOverlay] New position calculated:', {
+            newPosition: newPosition.toJSON(),
+            shapeType: this.properties.shapeType
+          })
+          
           this.position = newPosition
           
           // Update the underlying shape based on its type
           if ('setCenter' in this.shape) {
+            console.log('[ShapeOverlay] Updating circle center')
             this.shape.setCenter(newPosition)
           } else if ('setBounds' in this.shape) {
+            console.log('[ShapeOverlay] Updating rectangle bounds')
             const bounds = this.shape.getBounds()
             if (bounds) {
               const ne = bounds.getNorthEast()
@@ -435,13 +455,21 @@ export function createShapeOverlay(
               const width = google.maps.geometry.spherical.computeDistanceBetween(ne, new google.maps.LatLng(ne.lat(), sw.lng()))
               const height = google.maps.geometry.spherical.computeDistanceBetween(ne, new google.maps.LatLng(sw.lat(), ne.lng()))
               
+              console.log('[ShapeOverlay] Rectangle dimensions:', {
+                width,
+                height,
+                currentBounds: bounds.toJSON()
+              })
+              
               const newBounds = new google.maps.LatLngBounds(
                 google.maps.geometry.spherical.computeOffset(newPosition, -height/2, 180),
                 google.maps.geometry.spherical.computeOffset(newPosition, height/2, 0)
               )
               this.shape.setBounds(newBounds)
+              console.log('[ShapeOverlay] New bounds set:', newBounds.toJSON())
             }
           } else if ('setPath' in this.shape) {
+            console.log('[ShapeOverlay] Updating polygon path')
             const path = this.shape.getPath()
             const points = path.getArray()
             const center = this.position
@@ -451,6 +479,7 @@ export function createShapeOverlay(
               return google.maps.geometry.spherical.computeOffset(newPosition, offset, heading)
             })
             this.shape.setPath(newPoints)
+            console.log('[ShapeOverlay] New polygon points:', newPoints.map(p => p.toJSON()))
           }
           
           this.draw()
@@ -461,6 +490,10 @@ export function createShapeOverlay(
 
     private handleDragEnd = () => {
       if (this.isDragging) {
+        console.log('[ShapeOverlay] Drag end:', {
+          finalPosition: this.position.toJSON(),
+          shapeType: this.properties.shapeType
+        })
         this.isDragging = false
         document.body.style.cursor = 'default'
       }
