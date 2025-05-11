@@ -374,6 +374,19 @@ export function createShapeOverlay(
         // Force a redraw after image loads
         this.draw()
       }
+
+      // Add resize observer to handle content changes
+      const resizeObserver = new ResizeObserver(() => {
+        this.draw()
+      })
+      
+      if (this.contentDiv) {
+        resizeObserver.observe(this.contentDiv)
+      }
+
+      this.cleanupFunctions.push(() => {
+        resizeObserver.disconnect()
+      })
     }
 
     draw() {
