@@ -38,6 +38,8 @@ export function createShapeOverlay(
     private properties: ShapeProperties
     private cleanupFunctions: Array<() => void> = []
     private isSelected = false
+    private startPos = { x: 0, y: 0 }
+    private isDragging = false
 
     constructor(position: google.maps.LatLng, properties: ShapeProperties) {
       super()
@@ -400,6 +402,35 @@ export function createShapeOverlay(
 
     getPosition() {
       return this.position
+    }
+
+    private handleDragStart = (e: MouseEvent) => {
+      e.stopPropagation()
+      this.isDragging = true
+      this.startPos = { x: e.clientX, y: e.clientY }
+      document.body.style.cursor = 'move'
+    }
+
+    private handleDragMove = (e: MouseEvent) => {
+      if (!this.isDragging) return
+      e.preventDefault()
+      const dx = e.clientX - this.startPos.x
+      const dy = e.clientY - this.startPos.y
+      const proj = this.getProjection()
+      const point = proj.fromLatLngToDivPixel(this.position)
+      if (point) {
+        const newPoint = new google.maps.Point(point.x + dx, point.y + dy)
+        this.position = proj.fromDivPixelToLatLng(newPoint)
+        this.draw()
+        this.startPos = { x: e.clientX, y: e.clientY }
+      }
+    }
+
+    private handleDragEnd = () => {
+      if (this.isDragging) {
+        this.isDragging = false
+        document.body.style.cursor = 'default'
+      }
     }
   }
 
