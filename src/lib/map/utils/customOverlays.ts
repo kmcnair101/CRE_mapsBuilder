@@ -35,6 +35,7 @@ export function createCustomImageOverlay(
     private cleanupFunctions: Array<() => void> = []
     private style: ContainerStyle
     private isMapReady = false
+    private drawCount = 0
 
     constructor(config: ImageOverlayConfig) {
       super()
@@ -64,17 +65,26 @@ export function createCustomImageOverlay(
       }
     }
     onAdd() {
-      // Wait for map to be ready
-      const map = this.getMap()
+      const map = this.getMap();
+      console.log('[Overlay] onAdd - Initial state:', {
+        hasMap: !!map,
+        isMapInstance: map instanceof google.maps.Map,
+        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
+        initialPosition: this.initialPosition.toJSON(),
+        isMapReady: this.isMapReady
+      });
+
       if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
+        console.log('[Overlay] Map not ready, waiting for idle event');
         map?.addListener('idle', () => {
-          this.isMapReady = true
-          this.draw()
-        })
-        return
+          console.log('[Overlay] Map became idle, setting ready state');
+          this.isMapReady = true;
+          this.draw();
+        });
+        return;
       }
 
-      this.isMapReady = true
+      this.isMapReady = true;
       const div = document.createElement('div')
       div.style.position = 'absolute'
       div.style.cursor = 'move'
@@ -188,20 +198,26 @@ export function createCustomImageOverlay(
       }
 
       const handleDragMove = (e: MouseEvent) => {
-        if (!this.isDragging) return
-        e.preventDefault()
-        const proj = this.getProjection()
-        const point = proj.fromLatLngToDivPixel(this.position)
+        if (!this.isDragging) return;
+        e.preventDefault();
+        const proj = this.getProjection();
+        const point = proj.fromLatLngToDivPixel(this.position);
         if (point) {
-          point.x += e.movementX
-          point.y += e.movementY
-          this.position = proj.fromDivPixelToLatLng(point)
-          this.draw()
-          console.log('[Overlay] Drag - Position update:', {
+          const oldPoint = { x: point.x, y: point.y };
+          point.x += e.movementX;
+          point.y += e.movementY;
+          const newPosition = proj.fromDivPixelToLatLng(point);
+          
+          console.log('[Overlay] Drag position update:', {
             oldPosition: this.position.toJSON(),
-            newPosition: proj.fromDivPixelToLatLng(point).toJSON(),
-            movement: { x: e.movementX, y: e.movementY }
-          })
+            newPosition: newPosition.toJSON(),
+            pixelDelta: { x: e.movementX, y: e.movementY },
+            oldPixelPoint: oldPoint,
+            newPixelPoint: { x: point.x, y: point.y }
+          });
+          
+          this.position = newPosition;
+          this.draw();
         }
       }
 
@@ -239,27 +255,39 @@ export function createCustomImageOverlay(
     }
 
     draw() {
-      if (!this.div || !this.isMapReady || !this.getProjection()) return
+      if (!this.div || !this.isMapReady || !this.getProjection()) {
+        console.log('[Overlay] draw skipped - missing requirements:', {
+          hasDiv: !!this.div,
+          isMapReady: this.isMapReady,
+          hasProjection: !!this.getProjection()
+        });
+        return;
+      }
       
-      const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
+      this.drawCount++;
+      const overlayProjection = this.getProjection();
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
+      
       if (point) {
-        const width = this.div.offsetWidth
-        const height = this.div.offsetHeight
-        this.div.style.left = `${point.x - width / 2}px`
-        this.div.style.top = `${point.y - height / 2}px`
-        console.log('[Overlay] draw - Position calculation:', {
+        const width = this.div.offsetWidth;
+        const height = this.div.offsetHeight;
+        const left = point.x - width / 2;
+        const top = point.y - height / 2;
+        
+        console.log('[Overlay] draw calculation:', {
+          drawCount: this.drawCount,
           initialPosition: this.initialPosition.toJSON(),
-          calculatedPoint: point ? { x: point.x, y: point.y } : null,
-          divDimensions: {
-            width: this.div.offsetWidth,
-            height: this.div.offsetHeight
-          },
-          finalPosition: {
+          calculatedPoint: { x: point.x, y: point.y },
+          divDimensions: { width, height },
+          finalPosition: { left, top },
+          currentStyle: {
             left: this.div.style.left,
             top: this.div.style.top
           }
-        })
+        });
+        
+        this.div.style.left = `${left}px`;
+        this.div.style.top = `${top}px`;
       }
     }
 
@@ -317,6 +345,7 @@ export function createCustomTextOverlay(
     private currentWidth = 80
     private baseFontSize = 14
     private isMapReady = false
+    private drawCount = 0
 
     constructor(position: google.maps.LatLng, content: string, style: any) {
       super()
@@ -385,17 +414,26 @@ export function createCustomTextOverlay(
       this.draw()
     }
     onAdd() {
-      // Wait for map to be ready
-      const map = this.getMap()
+      const map = this.getMap();
+      console.log('[Overlay] onAdd - Initial state:', {
+        hasMap: !!map,
+        isMapInstance: map instanceof google.maps.Map,
+        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
+        initialPosition: this.initialPosition.toJSON(),
+        isMapReady: this.isMapReady
+      });
+
       if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
+        console.log('[Overlay] Map not ready, waiting for idle event');
         map?.addListener('idle', () => {
-          this.isMapReady = true
-          this.draw()
-        })
-        return
+          console.log('[Overlay] Map became idle, setting ready state');
+          this.isMapReady = true;
+          this.draw();
+        });
+        return;
       }
 
-      this.isMapReady = true
+      this.isMapReady = true;
       const div = document.createElement('div')
       div.style.position = 'absolute'
       div.style.cursor = 'move'
@@ -595,27 +633,39 @@ export function createCustomTextOverlay(
     }
 
     draw() {
-      if (!this.div || !this.isMapReady || !this.getProjection()) return
+      if (!this.div || !this.isMapReady || !this.getProjection()) {
+        console.log('[Overlay] draw skipped - missing requirements:', {
+          hasDiv: !!this.div,
+          isMapReady: this.isMapReady,
+          hasProjection: !!this.getProjection()
+        });
+        return;
+      }
       
-      const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
+      this.drawCount++;
+      const overlayProjection = this.getProjection();
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
+      
       if (point) {
-        const width = this.div.offsetWidth
-        const height = this.div.offsetHeight
-        this.div.style.left = `${point.x - width / 2}px`
-        this.div.style.top = `${point.y - height / 2}px`
-        console.log('[Overlay] draw - Position calculation:', {
+        const width = this.div.offsetWidth;
+        const height = this.div.offsetHeight;
+        const left = point.x - width / 2;
+        const top = point.y - height / 2;
+        
+        console.log('[Overlay] draw calculation:', {
+          drawCount: this.drawCount,
           initialPosition: this.initialPosition.toJSON(),
-          calculatedPoint: point ? { x: point.x, y: point.y } : null,
-          divDimensions: {
-            width: this.div.offsetWidth,
-            height: this.div.offsetHeight
-          },
-          finalPosition: {
+          calculatedPoint: { x: point.x, y: point.y },
+          divDimensions: { width, height },
+          finalPosition: { left, top },
+          currentStyle: {
             left: this.div.style.left,
             top: this.div.style.top
           }
-        })
+        });
+        
+        this.div.style.left = `${left}px`;
+        this.div.style.top = `${top}px`;
       }
     }
 
