@@ -266,38 +266,20 @@ export function createCustomImageOverlay(
         return;
       }
       
-      const currentWidth = this.div.offsetWidth;
-      const currentHeight = this.div.offsetHeight;
-      
-      if (this.lastWidth === currentWidth && 
-          this.lastHeight === currentHeight && 
-          this.drawCount > 0) {
-        return;
-      }
-      
-      this.lastWidth = currentWidth;
-      this.lastHeight = currentHeight;
-      this.drawCount++;
-      
       const overlayProjection = this.getProjection();
       const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
       if (point) {
         const width = this.div.offsetWidth;
         const height = this.div.offsetHeight;
-        const left = point.x - width / 2;
-        const top = point.y - height / 2;
+        const left = Math.round(point.x - width / 2);
+        const top = Math.round(point.y - height / 2);
         
         console.log('[Overlay] draw calculation:', {
-          drawCount: this.drawCount,
           initialPosition: this.initialPosition.toJSON(),
           calculatedPoint: { x: point.x, y: point.y },
           divDimensions: { width, height },
-          finalPosition: { left, top },
-          currentStyle: {
-            left: this.div.style.left,
-            top: this.div.style.top
-          }
+          finalPosition: { left, top }
         });
         
         this.div.style.left = `${left}px`;
@@ -658,38 +640,20 @@ export function createCustomTextOverlay(
         return;
       }
       
-      const currentWidth = this.div.offsetWidth;
-      const currentHeight = this.div.offsetHeight;
-      
-      if (this.lastWidth === currentWidth && 
-          this.lastHeight === currentHeight && 
-          this.drawCount > 0) {
-        return;
-      }
-      
-      this.lastWidth = currentWidth;
-      this.lastHeight = currentHeight;
-      this.drawCount++;
-      
       const overlayProjection = this.getProjection();
       const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
       if (point) {
         const width = this.div.offsetWidth;
         const height = this.div.offsetHeight;
-        const left = point.x - width / 2;
-        const top = point.y - height / 2;
+        const left = Math.round(point.x - width / 2);
+        const top = Math.round(point.y - height / 2);
         
         console.log('[Overlay] draw calculation:', {
-          drawCount: this.drawCount,
           initialPosition: this.initialPosition.toJSON(),
           calculatedPoint: { x: point.x, y: point.y },
           divDimensions: { width, height },
-          finalPosition: { left, top },
-          currentStyle: {
-            left: this.div.style.left,
-            top: this.div.style.top
-          }
+          finalPosition: { left, top }
         });
         
         this.div.style.left = `${left}px`;
