@@ -21,6 +21,16 @@ interface ShapeProperties {
   points?: Array<{ lat: number; lng: number }>
 }
 
+export function validatePosition(position: { lat: number; lng: number }): boolean {
+  return (
+    typeof position.lat === 'number' &&
+    typeof position.lng === 'number' &&
+    position.lat >= -90 &&
+    position.lat <= 90 &&
+    position.lng >= -180 &&
+    position.lng <= 180
+  )
+}
 
 export function createShapeOverlay(
   overlay: MapOverlay,
@@ -372,6 +382,12 @@ export function createShapeOverlay(
           this.controlsDiv.style.top = `${point.y - this.controlsDiv.offsetHeight - 10}px`
         }
       }
+
+      const bounds = map.getBounds()
+      if (bounds && !bounds.contains(position)) {
+        // Adjust position to be within bounds
+        position = getSafePosition(map)
+      }
     }
 
     onRemove() {
@@ -507,5 +523,14 @@ export function createShapeOverlay(
   )
 
   shapeOverlay.setMap(map)
+
+  console.log('Saving position:', {
+    original: overlay.position,
+    serialized: {
+      lat: typeof overlay.position.lat === 'function' ? overlay.position.lat() : overlay.position.lat,
+      lng: typeof overlay.position.lng === 'function' ? overlay.position.lng() : overlay.position.lng,
+    }
+  })
+
   return shapeOverlay
 }
