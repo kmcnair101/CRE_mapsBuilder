@@ -63,13 +63,6 @@ export function createCustomImageOverlay(
         this.container.style.backgroundColor = this.getRgbaColor(style.backgroundColor, style.backgroundOpacity)
         this.container.style.border = `${style.borderWidth}px solid ${this.getRgbaColor(style.borderColor, style.borderOpacity)}`
         this.container.style.padding = `${style.padding}px`
-        
-        // Ensure width maintains aspect ratio
-        if (this.imageWrapper && this.aspectRatio) {
-          const height = this.width / this.aspectRatio
-          this.imageWrapper.style.height = `${height}px`
-        }
-        
         console.log('[ImageOverlay] Updated container style:', this.container.style.cssText)
       }
     }
@@ -322,14 +315,7 @@ export function createCustomImageOverlay(
     }
 
     getPosition() {
-      return {
-        lat: this.initialPosition.lat(),
-        lng: this.initialPosition.lng(),
-        width: this.width,
-        height: this.div?.offsetHeight || 0,
-        fontSize: this.aspectRatio,
-        aspectRatio: this.aspectRatio
-      }
+      return this.position
     }
   }
 
@@ -549,10 +535,8 @@ export function createCustomTextOverlay(
                       if (onEdit) {
                         onEdit(this.content, {
                           ...this.style,
-                          fontSize: scaled.fontSize,
-                          width: width,
-                          padding: scaled.padding,
-                          borderWidth: scaled.borderWidth
+                          fontSize: this.baseFontSize,
+                          width: this.baseWidth
                         })
                       }
                     }
@@ -589,10 +573,8 @@ export function createCustomTextOverlay(
           if (onEdit) {
             onEdit(this.content, {
               ...this.style,
-              fontSize: scaled.fontSize,
-              width: width,
-              padding: scaled.padding,
-              borderWidth: scaled.borderWidth
+              fontSize: this.baseFontSize,
+              width: this.baseWidth
             })
           }
         }
@@ -714,14 +696,7 @@ export function createCustomTextOverlay(
     }
 
     getPosition() {
-      return {
-        lat: this.initialPosition.lat(),
-        lng: this.initialPosition.lng(),
-        width: this.currentWidth,
-        height: this.div?.offsetHeight || 0,
-        fontSize: this.baseFontSize,
-        aspectRatio: this.aspectRatio
-      }
+      return this.position
     }
   }
 
