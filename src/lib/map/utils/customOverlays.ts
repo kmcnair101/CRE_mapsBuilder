@@ -203,7 +203,7 @@ export function createCustomImageOverlay(
         if (!this.isDragging) return;
         
         const overlayProjection = this.getProjection();
-        const oldPoint = overlayProjection.fromLatLngToDivPixel(this.position);
+        const oldPoint = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
         
         if (oldPoint) {
           const newPoint = new google.maps.Point(
@@ -214,8 +214,9 @@ export function createCustomImageOverlay(
           
           if (newPosition) {
             this.position = newPosition;
+            this.initialPosition = newPosition;
             console.log('[Overlay] Drag position update:', {
-              oldPosition: this.position.toJSON(),
+              oldPosition: this.initialPosition.toJSON(),
               newPosition: newPosition.toJSON(),
               pixelDelta: { x: e.movementX, y: e.movementY },
               oldPixelPoint: oldPoint,
@@ -592,21 +593,23 @@ export function createCustomTextOverlay(
       }
 
       const handleDragMove = (e: MouseEvent) => {
-        if (!this.isDragging || this.isResizing) return
-        e.preventDefault()
-        const dx = e.clientX - this.startPos.x
-        const dy = e.clientY - this.startPos.y
-        const proj = this.getProjection()
-        const point = proj.fromLatLngToDivPixel(this.position)
-        const newPoint = new google.maps.Point(point.x + dx, point.y + dy)
-        this.position = proj.fromDivPixelToLatLng(newPoint)
-        this.draw()
-        this.startPos = { x: e.clientX, y: e.clientY }
+        if (!this.isDragging || this.isResizing) return;
+        e.preventDefault();
+        const dx = e.clientX - this.startPos.x;
+        const dy = e.clientY - this.startPos.y;
+        const proj = this.getProjection();
+        const point = proj.fromLatLngToDivPixel(this.initialPosition);
+        const newPoint = new google.maps.Point(point.x + dx, point.y + dy);
+        const newPosition = proj.fromDivPixelToLatLng(newPoint);
+        this.position = newPosition;
+        this.initialPosition = newPosition;
+        this.draw();
+        this.startPos = { x: e.clientX, y: e.clientY };
         console.log('[Overlay] Drag - Position update:', {
-          oldPosition: this.position.toJSON(),
-          newPosition: proj.fromDivPixelToLatLng(point).toJSON(),
-          movement: { x: e.movementX, y: e.movementY }
-        })
+          oldPosition: this.initialPosition.toJSON(),
+          newPosition: newPosition.toJSON(),
+          movement: { x: dx, y: dy }
+        });
       }
 
       const handleDragEnd = () => {
