@@ -357,36 +357,35 @@ export function createShapeOverlay(
           this.deselectShape()
         })
       }
+
+      const img = document.createElement('img')
+      img.src = this.url
+      img.style.width = '100%'
+      img.style.height = 'auto'
+      img.style.display = 'block'
+      img.draggable = false
+
+      // Update position after image loads
+      img.onload = () => {
+        this.aspectRatio = img.naturalWidth / img.naturalHeight
+        if (this.imageWrapper) {
+          this.imageWrapper.style.height = 'auto'
+        }
+        // Force a redraw after image loads
+        this.draw()
+      }
     }
 
     draw() {
-      if (!this.controlsDiv || !this.shape) return
-
-      let position: google.maps.LatLng | null = null
-
-      if ('getCenter' in this.shape) {
-        position = this.shape.getCenter()
-      } else if ('getBounds' in this.shape) {
-        position = this.shape.getBounds()?.getCenter() || null
-      } else if ('getPath' in this.shape) {
-        const bounds = new google.maps.LatLngBounds()
-        this.shape.getPath().forEach((point: google.maps.LatLng) => bounds.extend(point))
-        position = bounds.getCenter()
-      }
-
-      if (position) {
-        const projection = this.getProjection()
-        const point = projection.fromLatLngToDivPixel(position)
-        if (point) {
-          this.controlsDiv.style.left = `${point.x - this.controlsDiv.offsetWidth / 2}px`
-          this.controlsDiv.style.top = `${point.y - this.controlsDiv.offsetHeight - 10}px`
-        }
-      }
-
-      const bounds = map.getBounds()
-      if (bounds && !bounds.contains(position)) {
-        // Adjust position to be within bounds
-        position = getSafePosition(map)
+      if (!this.div || !this.contentDiv) return
+      const overlayProjection = this.getProjection()
+      const point = overlayProjection.fromLatLngToDivPixel(this.position)
+      if (point) {
+        // Use the content div's dimensions instead of the container div
+        const width = this.contentDiv.offsetWidth
+        const height = this.contentDiv.offsetHeight
+        this.div.style.left = `${point.x - width / 2}px`
+        this.div.style.top = `${point.y - height / 2}px`
       }
     }
 
