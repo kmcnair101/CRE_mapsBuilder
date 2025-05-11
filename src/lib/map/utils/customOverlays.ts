@@ -27,16 +27,19 @@ export function createCustomImageOverlay(
     private modalRoot: HTMLDivElement | null = null
     private modalReactRoot: ReturnType<typeof createRoot> | null = null
     private position: google.maps.LatLng
+    private initialPosition: google.maps.LatLng
     private url: string
     private width: number
     private aspectRatio: number = 1
     private isDragging = false
     private cleanupFunctions: Array<() => void> = []
     private style: ContainerStyle
+    private isMapReady = false
 
     constructor(config: ImageOverlayConfig) {
       super()
       this.position = config.position
+      this.initialPosition = config.position
       this.url = config.url
       this.width = config.width
       this.style = config.style
@@ -61,6 +64,17 @@ export function createCustomImageOverlay(
       }
     }
     onAdd() {
+      // Wait for map to be ready
+      const map = this.getMap()
+      if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
+        map?.addListener('idle', () => {
+          this.isMapReady = true
+          this.draw()
+        })
+        return
+      }
+
+      this.isMapReady = true
       const div = document.createElement('div')
       div.style.position = 'absolute'
       div.style.cursor = 'move'
@@ -214,15 +228,16 @@ export function createCustomImageOverlay(
     }
 
     draw() {
-      if (!this.div) return
+      if (!this.div || !this.isMapReady || !this.getProjection()) return
+      
       const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.position)
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
       if (point) {
         const width = this.div.offsetWidth
         const height = this.div.offsetHeight
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
-        console.log('[ImageOverlay] draw position:', this.position, 'div style:', this.div.style.cssText)
+        console.log('[ImageOverlay] draw position:', this.initialPosition, 'div style:', this.div.style.cssText)
       }
     }
 
@@ -268,6 +283,7 @@ export function createCustomTextOverlay(
     private modalRoot: HTMLDivElement | null = null
     private modalReactRoot: ReturnType<typeof createRoot> | null = null
     private position: google.maps.LatLng
+    private initialPosition: google.maps.LatLng
     private content: string
     private style: any
     private isDragging = false
@@ -278,10 +294,12 @@ export function createCustomTextOverlay(
     private baseWidth = 80
     private currentWidth = 80
     private baseFontSize = 14
+    private isMapReady = false
 
     constructor(position: google.maps.LatLng, content: string, style: any) {
       super()
       this.position = position
+      this.initialPosition = position
       this.content = content
       this.style = style
       this.baseWidth = style.width || 80
@@ -345,6 +363,17 @@ export function createCustomTextOverlay(
       this.draw()
     }
     onAdd() {
+      // Wait for map to be ready
+      const map = this.getMap()
+      if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
+        map?.addListener('idle', () => {
+          this.isMapReady = true
+          this.draw()
+        })
+        return
+      }
+
+      this.isMapReady = true
       const div = document.createElement('div')
       div.style.position = 'absolute'
       div.style.cursor = 'move'
@@ -533,15 +562,16 @@ export function createCustomTextOverlay(
     }
 
     draw() {
-      if (!this.div) return
+      if (!this.div || !this.isMapReady || !this.getProjection()) return
+      
       const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.position)
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
       if (point) {
         const width = this.div.offsetWidth
         const height = this.div.offsetHeight
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
-        console.log('[TextOverlay] draw position:', this.position, 'div style:', this.div.style.cssText)
+        console.log('[TextOverlay] draw position:', this.initialPosition, 'div style:', this.div.style.cssText)
       }
     }
 
