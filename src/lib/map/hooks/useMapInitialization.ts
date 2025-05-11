@@ -97,6 +97,13 @@ export function useMapInitialization(
       try {
         await loader.load()
         
+        // Store initial container size
+        const containerSize = {
+          width: mapRef.current!.offsetWidth,
+          height: mapRef.current!.offsetHeight
+        }
+        
+        // Create map with saved center and zoom
         const map = new google.maps.Map(mapRef.current!, {
           center: { lat: mapData.center_lat, lng: mapData.center_lng },
           zoom: mapData.zoom_level,
@@ -141,6 +148,44 @@ export function useMapInitialization(
 
         googleMapRef.current = map
 
+        // Wait for map to be fully loaded and centered
+        await new Promise<void>((resolve) => {
+          const checkMapReady = () => {
+            const currentCenter = map.getCenter()
+            const currentZoom = map.getZoom()
+            
+            if (currentCenter && currentZoom) {
+              const centerLat = currentCenter.lat()
+              const centerLng = currentCenter.lng()
+              
+              // Check if map is centered and zoomed correctly
+              const isCentered = Math.abs(centerLat - mapData.center_lat) < 0.0001 && 
+                               Math.abs(centerLng - mapData.center_lng) < 0.0001
+              const isZoomed = Math.abs(currentZoom - mapData.zoom_level) < 0.1
+              
+              if (isCentered && isZoomed) {
+                resolve()
+              } else {
+                // If not centered/zoomed correctly, set them again
+                const newCenter = new google.maps.LatLng(mapData.center_lat, mapData.center_lng)
+                map.setCenter(newCenter as google.maps.LatLng)
+                map.setZoom(mapData.zoom_level)
+                setTimeout(checkMapReady, 100)
+              }
+            } else {
+              setTimeout(checkMapReady, 100)
+            }
+          }
+          
+          google.maps.event.addListenerOnce(map, 'idle', checkMapReady)
+        })
+
+        // Verify container size hasn't changed
+        if (mapRef.current!.offsetWidth !== containerSize.width || 
+            mapRef.current!.offsetHeight !== containerSize.height) {
+          console.warn('Map container size changed during initialization')
+        }
+
         if (mapData.mapStyle) {
           if (mapData.mapStyle.type === 'satellite') {
             map.setMapTypeId('satellite')
@@ -155,6 +200,10 @@ export function useMapInitialization(
           }
         }
 
+        // Add a small delay before adding overlays to ensure map is fully rendered
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // Add overlays
         mapData.overlays.forEach(overlay => {
           addOverlayToMap(overlay, map)
         })
