@@ -684,20 +684,29 @@ export default function MapEditor() {
           let updatedPosition = overlay.position
           let updatedProperties = { ...overlay.properties }
           
-          // Get current position if available
-          if ('getPosition' in currentOverlay && typeof currentOverlay.getPosition === 'function') {
-            const position = currentOverlay.getPosition()
+          // Get current position based on overlay type
+          if (overlay.type === 'shape' && 'shape' in currentOverlay) {
+            const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
+            let position: google.maps.LatLng | null = null
+            
+            if ('getCenter' in shape) {
+              position = shape.getCenter()
+            } else if ('getBounds' in shape) {
+              position = shape.getBounds()?.getCenter() || null
+            } else if ('getPath' in shape) {
+              const bounds = new google.maps.LatLngBounds()
+              shape.getPath().forEach((point: google.maps.LatLng) => bounds.extend(point))
+              position = bounds.getCenter()
+            }
+            
             if (position) {
               updatedPosition = {
                 lat: position.lat(),
                 lng: position.lng()
               }
             }
-          }
-          
-          // For shapes, ensure the style object is preserved
-          if (overlay.type === 'shape' && 'shape' in currentOverlay) {
-            const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
+            
+            // Update shape properties
             updatedProperties = {
               ...updatedProperties,
               style: {
@@ -706,6 +715,15 @@ export default function MapEditor() {
                 strokeWeight: shape.strokeWeight || 2,
                 fillOpacity: shape.fillOpacity || 0.5,
                 strokeOpacity: shape.strokeOpacity || 1
+              }
+            }
+          } else if ('getPosition' in currentOverlay) {
+            // Handle custom overlays (text, images, etc.)
+            const position = currentOverlay.getPosition()
+            if (position) {
+              updatedPosition = {
+                lat: position.lat(),
+                lng: position.lng()
               }
             }
           }
@@ -747,22 +765,22 @@ export default function MapEditor() {
       }
 
       console.log('Saving map data:', JSON.stringify(mapUpdate, null, 2))
-  
+
       if (id) {
         const { error } = await supabase
           .from('maps')
           .update(mapUpdate)
           .eq('id', id)
-  
+
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('maps')
           .insert([mapUpdate])
-  
+
         if (error) throw error
       }
-  
+
       navigate('/')
     } catch (error) {
       console.error('Error saving map:', error)
