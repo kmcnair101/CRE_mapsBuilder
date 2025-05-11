@@ -397,6 +397,16 @@ export function createShapeOverlay(
         // Use the content div's dimensions instead of the container div
         const width = this.contentDiv.offsetWidth
         const height = this.contentDiv.offsetHeight
+        
+        console.log('[ShapeOverlay] Position calculation:', {
+          originalPoint: point.toJSON(),
+          dimensions: { width, height },
+          calculatedPosition: {
+            left: point.x - width / 2,
+            top: point.y - height / 2
+          }
+        })
+        
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
       }
