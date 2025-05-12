@@ -330,6 +330,7 @@ export function createCustomTextOverlay(
     private drawCount = 0
     private lastWidth: number = 0
     private lastHeight: number = 0
+    private resizeHandleCleanup: (() => void) | null = null
 
     constructor(position: google.maps.LatLng, content: string, style: any) {
       super()
@@ -394,23 +395,58 @@ export function createCustomTextOverlay(
       contentDiv.innerHTML = this.content
     }
 
+    private setupResizeHandle() {
+      // Clean up existing resize handle if it exists
+      if (this.resizeHandleCleanup) {
+        this.resizeHandleCleanup();
+        this.resizeHandleCleanup = null;
+      }
+
+      if (this.contentDiv) {
+        const resizeCleanup = createResizeHandle(this.contentDiv, {
+          minWidth: 30,
+          maxWidth: 400,
+          onResize: (width: number) => {
+            this.currentWidth = width;
+            this.applyStyles(this.contentDiv!, width);
+            this.draw();
+            
+            if (onEdit) {
+              onEdit(this.content, {
+                ...this.style,
+                fontSize: this.baseFontSize,
+                width: width  // Use the new width
+              });
+            }
+          }
+        });
+
+        if (resizeCleanup) {
+          this.resizeHandleCleanup = resizeCleanup;
+          this.cleanupFunctions.push(resizeCleanup);
+        }
+      }
+    }
+
     updateContent(content: string, style: any) {
-      this.content = content
+      this.content = content;
       this.style = {
         ...this.style,
         ...style,
         width: style.width || this.baseWidth,
         fontSize: style.fontSize || this.baseFontSize
-      }
-      this.baseWidth = this.style.width
-      this.currentWidth = this.baseWidth
-      this.baseFontSize = this.style.fontSize
+      };
+      this.baseWidth = this.style.width;
+      this.currentWidth = this.baseWidth;
+      this.baseFontSize = this.style.fontSize;
 
       if (this.contentDiv) {
-        this.applyStyles(this.contentDiv, this.currentWidth)
+        this.applyStyles(this.contentDiv, this.currentWidth);
+        // Recreate resize handle after updating content
+        this.setupResizeHandle();
       }
 
-      this.draw()
+      this.draw();
     }
 
     onAdd() {
@@ -425,32 +461,35 @@ export function createCustomTextOverlay(
       }
 
       this.isMapReady = true;
-      const div = document.createElement('div')
-      div.className = 'custom-map-overlay'
+      const div = document.createElement('div');
+      div.className = 'custom-map-overlay';
       Object.assign(div.style, {
         position: 'absolute',
         cursor: 'move',
         userSelect: 'none'
-      })
+      });
 
-      const contentDiv = document.createElement('div')
-      contentDiv.className = 'text-content'
-      this.applyStyles(contentDiv, this.currentWidth)
-      this.contentDiv = contentDiv
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'text-content';
+      this.applyStyles(contentDiv, this.currentWidth);
+      this.contentDiv = contentDiv;
 
-      div.appendChild(contentDiv)
+      div.appendChild(contentDiv);
 
-      const deleteCleanup = createDeleteButton(div, onDelete)
+      // Setup resize handle
+      this.setupResizeHandle();
+
+      const deleteCleanup = createDeleteButton(div, onDelete);
       if (deleteCleanup) {
-        this.cleanupFunctions.push(deleteCleanup)
+        this.cleanupFunctions.push(deleteCleanup);
       }
 
       if (onEdit) {
         const editCleanup = createEditButton(div, () => {
           if (!this.modalRoot) {
-            this.modalRoot = document.createElement('div')
-            document.body.appendChild(this.modalRoot)
-            this.modalReactRoot = createRoot(this.modalRoot)
+            this.modalRoot = document.createElement('div');
+            document.body.appendChild(this.modalRoot);
+            this.modalReactRoot = createRoot(this.modalRoot);
           }
 
           this.modalReactRoot?.render(
@@ -464,74 +503,24 @@ export function createCustomTextOverlay(
                 width: this.baseWidth
               },
               onSave: (text, style) => {
-                this.updateContent(text, style)
-                onEdit(text, style)
-                this.modalReactRoot?.render(null)
-                
-                if (this.contentDiv) {
-                  const existingHandle = this.contentDiv.querySelector('.resize-handle');
-                  if (existingHandle) {
-                    existingHandle.remove();
-                  }
-                  
-                  const resizeCleanup = createResizeHandle(this.contentDiv, {
-                    minWidth: 30,
-                    maxWidth: 400,
-                    onResize: (width: number) => {
-                      this.currentWidth = width
-                      this.applyStyles(this.contentDiv!, width)
-                      this.draw()
-                      
-                      if (onEdit) {
-                        onEdit(this.content, {
-                          ...this.style,
-                          fontSize: this.baseFontSize,
-                          width: this.baseWidth
-                        })
-                      }
-                    }
-                  });
-                  
-                  if (resizeCleanup) {
-                    this.cleanupFunctions.push(resizeCleanup);
-                  }
-                }
+                this.updateContent(text, style);
+                onEdit(text, style);
+                this.modalReactRoot?.render(null);
               }
             })
-          )
-        })
+          );
+        });
         if (editCleanup) {
-          this.cleanupFunctions.push(editCleanup)
+          this.cleanupFunctions.push(editCleanup);
         }
-      }
-
-      const resizeCleanup = createResizeHandle(contentDiv, {
-        minWidth: 30,
-        maxWidth: 400,
-        onResize: (width: number) => {
-          this.currentWidth = width
-          this.applyStyles(contentDiv, width)
-          this.draw()
-          
-          if (onEdit) {
-            onEdit(this.content, {
-              ...this.style,
-              fontSize: this.baseFontSize,
-              width: this.baseWidth
-            })
-          }
-        }
-      })
-      if (resizeCleanup) {
-        this.cleanupFunctions.push(resizeCleanup)
       }
 
       const handleDragStart = (e: MouseEvent) => {
-        if (this.isResizing) return
-        e.stopPropagation()
-        this.isDragging = true
-        this.startPos = { x: e.clientX, y: e.clientY }
-        document.body.style.cursor = 'move'
+        if (this.isResizing) return;
+        e.stopPropagation();
+        this.isDragging = true;
+        this.startPos = { x: e.clientX, y: e.clientY };
+        document.body.style.cursor = 'move';
       }
 
       const handleDragMove = (e: MouseEvent) => {
@@ -551,75 +540,81 @@ export function createCustomTextOverlay(
 
       const handleDragEnd = () => {
         if (this.isDragging) {
-          this.isDragging = false
-          document.body.style.cursor = 'default'
+          this.isDragging = false;
+          document.body.style.cursor = 'default';
         }
       }
 
-      div.addEventListener('mousedown', handleDragStart)
-      document.addEventListener('mousemove', handleDragMove)
-      document.addEventListener('mouseup', handleDragEnd)
+      div.addEventListener('mousedown', handleDragStart);
+      document.addEventListener('mousemove', handleDragMove);
+      document.addEventListener('mouseup', handleDragEnd);
 
       this.cleanupFunctions.push(() => {
-        div.removeEventListener('mousedown', handleDragStart)
-        document.removeEventListener('mousemove', handleDragMove)
-        document.removeEventListener('mouseup', handleDragEnd)
-      })
+        div.removeEventListener('mousedown', handleDragStart);
+        div.removeEventListener('mousemove', handleDragMove);
+        div.removeEventListener('mouseup', handleDragEnd);
+      });
 
-      this.div = div
-      const panes = this.getPanes()
-      panes?.overlayMouseTarget.appendChild(div)
+      this.div = div;
+      const panes = this.getPanes();
+      panes?.overlayMouseTarget.appendChild(div);
     }
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        return
+        return;
       }
       
       // First ensure all styles are applied
       if (this.contentDiv) {
-        this.applyStyles(this.contentDiv, this.currentWidth)
+        this.applyStyles(this.contentDiv, this.currentWidth);
       }
       
       // Then calculate position
-      const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
+      const overlayProjection = this.getProjection();
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
       if (point) {
         // Get dimensions AFTER styles are applied
-        const width = this.div.offsetWidth
-        const height = this.div.offsetHeight
+        const width = this.div.offsetWidth;
+        const height = this.div.offsetHeight;
         
         // Calculate position
-        const left = Math.round(point.x - width / 2)
-        const top = Math.round(point.y - height / 2)
+        const left = Math.round(point.x - width / 2);
+        const top = Math.round(point.y - height / 2);
         
         // Apply position
         if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
-          this.div.style.left = `${left}px`
-          this.div.style.top = `${top}px`
+          this.div.style.left = `${left}px`;
+          this.div.style.top = `${top}px`;
         }
       }
     }
 
     onRemove() {
-      this.cleanupFunctions.forEach(cleanup => cleanup())
-      this.cleanupFunctions = []
+      // Clean up resize handle
+      if (this.resizeHandleCleanup) {
+        this.resizeHandleCleanup();
+        this.resizeHandleCleanup = null;
+      }
+
+      this.cleanupFunctions.forEach(cleanup => cleanup());
+      this.cleanupFunctions = [];
       if (this.div) {
-        this.div.parentNode?.removeChild(this.div)
-        this.div = null
-        this.contentDiv = null
+        this.div.parentNode?.removeChild(this.div);
+        this.div = null;
+        this.contentDiv = null;
       }
       if (this.modalRoot) {
-        this.modalReactRoot?.unmount()
-        this.modalRoot.parentNode?.removeChild(this.modalRoot)
-        this.modalRoot = null
-        this.modalReactRoot = null
+        this.modalReactRoot?.unmount();
+        this.modalRoot.parentNode?.removeChild(this.modalRoot);
+        this.modalRoot = null;
+        this.modalReactRoot = null;
       }
     }
 
     getPosition() {
-      return this.position
+      return this.position;
     }
   }
 
