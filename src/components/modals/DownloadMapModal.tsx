@@ -14,6 +14,7 @@ interface DownloadMapModalProps {
   mapData: any // Replace with your map data type
 }
 
+
 export function DownloadMapModal({
   open,
   width,
