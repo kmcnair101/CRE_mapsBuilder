@@ -63,7 +63,8 @@ export function useMapDownload() {
     mapRef: React.RefObject<HTMLDivElement>,
     forThumbnail = false,
     width?: number,
-    height?: number
+    height?: number,
+    googleMapRef?: React.RefObject<google.maps.Map>
   ) => {
     if (!hasAccess()) {
       return null
@@ -95,6 +96,21 @@ export function useMapDownload() {
       const logo = mapRef.current.querySelector('.gm-style a[href*="maps.google.com"]')
       if (logo instanceof HTMLElement) {
         logo.style.visibility = 'hidden'
+      }
+
+      // Wait for map to be idle
+      const map = googleMapRef?.current
+      if (map) {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Map idle timeout'))
+          }, 10000)
+
+          google.maps.event.addListenerOnce(map, 'idle', () => {
+            clearTimeout(timeout)
+            resolve()
+          })
+        })
       }
 
       const canvas = await html2canvas(mapRef.current, {
@@ -142,10 +158,11 @@ export function useMapDownload() {
               return loadImage(img)
             }))
 
-            // Wait a bit to ensure all images are loaded
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            // Wait a bit longer to ensure all images are loaded
+            await new Promise(resolve => setTimeout(resolve, 2000))
           } catch (error) {
-            // Error in onclone
+            console.error('Error in onclone:', error)
+            throw error
           }
         }
       })
@@ -174,6 +191,7 @@ export function useMapDownload() {
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
           return dataUrl
         } catch (err) {
+          console.error('Error generating thumbnail:', err)
           return null
         }
       }
@@ -189,10 +207,12 @@ export function useMapDownload() {
 
         return null
       } catch (err) {
-        return null
+        console.error('Error generating download:', err)
+        throw new Error('Failed to generate download image')
       }
     } catch (error) {
-      return null
+      console.error('Error in handleDownload:', error)
+      throw error
     }
   }
 

@@ -690,7 +690,7 @@ export default function MapEditor() {
   const handleMapDownload = async () => {
     setDownloading(true)
     try {
-      await handleDownload(mapRef)
+      await handleDownload(mapRef, false, undefined, undefined, googleMapRef)
     } catch (error) {
       console.error('Error downloading map:', error)
     } finally {
@@ -783,7 +783,7 @@ export default function MapEditor() {
       })
 
       // Generate thumbnail before saving
-      const thumbnail = await handleDownload(mapRef, true)
+      const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
 
       // Simplify the map style object
       const simplifiedMapStyle = {
@@ -972,7 +972,7 @@ export default function MapEditor() {
         onDownload={async () => {
           setDownloading(true)
           try {
-            await handleDownload(mapRef, false, downloadWidth, downloadHeight)
+            await handleDownload(mapRef, false, downloadWidth, downloadHeight, googleMapRef)
             setDownloadModalOpen(false)
           } catch (error) {
             // handle error
