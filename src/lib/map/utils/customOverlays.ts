@@ -415,12 +415,11 @@ export function createCustomTextOverlay(
       handle.style.border = '1px solid #D1D5DB';
       handle.style.borderRadius = '4px';
       handle.style.cursor = 'se-resize';
-      handle.style.display = 'none';  // Initially hidden
+      handle.style.display = 'none';
       handle.style.alignItems = 'center';
       handle.style.justifyContent = 'center';
       handle.style.zIndex = '1000';
 
-      // Add resize handle icon
       const handleIcon = document.createElement('div');
       handleIcon.style.width = '6px';
       handleIcon.style.height = '6px';
@@ -430,24 +429,17 @@ export function createCustomTextOverlay(
 
       // Show/hide resize handle
       const handleMouseEnter = () => {
-        if (!this.isResizing && handle) {
+        if (!this.isResizing) {
           handle.style.display = 'flex';
-          handle.style.opacity = '1';
         }
       };
 
       const handleMouseLeave = (e: MouseEvent) => {
-        if (!handle) return;
         const rect = handle.getBoundingClientRect();
         const isOverHandle = e.clientX >= rect.left && e.clientX <= rect.right &&
                             e.clientY >= rect.top && e.clientY <= rect.bottom;
         if (!isOverHandle && !this.isResizing) {
-          handle.style.opacity = '0';
-          setTimeout(() => {
-            if (handle && handle.style.opacity === '0') {
-              handle.style.display = 'none';
-            }
-          }, 200);
+          handle.style.display = 'none';
         }
       };
 
