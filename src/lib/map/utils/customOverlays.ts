@@ -639,6 +639,7 @@ export function createCustomTextOverlay(
     }
   }
 
+  
   // Container styles
   const containerStyle = {
     backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
