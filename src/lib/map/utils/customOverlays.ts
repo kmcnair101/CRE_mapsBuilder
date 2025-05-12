@@ -57,16 +57,20 @@ export function createCustomImageOverlay(
     }
 
     private applyStyles(container: HTMLDivElement) {
-      container.style.backgroundColor = this.getRgbaColor(this.style.backgroundColor, this.style.backgroundOpacity)
-      container.style.border = `${this.style.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor, this.style.borderOpacity)}`
-      container.style.padding = `${this.style.padding}px`
-      container.style.borderRadius = '4px'
-      container.style.display = 'inline-block'
-      container.style.position = 'relative'
-      container.style.minWidth = '50px'
-      container.style.maxWidth = '400px'
-      container.style.width = `${this.width}px`
-      container.style.boxSizing = 'border-box'
+      const styles = {
+        backgroundColor: this.getRgbaColor(this.style.backgroundColor, this.style.backgroundOpacity),
+        border: `${this.style.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor, this.style.borderOpacity)}`,
+        padding: `${this.style.padding}px`,
+        borderRadius: '4px',
+        display: 'inline-block',
+        position: 'relative',
+        minWidth: '50px',
+        maxWidth: '400px',
+        width: `${this.width}px`,
+        boxSizing: 'border-box'
+      }
+
+      Object.assign(container.style, styles)
     }
 
     updateStyle(style: ContainerStyle) {
@@ -89,30 +93,34 @@ export function createCustomImageOverlay(
 
       this.isMapReady = true;
       const div = document.createElement('div')
-      div.style.position = 'absolute'
-      div.style.cursor = 'move'
-      div.style.userSelect = 'none'
+      div.className = 'custom-map-overlay'
+      Object.assign(div.style, {
+        position: 'absolute',
+        cursor: 'move',
+        userSelect: 'none'
+      })
 
-      // Create container with styles
       const container = document.createElement('div')
       this.applyStyles(container)
       this.container = container
 
-      // Create image wrapper for maintaining aspect ratio
       const imageWrapper = document.createElement('div')
-      imageWrapper.style.position = 'relative'
-      imageWrapper.style.width = '100%'
-      imageWrapper.style.overflow = 'hidden'
+      Object.assign(imageWrapper.style, {
+        position: 'relative',
+        width: '100%',
+        overflow: 'hidden'
+      })
       this.imageWrapper = imageWrapper
 
       const img = document.createElement('img')
       img.src = this.url
-      img.style.width = '100%'
-      img.style.height = 'auto'
-      img.style.display = 'block'
+      Object.assign(img.style, {
+        width: '100%',
+        height: 'auto',
+        display: 'block'
+      })
       img.draggable = false
 
-      // Update aspect ratio when image loads
       img.onload = () => {
         this.aspectRatio = img.naturalWidth / img.naturalHeight
         this.isImageLoaded = true
@@ -125,13 +133,11 @@ export function createCustomImageOverlay(
       imageWrapper.appendChild(img)
       container.appendChild(imageWrapper)
 
-      // Add delete button
       const deleteCleanup = createDeleteButton(div, onDelete)
       if (deleteCleanup) {
         this.cleanupFunctions.push(deleteCleanup)
       }
 
-      // Add edit button
       if (onEdit) {
         const editCleanup = createEditButton(div, () => {
           if (!this.modalRoot) {
@@ -164,7 +170,6 @@ export function createCustomImageOverlay(
         }
       }
 
-      // Add resize handle
       const resizeCleanup = createResizeHandle(container, {
         minWidth: 50,
         maxWidth: 400,
@@ -186,7 +191,6 @@ export function createCustomImageOverlay(
         this.cleanupFunctions.push(resizeCleanup)
       }
 
-      // Handle dragging
       const handleDragStart = (e: MouseEvent) => {
         e.stopPropagation()
         this.isDragging = true
@@ -240,25 +244,31 @@ export function createCustomImageOverlay(
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        return;
+        return
       }
       
-      const overlayProjection = this.getProjection();
-      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
+      // First ensure all styles are applied
+      if (this.container) {
+        this.applyStyles(this.container)
+      }
+      
+      // Then calculate position
+      const overlayProjection = this.getProjection()
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
       
       if (point) {
-        // Get the current dimensions
-        const width = this.div.offsetWidth;
-        const height = this.div.offsetHeight;
+        // Get dimensions AFTER styles are applied
+        const width = this.div.offsetWidth
+        const height = this.div.offsetHeight
         
-        // Calculate the position, ensuring we center the overlay
-        const left = Math.round(point.x - width / 2);
-        const top = Math.round(point.y - height / 2);
+        // Calculate position
+        const left = Math.round(point.x - width / 2)
+        const top = Math.round(point.y - height / 2)
         
-        // Only update if position has changed
+        // Apply position
         if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
-          this.div.style.left = `${left}px`;
-          this.div.style.top = `${top}px`;
+          this.div.style.left = `${left}px`
+          this.div.style.top = `${top}px`
         }
       }
     }
@@ -351,29 +361,29 @@ export function createCustomTextOverlay(
     private applyStyles(contentDiv: HTMLDivElement, width: number) {
       const scaled = this.calculateScaledValues(width)
       
+      const styles = {
+        color: this.style.color || '#000000',
+        fontSize: `${scaled.fontSize}px`,
+        fontFamily: this.style.fontFamily || 'Arial',
+        backgroundColor: this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1),
+        border: `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`,
+        padding: `${scaled.padding}px`,
+        borderRadius: '4px',
+        textAlign: 'center',
+        minWidth: 'min-content',
+        width: `${width}px`,
+        maxWidth: '400px',
+        whiteSpace: 'pre',
+        display: 'inline-block',
+        position: 'relative',
+        boxSizing: 'border-box',
+        lineHeight: '1.2',
+        verticalAlign: 'middle'
+      }
+
+      Object.assign(contentDiv.style, styles)
+      
       contentDiv.innerHTML = this.content
-      // Preserve text formatting styles
-      contentDiv.style.fontWeight = 'inherit'
-      contentDiv.style.fontStyle = 'inherit'
-      contentDiv.style.textDecoration = 'inherit'
-      // Set other styles
-      contentDiv.style.color = this.style.color || '#000000'
-      contentDiv.style.fontSize = `${scaled.fontSize}px`
-      contentDiv.style.fontFamily = this.style.fontFamily || 'Arial'
-      contentDiv.style.backgroundColor = this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1)
-      contentDiv.style.border = `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`
-      contentDiv.style.padding = `${scaled.padding}px`
-      contentDiv.style.borderRadius = '4px'
-      contentDiv.style.textAlign = 'center'
-      contentDiv.style.minWidth = 'min-content'
-      contentDiv.style.width = `${width}px`
-      contentDiv.style.maxWidth = '400px'
-      contentDiv.style.whiteSpace = 'pre'
-      contentDiv.style.display = 'inline-block'
-      contentDiv.style.position = 'relative'
-      contentDiv.style.boxSizing = 'border-box'
-      contentDiv.style.lineHeight = '1.2'
-      contentDiv.style.verticalAlign = 'middle'
     }
 
     updateContent(content: string, style: any) {
@@ -403,14 +413,12 @@ export function createCustomTextOverlay(
 
       this.isMapReady = true;
       const div = document.createElement('div')
-      div.style.position = 'absolute'
-      div.style.cursor = 'move'
-      div.style.userSelect = 'none'
-      div.style.display = 'flex'
-      div.style.justifyContent = 'center'
-      div.style.alignItems = 'center'
-      div.style.width = 'auto'
-      div.style.height = 'auto'
+      div.className = 'custom-map-overlay'
+      Object.assign(div.style, {
+        position: 'absolute',
+        cursor: 'move',
+        userSelect: 'none'
+      })
 
       const contentDiv = document.createElement('div')
       contentDiv.className = 'text-content'
@@ -419,13 +427,11 @@ export function createCustomTextOverlay(
 
       div.appendChild(contentDiv)
 
-      // Add delete button
       const deleteCleanup = createDeleteButton(div, onDelete)
       if (deleteCleanup) {
         this.cleanupFunctions.push(deleteCleanup)
       }
 
-      // Add edit button if onEdit is provided
       if (onEdit) {
         const editCleanup = createEditButton(div, () => {
           if (!this.modalRoot) {
@@ -449,15 +455,12 @@ export function createCustomTextOverlay(
                 onEdit(text, style)
                 this.modalReactRoot?.render(null)
                 
-                // Re-add resize handle after editing
                 if (this.contentDiv) {
-                  // Remove any existing resize handle first
                   const existingHandle = this.contentDiv.querySelector('.resize-handle');
                   if (existingHandle) {
                     existingHandle.remove();
                   }
                   
-                  // Add a new resize handle
                   const resizeCleanup = createResizeHandle(this.contentDiv, {
                     minWidth: 30,
                     maxWidth: 400,
@@ -489,7 +492,6 @@ export function createCustomTextOverlay(
         }
       }
 
-      // Add resize handle with proper configuration
       const resizeCleanup = createResizeHandle(contentDiv, {
         minWidth: 30,
         maxWidth: 400,
@@ -511,7 +513,6 @@ export function createCustomTextOverlay(
         this.cleanupFunctions.push(resizeCleanup)
       }
 
-      // Handle dragging
       const handleDragStart = (e: MouseEvent) => {
         if (this.isResizing) return
         e.stopPropagation()
@@ -559,25 +560,31 @@ export function createCustomTextOverlay(
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        return;
+        return
       }
       
-      const overlayProjection = this.getProjection();
-      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
+      // First ensure all styles are applied
+      if (this.container) {
+        this.applyStyles(this.container)
+      }
+      
+      // Then calculate position
+      const overlayProjection = this.getProjection()
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
       
       if (point) {
-        // Get the current dimensions
-        const width = this.div.offsetWidth;
-        const height = this.div.offsetHeight;
+        // Get dimensions AFTER styles are applied
+        const width = this.div.offsetWidth
+        const height = this.div.offsetHeight
         
-        // Calculate the position, ensuring we center the overlay
-        const left = Math.round(point.x - width / 2);
-        const top = Math.round(point.y - height / 2);
+        // Calculate position
+        const left = Math.round(point.x - width / 2)
+        const top = Math.round(point.y - height / 2)
         
-        // Only update if position has changed
+        // Apply position
         if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
-          this.div.style.left = `${left}px`;
-          this.div.style.top = `${top}px`;
+          this.div.style.left = `${left}px`
+          this.div.style.top = `${top}px`
         }
       }
     }
@@ -603,23 +610,33 @@ export function createCustomTextOverlay(
     }
   }
 
-  
-  const style = {
-    color: overlay.properties.color || '#000000',
-    fontSize: overlay.properties.fontSize || 14,
-    fontFamily: overlay.properties.fontFamily || 'Arial',
-    backgroundColor: overlay.properties.backgroundColor || '#FFFFFF',
-    borderColor: overlay.properties.borderColor || '#000000',
-    borderWidth: overlay.properties.borderWidth || 1,
-    padding: overlay.properties.padding || 8,
-    backgroundOpacity: overlay.properties.backgroundOpacity || 1,
-    borderOpacity: overlay.properties.borderOpacity || 1,
-    width: overlay.properties.width || 80
+  // Merge container styles with defaults
+  const containerStyle = {
+    backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
+    borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
+    borderWidth: overlay.properties.containerStyle?.borderWidth || 1,
+    padding: overlay.properties.containerStyle?.padding || 8,
+    backgroundOpacity: overlay.properties.containerStyle?.backgroundOpacity || 1,
+    borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
   }
+
+  // Merge text styles with defaults
+  const textStyle = {
+    color: overlay.properties.textStyle?.color || '#000000',
+    fontSize: overlay.properties.textStyle?.fontSize || 14,
+    fontFamily: overlay.properties.textStyle?.fontFamily || 'Arial',
+    fontWeight: overlay.properties.textStyle?.fontWeight || 'normal',
+    textAlign: overlay.properties.textStyle?.textAlign || 'center'
+  }
+
   const textOverlay = new CustomTextOverlay(
     new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
     overlay.properties.content || '',
-    style
+    {
+      ...containerStyle,
+      ...textStyle,
+      width: overlay.properties.width || 80
+    }
   )
 
   textOverlay.setMap(map)
