@@ -476,8 +476,8 @@ export function createCustomTextOverlay(
 
       div.appendChild(contentDiv);
 
-      // Add resize handle
-      const resizeCleanup = createResizeHandle(contentDiv, {
+      // --- CHANGE: Attach resize handle to the outer div, not contentDiv ---
+      const resizeCleanup = createResizeHandle(div, {
         minWidth: 30,
         maxWidth: 400,
         onResize: (width: number) => {
@@ -497,6 +497,7 @@ export function createCustomTextOverlay(
       if (resizeCleanup) {
         this.cleanupFunctions.push(resizeCleanup);
       }
+      // --- END CHANGE ---
 
       const deleteCleanup = createDeleteButton(div, onDelete);
       if (deleteCleanup) {
