@@ -677,39 +677,19 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
   } = config
 
   const handle = document.createElement('div')
-  handle.className = 'resize-handle'
-  Object.assign(handle.style, {
-    position: 'absolute',
-    right: '-8px',
-    bottom: '-8px',
-    width: '16px',
-    height: '16px',
-    backgroundColor: 'white',
-    border: '1px solid #D1D5DB',
-    borderRadius: '4px',
-    cursor: 'se-resize',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: '1000',
-    transition: 'background-color 0.2s',
-    opacity: '1'
-  })
-
-  const icon = document.createElement('div')
-  Object.assign(icon.style, {
-    width: '6px',
-    height: '6px',
-    borderRight: '2px solid #D1D5DB',
-    borderBottom: '2px solid #D1D5DB'
-  })
-
-  try {
-    handle.appendChild(icon)
-  } catch (error) {
-    console.warn('Failed to append resize handle icon')
-    return null
-  }
+  handle.style.position = 'absolute'
+  handle.style.right = '-8px'
+  handle.style.bottom = '-8px'
+  handle.style.width = '16px'
+  handle.style.height = '16px'
+  handle.style.backgroundColor = 'white'
+  handle.style.border = '1px solid #D1D5DB'
+  handle.style.borderRadius = '4px'
+  handle.style.cursor = 'se-resize'
+  handle.style.display = 'none'  // Initially hidden
+  handle.style.alignItems = 'center'
+  handle.style.justifyContent = 'center'
+  handle.style.zIndex = '1000'
 
   let isResizing = false
   let startX = 0
@@ -722,7 +702,6 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
     startX = e.clientX
     startWidth = container.offsetWidth
     document.body.style.cursor = 'se-resize'
-    handle.style.backgroundColor = '#F3F4F6'
   }
 
   const handleMouseMove = (e: MouseEvent) => {
@@ -756,13 +735,16 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
   // Handle hover on the resize handle itself
   const handleMouseEnter = () => {
     if (!isResizing) {
-      handle.style.backgroundColor = '#F3F4F6'
+      handle.style.display = 'flex'
     }
   }
 
-  const handleHandleMouseLeave = () => {
-    if (!isResizing) {
-      handle.style.backgroundColor = 'white'
+  const handleMouseLeave = (e: MouseEvent) => {
+    const rect = handle.getBoundingClientRect()
+    const isOverHandle = e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top && e.clientY <= rect.bottom
+    if (!isOverHandle && !isResizing) {
+      handle.style.display = 'none'
     }
   }
 
@@ -770,7 +752,7 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
   handle.addEventListener('mouseenter', handleMouseEnter)
-  handle.addEventListener('mouseleave', handleHandleMouseLeave)
+  handle.addEventListener('mouseleave', handleMouseLeave)
 
   try {
     container.appendChild(handle)
@@ -784,7 +766,7 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
     handle.removeEventListener('mouseenter', handleMouseEnter)
-    handle.removeEventListener('mouseleave', handleHandleMouseLeave)
+    handle.removeEventListener('mouseleave', handleMouseLeave)
     try {
       if (handle.parentNode === container) {
         container.removeChild(handle)
