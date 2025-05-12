@@ -385,7 +385,8 @@ export function createCustomTextOverlay(
         position: 'relative',
         boxSizing: 'border-box',
         lineHeight: '1.2',
-        verticalAlign: 'middle'
+        verticalAlign: 'middle',
+        cursor: 'move'
       }
 
       // Apply all styles at once
@@ -407,6 +408,7 @@ export function createCustomTextOverlay(
           minWidth: 30,
           maxWidth: 400,
           onResize: (width: number) => {
+            this.isResizing = true;
             this.currentWidth = width;
             this.applyStyles(this.contentDiv!, width);
             this.draw();
@@ -415,7 +417,7 @@ export function createCustomTextOverlay(
               onEdit(this.content, {
                 ...this.style,
                 fontSize: this.baseFontSize,
-                width: width  // Use the new width
+                width: width
               });
             }
           }
@@ -516,6 +518,12 @@ export function createCustomTextOverlay(
       }
 
       const handleDragStart = (e: MouseEvent) => {
+        // Don't start drag if clicking on resize handle
+        const target = e.target as HTMLElement;
+        if (target.closest('.resize-handle')) {
+          return;
+        }
+        
         if (this.isResizing) return;
         e.stopPropagation();
         this.isDragging = true;
@@ -541,6 +549,10 @@ export function createCustomTextOverlay(
       const handleDragEnd = () => {
         if (this.isDragging) {
           this.isDragging = false;
+          document.body.style.cursor = 'default';
+        }
+        if (this.isResizing) {
+          this.isResizing = false;
           document.body.style.cursor = 'default';
         }
       }
