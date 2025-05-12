@@ -11,6 +11,14 @@ interface ImageOverlayConfig {
   style: ContainerStyle
 }
 
+interface ResizeConfig {
+  minWidth: number
+  maxWidth: number
+  maintainAspectRatio?: boolean
+  aspectRatio?: number
+  onResize: (width: number) => void
+}
+
 export function createCustomImageOverlay(
   config: ImageOverlayConfig,
   map: google.maps.Map,
@@ -678,40 +686,57 @@ export function createCustomTextOverlay(
 export function createResizeHandle(container: HTMLElement | null, config: ResizeConfig) {
   if (!container) return null
 
-  const {
-    minWidth,
-    maxWidth,
-    maintainAspectRatio = false,
-    aspectRatio = 1,
-    onResize
-  } = config
+  // Ensure container has proper positioning
+  if (container.style.position !== 'relative') {
+    container.style.position = 'relative'
+  }
 
   const handle = document.createElement('div')
-  handle.style.position = 'absolute'
-  handle.style.right = '-8px'
-  handle.style.bottom = '-8px'
-  handle.style.width = '16px'
-  handle.style.height = '16px'
-  handle.style.backgroundColor = 'white'
-  handle.style.border = '1px solid #D1D5DB'
-  handle.style.borderRadius = '4px'
-  handle.style.cursor = 'se-resize'
-  handle.style.display = 'none'  // Initially hidden
-  handle.style.alignItems = 'center'
-  handle.style.justifyContent = 'center'
-  handle.style.zIndex = '1000'
+  handle.className = 'resize-handle'
+  
+  // Set handle styles with proper visibility
+  Object.assign(handle.style, {
+    position: 'absolute',
+    right: '-8px',
+    bottom: '-8px',
+    width: '16px',
+    height: '16px',
+    backgroundColor: 'white',
+    border: '1px solid #D1D5DB',
+    borderRadius: '4px',
+    cursor: 'se-resize',
+    display: 'none',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: '1000',
+    transition: 'opacity 0.2s, background-color 0.2s',
+    opacity: '0'
+  })
+
+  // Add resize handle icon
+  const icon = document.createElement('div')
+  Object.assign(icon.style, {
+    width: '6px',
+    height: '6px',
+    borderRight: '2px solid #D1D5DB',
+    borderBottom: '2px solid #D1D5DB'
+  })
+  handle.appendChild(icon)
 
   let isResizing = false
   let startX = 0
   let startWidth = 0
   let lastWidth = container.offsetWidth
 
+  // Mouse event handlers
   const handleMouseDown = (e: MouseEvent) => {
     e.stopPropagation()
     isResizing = true
     startX = e.clientX
     startWidth = container.offsetWidth
     document.body.style.cursor = 'se-resize'
+    handle.style.backgroundColor = '#F3F4F6'
+    handle.style.opacity = '1'
   }
 
   const handleMouseMove = (e: MouseEvent) => {
@@ -719,18 +744,12 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
     e.preventDefault()
     
     const dx = e.clientX - startX
-    const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidth + dx))
+    const newWidth = Math.max(config.minWidth, Math.min(config.maxWidth, startWidth + dx))
     
     if (newWidth !== lastWidth) {
       lastWidth = newWidth
       container.style.width = `${newWidth}px`
-
-      if (maintainAspectRatio && aspectRatio) {
-        const newHeight = newWidth / aspectRatio
-        container.style.height = `${newHeight}px`
-      }
-
-      onResize(newWidth)
+      config.onResize(newWidth)
     }
   }
 
@@ -739,51 +758,71 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
       isResizing = false
       document.body.style.cursor = 'default'
       handle.style.backgroundColor = 'white'
+      handle.style.opacity = '0'
     }
   }
 
-  // Handle hover on the resize handle itself
-  const handleMouseEnter = () => {
-    if (!isResizing && handle) {
+  // Show/hide resize handle on hover
+  const containerMouseEnter = () => {
+    if (!isResizing) {
       handle.style.display = 'flex'
+      handle.style.opacity = '1'
+    }
+  }
+
+  const containerMouseLeave = (e: MouseEvent) => {
+    const rect = handle.getBoundingClientRect()
+    const isOverHandle = e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top && e.clientY <= rect.bottom
+    
+    if (!isOverHandle && !isResizing) {
+      handle.style.display = 'none'
+      handle.style.opacity = '0'
+    }
+  }
+
+  const handleMouseEnter = () => {
+    if (!isResizing) {
+      handle.style.display = 'flex'
+      handle.style.opacity = '1'
     }
   }
 
   const handleMouseLeave = (e: MouseEvent) => {
-    if (!handle) return;
-    const rect = handle.getBoundingClientRect()
-    const isOverHandle = e.clientX >= rect.left && e.clientX <= rect.right &&
-                        e.clientY >= rect.top && e.clientY <= rect.bottom
-    if (!isOverHandle && !isResizing) {
+    const rect = container.getBoundingClientRect()
+    const isOverContainer = e.clientX >= rect.left && e.clientX <= rect.right &&
+                           e.clientY >= rect.top && e.clientY <= rect.bottom
+    
+    if (!isOverContainer && !isResizing) {
       handle.style.display = 'none'
+      handle.style.opacity = '0'
     }
   }
 
+  // Add event listeners
+  container.addEventListener('mouseenter', containerMouseEnter)
+  container.addEventListener('mouseleave', containerMouseLeave)
   handle.addEventListener('mousedown', handleMouseDown)
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
   handle.addEventListener('mouseenter', handleMouseEnter)
   handle.addEventListener('mouseleave', handleMouseLeave)
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
 
-  try {
-    container.appendChild(handle)
-  } catch (error) {
-    console.warn('Failed to append resize handle')
-    return null
-  }
+  // Append handle to container
+  container.appendChild(handle)
 
+  // Return cleanup function
   return () => {
+    container.removeEventListener('mouseenter', containerMouseEnter)
+    container.removeEventListener('mouseleave', containerMouseLeave)
     handle.removeEventListener('mousedown', handleMouseDown)
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', handleMouseUp)
     handle.removeEventListener('mouseenter', handleMouseEnter)
     handle.removeEventListener('mouseleave', handleMouseLeave)
-    try {
-      if (handle.parentNode === container) {
-        container.removeChild(handle)
-      }
-    } catch (error) {
-      console.warn('Failed to remove resize handle')
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+    
+    if (handle.parentNode === container) {
+      container.removeChild(handle)
     }
   }
 }
