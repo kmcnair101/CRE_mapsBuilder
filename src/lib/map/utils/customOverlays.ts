@@ -823,6 +823,7 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
     
     if (handle.parentNode === container) {
       container.removeChild(handle)
+      
     }
   }
 }
