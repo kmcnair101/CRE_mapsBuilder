@@ -162,19 +162,30 @@ export default function MapEditor() {
   }
 
   const handleTextEdit = (id: string, text: string, style: any) => {
-    console.log('[MapEditor] Before text edit:', {
-      overlays: mapData.overlays,
-      overlayCount: mapData.overlays.length
-    })
     setMapData(prev => ({
       ...prev,
-      overlays: prev.overlays.map(o => 
+      overlays: prev.overlays.map(o =>
         o.id === id ? {
           ...o,
           properties: {
             ...o.properties,
             content: text,
-            ...style
+            textStyle: {
+              color: style.color,
+              fontSize: style.fontSize,
+              fontFamily: style.fontFamily,
+              fontWeight: style.fontWeight,
+              textAlign: style.textAlign,
+            },
+            containerStyle: {
+              backgroundColor: style.backgroundColor,
+              borderColor: style.borderColor,
+              borderWidth: style.borderWidth,
+              padding: style.padding,
+              backgroundOpacity: style.backgroundOpacity,
+              borderOpacity: style.borderOpacity,
+            },
+            width: style.width
           }
         } : o
       )
