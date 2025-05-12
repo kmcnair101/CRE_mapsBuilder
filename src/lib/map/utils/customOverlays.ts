@@ -35,6 +35,7 @@ export function createCustomImageOverlay(
     private cleanupFunctions: Array<() => void> = []
     private style: ContainerStyle
     private isMapReady = false
+    private isImageLoaded = false
     private drawCount = 0
     private lastWidth: number = 0
     private lastHeight: number = 0
@@ -55,14 +56,26 @@ export function createCustomImageOverlay(
       return `rgba(${r}, ${g}, ${b}, ${opacity})`
     }
 
+    private applyStyles(container: HTMLDivElement) {
+      container.style.backgroundColor = this.getRgbaColor(this.style.backgroundColor, this.style.backgroundOpacity)
+      container.style.border = `${this.style.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor, this.style.borderOpacity)}`
+      container.style.padding = `${this.style.padding}px`
+      container.style.borderRadius = '4px'
+      container.style.display = 'inline-block'
+      container.style.position = 'relative'
+      container.style.minWidth = '50px'
+      container.style.maxWidth = '400px'
+      container.style.width = `${this.width}px`
+      container.style.boxSizing = 'border-box'
+    }
+
     updateStyle(style: ContainerStyle) {
       this.style = style
       if (this.container) {
-        this.container.style.backgroundColor = this.getRgbaColor(style.backgroundColor, style.backgroundOpacity)
-        this.container.style.border = `${style.borderWidth}px solid ${this.getRgbaColor(style.borderColor, style.borderOpacity)}`
-        this.container.style.padding = `${style.padding}px`
+        this.applyStyles(this.container)
       }
     }
+
     onAdd() {
       const map = this.getMap();
 
@@ -82,16 +95,8 @@ export function createCustomImageOverlay(
 
       // Create container with styles
       const container = document.createElement('div')
-      container.style.backgroundColor = this.getRgbaColor(this.style.backgroundColor, this.style.backgroundOpacity)
-      container.style.border = `${this.style.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor, this.style.borderOpacity)}`
-      container.style.padding = `${this.style.padding}px`
-      container.style.borderRadius = '4px'
-      container.style.display = 'inline-block'
-      container.style.position = 'relative'
-      container.style.minWidth = '50px'
-      container.style.maxWidth = '400px'
-      container.style.width = `${this.width}px`
-      container.style.boxSizing = 'border-box'
+      this.applyStyles(container)
+      this.container = container
 
       // Create image wrapper for maintaining aspect ratio
       const imageWrapper = document.createElement('div')
@@ -110,9 +115,11 @@ export function createCustomImageOverlay(
       // Update aspect ratio when image loads
       img.onload = () => {
         this.aspectRatio = img.naturalWidth / img.naturalHeight
+        this.isImageLoaded = true
         if (this.imageWrapper) {
           this.imageWrapper.style.height = 'auto'
         }
+        this.draw()
       }
 
       imageWrapper.appendChild(img)
@@ -161,7 +168,7 @@ export function createCustomImageOverlay(
       const resizeCleanup = createResizeHandle(container, {
         minWidth: 50,
         maxWidth: 400,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
         onResize: (width: number) => {
           this.width = width
           container.style.width = `${width}px`
@@ -225,7 +232,6 @@ export function createCustomImageOverlay(
       })
 
       div.appendChild(container)
-      this.container = container
       this.div = div
 
       const panes = this.getPanes()
@@ -307,9 +313,9 @@ export function createCustomTextOverlay(
     private startPos = { x: 0, y: 0 }
     private startWidth = 0
     private cleanupFunctions: Array<() => void> = []
-    private baseWidth = 80
-    private currentWidth = 80
-    private baseFontSize = 14
+    private baseWidth: number
+    private currentWidth: number
+    private baseFontSize: number
     private isMapReady = false
     private drawCount = 0
     private lastWidth: number = 0
@@ -342,6 +348,34 @@ export function createCustomTextOverlay(
       }
     }
 
+    private applyStyles(contentDiv: HTMLDivElement, width: number) {
+      const scaled = this.calculateScaledValues(width)
+      
+      contentDiv.innerHTML = this.content
+      // Preserve text formatting styles
+      contentDiv.style.fontWeight = 'inherit'
+      contentDiv.style.fontStyle = 'inherit'
+      contentDiv.style.textDecoration = 'inherit'
+      // Set other styles
+      contentDiv.style.color = this.style.color || '#000000'
+      contentDiv.style.fontSize = `${scaled.fontSize}px`
+      contentDiv.style.fontFamily = this.style.fontFamily || 'Arial'
+      contentDiv.style.backgroundColor = this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1)
+      contentDiv.style.border = `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`
+      contentDiv.style.padding = `${scaled.padding}px`
+      contentDiv.style.borderRadius = '4px'
+      contentDiv.style.textAlign = 'center'
+      contentDiv.style.minWidth = 'min-content'
+      contentDiv.style.width = `${width}px`
+      contentDiv.style.maxWidth = '400px'
+      contentDiv.style.whiteSpace = 'pre'
+      contentDiv.style.display = 'inline-block'
+      contentDiv.style.position = 'relative'
+      contentDiv.style.boxSizing = 'border-box'
+      contentDiv.style.lineHeight = '1.2'
+      contentDiv.style.verticalAlign = 'middle'
+    }
+
     updateContent(content: string, style: any) {
       this.content = content
       this.style = style
@@ -350,34 +384,12 @@ export function createCustomTextOverlay(
       this.baseFontSize = style.fontSize || this.baseFontSize
 
       if (this.contentDiv) {
-        const scaled = this.calculateScaledValues(this.currentWidth)
-        
-        this.contentDiv.innerHTML = this.content
-        // Preserve text formatting styles
-        this.contentDiv.style.fontWeight = 'inherit'
-        this.contentDiv.style.fontStyle = 'inherit'
-        this.contentDiv.style.textDecoration = 'inherit'
-        // Set other styles
-        this.contentDiv.style.color = this.style.color || '#000000'
-        this.contentDiv.style.fontSize = `${scaled.fontSize}px`
-        this.contentDiv.style.fontFamily = this.style.fontFamily || 'Arial'
-        this.contentDiv.style.backgroundColor = this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1)
-        this.contentDiv.style.border = `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`
-        this.contentDiv.style.padding = `${scaled.padding}px`
-        this.contentDiv.style.borderRadius = '4px'
-        this.contentDiv.style.textAlign = 'center'
-        this.contentDiv.style.minWidth = 'min-content'
-        this.contentDiv.style.width = `${this.currentWidth}px`
-        this.contentDiv.style.maxWidth = '400px'
-        this.contentDiv.style.whiteSpace = 'pre'
-        this.contentDiv.style.display = 'inline-block'
-        this.contentDiv.style.boxSizing = 'border-box'
-        this.contentDiv.style.lineHeight = '1.2'
-        this.contentDiv.style.verticalAlign = 'middle'
+        this.applyStyles(this.contentDiv, this.currentWidth)
       }
 
       this.draw()
     }
+
     onAdd() {
       const map = this.getMap();
 
@@ -402,30 +414,10 @@ export function createCustomTextOverlay(
 
       const contentDiv = document.createElement('div')
       contentDiv.className = 'text-content'
-      contentDiv.innerHTML = this.content
-
-      const scaled = this.calculateScaledValues(this.currentWidth)
-
-      contentDiv.style.color = this.style.color || '#000000'
-      contentDiv.style.fontSize = `${scaled.fontSize}px`
-      contentDiv.style.fontFamily = this.style.fontFamily || 'Arial'
-      contentDiv.style.backgroundColor = this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1)
-      contentDiv.style.border = `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`
-      contentDiv.style.padding = `${scaled.padding}px`
-      contentDiv.style.borderRadius = '4px'
-      contentDiv.style.textAlign = 'center'
-      contentDiv.style.minWidth = 'min-content'
-      contentDiv.style.width = `${this.currentWidth}px`
-      contentDiv.style.maxWidth = '400px'
-      contentDiv.style.whiteSpace = 'pre'
-      contentDiv.style.display = 'inline-block'
-      contentDiv.style.position = 'relative'
-      contentDiv.style.boxSizing = 'border-box'
-      contentDiv.style.lineHeight = '1.2'
-      contentDiv.style.verticalAlign = 'middle'
+      this.applyStyles(contentDiv, this.currentWidth)
+      this.contentDiv = contentDiv
 
       div.appendChild(contentDiv)
-      this.contentDiv = contentDiv
 
       // Add delete button
       const deleteCleanup = createDeleteButton(div, onDelete)
@@ -471,13 +463,7 @@ export function createCustomTextOverlay(
                     maxWidth: 400,
                     onResize: (width: number) => {
                       this.currentWidth = width
-                      const scaled = this.calculateScaledValues(width)
-                      
-                      this.contentDiv!.style.width = `${width}px`
-                      this.contentDiv!.style.fontSize = `${scaled.fontSize}px`
-                      this.contentDiv!.style.padding = `${scaled.padding}px`
-                      this.contentDiv!.style.border = `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`
-                      
+                      this.applyStyles(this.contentDiv!, width)
                       this.draw()
                       
                       if (onEdit) {
@@ -509,13 +495,7 @@ export function createCustomTextOverlay(
         maxWidth: 400,
         onResize: (width: number) => {
           this.currentWidth = width
-          const scaled = this.calculateScaledValues(width)
-          
-          contentDiv.style.width = `${width}px`
-          contentDiv.style.fontSize = `${scaled.fontSize}px`
-          contentDiv.style.padding = `${scaled.padding}px`
-          contentDiv.style.border = `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`
-          
+          this.applyStyles(contentDiv, width)
           this.draw()
           
           if (onEdit) {
