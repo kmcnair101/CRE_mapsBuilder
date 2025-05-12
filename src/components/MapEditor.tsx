@@ -969,11 +969,26 @@ export default function MapEditor() {
         onWidthChange={setDownloadWidth}
         onHeightChange={setDownloadHeight}
         onClose={() => setDownloadModalOpen(false)}
-        onDownload={async () => {
+        onDownload={async (center, zoom) => {
           setDownloading(true)
           try {
+            // Save current center/zoom to restore after download
+            const map = googleMapRef.current
+            let originalCenter, originalZoom
+            if (map) {
+              originalCenter = map.getCenter()
+              originalZoom = map.getZoom()
+              map.setCenter(center)
+              map.setZoom(zoom)
+              await new Promise(res => setTimeout(res, 400)) // let map update
+            }
             await handleDownload(mapRef, false, downloadWidth, downloadHeight, googleMapRef)
             setDownloadModalOpen(false)
+            // Restore original center/zoom
+            if (map && originalCenter && originalZoom !== undefined) {
+              map.setCenter(originalCenter)
+              map.setZoom(originalZoom)
+            }
           } catch (error) {
             // handle error
           } finally {

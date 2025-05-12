@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { useMapInitialization } from '@/lib/map/hooks/useMapInitialization'
 import { useMapOverlays } from '@/lib/map/hooks/useMapOverlays'
 
@@ -9,11 +9,10 @@ interface DownloadMapModalProps {
   onWidthChange: (width: number) => void
   onHeightChange: (height: number) => void
   onClose: () => void
-  onDownload: () => void
+  onDownload: (center: { lat: number, lng: number }, zoom: number) => void
   mapRef: React.RefObject<HTMLDivElement>
   mapData: any // Replace with your map data type
 }
-
 
 export function DownloadMapModal({
   open,
@@ -42,6 +41,29 @@ export function DownloadMapModal({
     addOverlayToMap,
     { setMapData: () => {} }
   )
+
+  const [previewCenter, setPreviewCenter] = useState<{ lat: number, lng: number } | null>(null)
+  const [previewZoom, setPreviewZoom] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!googleMapRef.current) return
+    const map = googleMapRef.current
+
+    const update = () => {
+      const center = map.getCenter()
+      setPreviewCenter({ lat: center.lat(), lng: center.lng() })
+      setPreviewZoom(map.getZoom())
+    }
+
+    map.addListener('center_changed', update)
+    map.addListener('zoom_changed', update)
+    update()
+
+    return () => {
+      google.maps.event.clearListeners(map, 'center_changed')
+      google.maps.event.clearListeners(map, 'zoom_changed')
+    }
+  }, [googleMapRef.current])
 
   // Increased maximum dimensions for the preview
   const maxPreviewWidth = 800 // Increased from 600 to 800
@@ -112,7 +134,11 @@ export function DownloadMapModal({
                   Cancel
                 </button>
                 <button
-                  onClick={onDownload}
+                  onClick={() => {
+                    if (previewCenter && previewZoom !== null) {
+                      onDownload(previewCenter, previewZoom)
+                    }
+                  }}
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
                 >
                   Download
@@ -144,4 +170,4 @@ export function DownloadMapModal({
       </div>
     </div>
   )
-} 
+}
