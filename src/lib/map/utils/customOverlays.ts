@@ -664,3 +664,133 @@ export function createCustomTextOverlay(
   textOverlay.setMap(map)
   return textOverlay
 }
+
+export function createResizeHandle(container: HTMLElement | null, config: ResizeConfig) {
+  if (!container) return null
+
+  const {
+    minWidth,
+    maxWidth,
+    maintainAspectRatio = false,
+    aspectRatio = 1,
+    onResize
+  } = config
+
+  const handle = document.createElement('div')
+  handle.className = 'resize-handle'
+  Object.assign(handle.style, {
+    position: 'absolute',
+    right: '-8px',
+    bottom: '-8px',
+    width: '16px',
+    height: '16px',
+    backgroundColor: 'white',
+    border: '1px solid #D1D5DB',
+    borderRadius: '4px',
+    cursor: 'se-resize',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: '1000',
+    transition: 'background-color 0.2s',
+    opacity: '1'
+  })
+
+  const icon = document.createElement('div')
+  Object.assign(icon.style, {
+    width: '6px',
+    height: '6px',
+    borderRight: '2px solid #D1D5DB',
+    borderBottom: '2px solid #D1D5DB'
+  })
+
+  try {
+    handle.appendChild(icon)
+  } catch (error) {
+    console.warn('Failed to append resize handle icon')
+    return null
+  }
+
+  let isResizing = false
+  let startX = 0
+  let startWidth = 0
+  let lastWidth = container.offsetWidth
+
+  const handleMouseDown = (e: MouseEvent) => {
+    e.stopPropagation()
+    isResizing = true
+    startX = e.clientX
+    startWidth = container.offsetWidth
+    document.body.style.cursor = 'se-resize'
+    handle.style.backgroundColor = '#F3F4F6'
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing) return
+    e.preventDefault()
+    
+    const dx = e.clientX - startX
+    const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidth + dx))
+    
+    if (newWidth !== lastWidth) {
+      lastWidth = newWidth
+      container.style.width = `${newWidth}px`
+
+      if (maintainAspectRatio && aspectRatio) {
+        const newHeight = newWidth / aspectRatio
+        container.style.height = `${newHeight}px`
+      }
+
+      onResize(newWidth)
+    }
+  }
+
+  const handleMouseUp = () => {
+    if (isResizing) {
+      isResizing = false
+      document.body.style.cursor = 'default'
+      handle.style.backgroundColor = 'white'
+    }
+  }
+
+  // Handle hover on the resize handle itself
+  const handleMouseEnter = () => {
+    if (!isResizing) {
+      handle.style.backgroundColor = '#F3F4F6'
+    }
+  }
+
+  const handleHandleMouseLeave = () => {
+    if (!isResizing) {
+      handle.style.backgroundColor = 'white'
+    }
+  }
+
+  handle.addEventListener('mousedown', handleMouseDown)
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+  handle.addEventListener('mouseenter', handleMouseEnter)
+  handle.addEventListener('mouseleave', handleHandleMouseLeave)
+
+  try {
+    container.appendChild(handle)
+  } catch (error) {
+    console.warn('Failed to append resize handle')
+    return null
+  }
+
+  return () => {
+    handle.removeEventListener('mousedown', handleMouseDown)
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+    handle.removeEventListener('mouseenter', handleMouseEnter)
+    handle.removeEventListener('mouseleave', handleHandleMouseLeave)
+    try {
+      if (handle.parentNode === container) {
+        container.removeChild(handle)
+      }
+    } catch (error) {
+      console.warn('Failed to remove resize handle')
+    }
+  }
+}
