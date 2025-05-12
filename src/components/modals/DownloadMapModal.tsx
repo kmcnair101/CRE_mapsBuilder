@@ -28,6 +28,7 @@ export function DownloadMapModal({
   if (!open) return null
 
   const previewMapRef = useRef<HTMLDivElement>(null)
+  const [previewMapData, setPreviewMapData] = useState(mapData)
   const { addOverlayToMap } = useMapOverlays(
     () => {}, // no-op for handleDeleteLayer
     undefined, // handleTextEdit
@@ -37,9 +38,9 @@ export function DownloadMapModal({
 
   const { googleMapRef } = useMapInitialization(
     previewMapRef,
-    mapData,
+    previewMapData,
     addOverlayToMap,
-    { setMapData: () => {} }
+    { setMapData: setPreviewMapData }
   )
 
   const [previewCenter, setPreviewCenter] = useState<{ lat: number, lng: number } | null>(null)
