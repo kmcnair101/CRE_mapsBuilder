@@ -360,7 +360,12 @@ export function createCustomTextOverlay(
     }
 
     private applyStyles(contentDiv: HTMLDivElement, width: number) {
-      const scaled = this.calculateScaledValues(width)
+      const scale = width / this.baseWidth;
+      const scaled = {
+        fontSize: Math.round(this.baseFontSize * scale),
+        padding: Math.round(this.style.padding * scale),
+        borderWidth: Math.round(this.style.borderWidth * scale)
+      };
       
       const styles = {
         // Text styles
@@ -387,47 +392,120 @@ export function createCustomTextOverlay(
         lineHeight: '1.2',
         verticalAlign: 'middle',
         cursor: 'move'
-      }
+      };
 
       // Apply all styles at once
-      Object.assign(contentDiv.style, styles)
+      Object.assign(contentDiv.style, styles);
       
       // Set content after styles
-      contentDiv.innerHTML = this.content
+      contentDiv.innerHTML = this.content;
     }
 
     private setupResizeHandle() {
-      // Clean up existing resize handle if it exists
-      if (this.resizeHandleCleanup) {
-        this.resizeHandleCleanup();
-        this.resizeHandleCleanup = null;
-      }
+      if (!this.contentDiv) return;
 
-      if (this.contentDiv) {
-        const resizeCleanup = createResizeHandle(this.contentDiv, {
-          minWidth: 30,
-          maxWidth: 400,
-          onResize: (width: number) => {
-            this.isResizing = true;
-            this.currentWidth = width;
-            this.applyStyles(this.contentDiv!, width);
-            this.draw();
-            
-            if (onEdit) {
-              onEdit(this.content, {
-                ...this.style,
-                fontSize: this.baseFontSize,
-                width: width
-              });
-            }
-          }
-        });
+      // Create resize handle
+      const handle = document.createElement('div');
+      handle.style.position = 'absolute';
+      handle.style.right = '-8px';
+      handle.style.bottom = '-8px';
+      handle.style.width = '16px';
+      handle.style.height = '16px';
+      handle.style.backgroundColor = 'white';
+      handle.style.border = '1px solid #D1D5DB';
+      handle.style.borderRadius = '4px';
+      handle.style.cursor = 'se-resize';
+      handle.style.display = 'none';  // Initially hidden
+      handle.style.alignItems = 'center';
+      handle.style.justifyContent = 'center';
+      handle.style.zIndex = '1000';
 
-        if (resizeCleanup) {
-          this.resizeHandleCleanup = resizeCleanup;
-          this.cleanupFunctions.push(resizeCleanup);
+      // Add resize handle icon
+      const handleIcon = document.createElement('div');
+      handleIcon.style.width = '6px';
+      handleIcon.style.height = '6px';
+      handleIcon.style.borderRight = '2px solid #D1D5DB';
+      handleIcon.style.borderBottom = '2px solid #D1D5DB';
+      handle.appendChild(handleIcon);
+
+      // Show/hide resize handle
+      const handleMouseEnter = () => {
+        if (!this.isResizing && handle) {
+          handle.style.display = 'flex';
+          handle.style.opacity = '1';
         }
-      }
+      };
+
+      const handleMouseLeave = (e: MouseEvent) => {
+        if (!handle) return;
+        const rect = handle.getBoundingClientRect();
+        const isOverHandle = e.clientX >= rect.left && e.clientX <= rect.right &&
+                            e.clientY >= rect.top && e.clientY <= rect.bottom;
+        if (!isOverHandle && !this.isResizing) {
+          handle.style.opacity = '0';
+          setTimeout(() => {
+            if (handle && handle.style.opacity === '0') {
+              handle.style.display = 'none';
+            }
+          }, 200);
+        }
+      };
+
+      // Handle resizing
+      const handleResizeStart = (e: MouseEvent) => {
+        e.stopPropagation();
+        this.isResizing = true;
+        this.startPos = { x: e.clientX, y: e.clientY };
+        this.startWidth = this.contentDiv!.offsetWidth;
+        document.body.style.cursor = 'se-resize';
+      };
+
+      const handleResizeMove = (e: MouseEvent) => {
+        if (!this.isResizing) return;
+        e.preventDefault();
+        const dx = e.clientX - this.startPos.x;
+        const newWidth = Math.max(30, Math.min(400, this.startWidth + dx));
+        this.currentWidth = newWidth;
+        this.applyStyles(this.contentDiv!, newWidth);
+        this.draw();
+        
+        if (onEdit) {
+          onEdit(this.content, {
+            ...this.style,
+            fontSize: this.baseFontSize,
+            width: newWidth
+          });
+        }
+      };
+
+      const handleResizeEnd = () => {
+        if (this.isResizing) {
+          this.isResizing = false;
+          document.body.style.cursor = 'default';
+        }
+      };
+
+      // Add event listeners
+      handle.addEventListener('mousedown', handleResizeStart);
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      this.contentDiv.addEventListener('mouseenter', handleMouseEnter);
+      this.contentDiv.addEventListener('mouseleave', handleMouseLeave);
+
+      // Add cleanup functions
+      this.cleanupFunctions.push(() => {
+        handle.removeEventListener('mousedown', handleResizeStart);
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+        this.contentDiv?.removeEventListener('mouseenter', handleMouseEnter);
+        this.contentDiv?.removeEventListener('mouseleave', handleMouseLeave);
+        if (handle.parentNode === this.contentDiv) {
+          this.contentDiv.removeChild(handle);
+        }
+      });
+
+      // Add handle to content div
+      this.contentDiv.appendChild(handle);
     }
 
     updateContent(content: string, style: any) {
@@ -734,12 +812,13 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
 
   // Handle hover on the resize handle itself
   const handleMouseEnter = () => {
-    if (!isResizing) {
+    if (!isResizing && handle) {
       handle.style.display = 'flex'
     }
   }
 
   const handleMouseLeave = (e: MouseEvent) => {
+    if (!handle) return;
     const rect = handle.getBoundingClientRect()
     const isOverHandle = e.clientX >= rect.left && e.clientX <= rect.right &&
                         e.clientY >= rect.top && e.clientY <= rect.bottom
