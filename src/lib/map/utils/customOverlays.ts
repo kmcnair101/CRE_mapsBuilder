@@ -362,14 +362,20 @@ export function createCustomTextOverlay(
       const scaled = this.calculateScaledValues(width)
       
       const styles = {
+        // Text styles
         color: this.style.color || '#000000',
         fontSize: `${scaled.fontSize}px`,
         fontFamily: this.style.fontFamily || 'Arial',
+        fontWeight: this.style.fontWeight || 'normal',
+        textAlign: this.style.textAlign || 'center',
+        
+        // Container styles
         backgroundColor: this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1),
         border: `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`,
         padding: `${scaled.padding}px`,
         borderRadius: '4px',
-        textAlign: 'center',
+        
+        // Layout styles
         minWidth: 'min-content',
         width: `${width}px`,
         maxWidth: '400px',
@@ -381,17 +387,24 @@ export function createCustomTextOverlay(
         verticalAlign: 'middle'
       }
 
+      // Apply all styles at once
       Object.assign(contentDiv.style, styles)
       
+      // Set content after styles
       contentDiv.innerHTML = this.content
     }
 
     updateContent(content: string, style: any) {
       this.content = content
-      this.style = style
-      this.baseWidth = style.width || this.baseWidth
+      this.style = {
+        ...this.style,
+        ...style,
+        width: style.width || this.baseWidth,
+        fontSize: style.fontSize || this.baseFontSize
+      }
+      this.baseWidth = this.style.width
       this.currentWidth = this.baseWidth
-      this.baseFontSize = style.fontSize || this.baseFontSize
+      this.baseFontSize = this.style.fontSize
 
       if (this.contentDiv) {
         this.applyStyles(this.contentDiv, this.currentWidth)
@@ -564,8 +577,8 @@ export function createCustomTextOverlay(
       }
       
       // First ensure all styles are applied
-      if (this.container) {
-        this.applyStyles(this.container)
+      if (this.contentDiv) {
+        this.applyStyles(this.contentDiv, this.currentWidth)
       }
       
       // Then calculate position
@@ -610,7 +623,7 @@ export function createCustomTextOverlay(
     }
   }
 
-  // Merge container styles with defaults
+  // Container styles
   const containerStyle = {
     backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
     borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
@@ -620,7 +633,7 @@ export function createCustomTextOverlay(
     borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
   }
 
-  // Merge text styles with defaults
+  // Text styles
   const textStyle = {
     color: overlay.properties.textStyle?.color || '#000000',
     fontSize: overlay.properties.textStyle?.fontSize || 14,
@@ -629,14 +642,16 @@ export function createCustomTextOverlay(
     textAlign: overlay.properties.textStyle?.textAlign || 'center'
   }
 
+  const style = {
+    ...containerStyle,
+    ...textStyle,
+    width: overlay.properties.width || 80
+  }
+
   const textOverlay = new CustomTextOverlay(
     new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
     overlay.properties.content || '',
-    {
-      ...containerStyle,
-      ...textStyle,
-      width: overlay.properties.width || 80
-    }
+    style
   )
 
   textOverlay.setMap(map)
