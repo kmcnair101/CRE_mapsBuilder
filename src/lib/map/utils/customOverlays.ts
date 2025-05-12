@@ -401,105 +401,6 @@ export function createCustomTextOverlay(
       contentDiv.innerHTML = this.content;
     }
 
-    private setupResizeHandle() {
-      if (!this.contentDiv) return;
-
-      // Create resize handle
-      const handle = document.createElement('div');
-      handle.style.position = 'absolute';
-      handle.style.right = '-8px';
-      handle.style.bottom = '-8px';
-      handle.style.width = '16px';
-      handle.style.height = '16px';
-      handle.style.backgroundColor = 'white';
-      handle.style.border = '1px solid #D1D5DB';
-      handle.style.borderRadius = '4px';
-      handle.style.cursor = 'se-resize';
-      handle.style.display = 'none';
-      handle.style.alignItems = 'center';
-      handle.style.justifyContent = 'center';
-      handle.style.zIndex = '1000';
-
-      const handleIcon = document.createElement('div');
-      handleIcon.style.width = '6px';
-      handleIcon.style.height = '6px';
-      handleIcon.style.borderRight = '2px solid #D1D5DB';
-      handleIcon.style.borderBottom = '2px solid #D1D5DB';
-      handle.appendChild(handleIcon);
-
-      // Show/hide resize handle
-      const handleMouseEnter = () => {
-        if (!this.isResizing) {
-          handle.style.display = 'flex';
-        }
-      };
-
-      const handleMouseLeave = (e: MouseEvent) => {
-        const rect = handle.getBoundingClientRect();
-        const isOverHandle = e.clientX >= rect.left && e.clientX <= rect.right &&
-                            e.clientY >= rect.top && e.clientY <= rect.bottom;
-        if (!isOverHandle && !this.isResizing) {
-          handle.style.display = 'none';
-        }
-      };
-
-      // Handle resizing
-      const handleResizeStart = (e: MouseEvent) => {
-        e.stopPropagation();
-        this.isResizing = true;
-        this.startPos = { x: e.clientX, y: e.clientY };
-        this.startWidth = this.contentDiv!.offsetWidth;
-        document.body.style.cursor = 'se-resize';
-      };
-
-      const handleResizeMove = (e: MouseEvent) => {
-        if (!this.isResizing) return;
-        e.preventDefault();
-        const dx = e.clientX - this.startPos.x;
-        const newWidth = Math.max(30, Math.min(400, this.startWidth + dx));
-        this.currentWidth = newWidth;
-        this.applyStyles(this.contentDiv!, newWidth);
-        this.draw();
-        
-        if (onEdit) {
-          onEdit(this.content, {
-            ...this.style,
-            fontSize: this.baseFontSize,
-            width: newWidth
-          });
-        }
-      };
-
-      const handleResizeEnd = () => {
-        if (this.isResizing) {
-          this.isResizing = false;
-          document.body.style.cursor = 'default';
-        }
-      };
-
-      // Add event listeners
-      handle.addEventListener('mousedown', handleResizeStart);
-      document.addEventListener('mousemove', handleResizeMove);
-      document.addEventListener('mouseup', handleResizeEnd);
-      this.contentDiv.addEventListener('mouseenter', handleMouseEnter);
-      this.contentDiv.addEventListener('mouseleave', handleMouseLeave);
-
-      // Add cleanup functions
-      this.cleanupFunctions.push(() => {
-        handle.removeEventListener('mousedown', handleResizeStart);
-        document.removeEventListener('mousemove', handleResizeMove);
-        document.removeEventListener('mouseup', handleResizeEnd);
-        this.contentDiv?.removeEventListener('mouseenter', handleMouseEnter);
-        this.contentDiv?.removeEventListener('mouseleave', handleMouseLeave);
-        if (handle.parentNode === this.contentDiv) {
-          this.contentDiv.removeChild(handle);
-        }
-      });
-
-      // Add handle to content div
-      this.contentDiv.appendChild(handle);
-    }
-
     updateContent(content: string, style: any) {
       this.content = content;
       this.style = {
@@ -515,7 +416,26 @@ export function createCustomTextOverlay(
       if (this.contentDiv) {
         this.applyStyles(this.contentDiv, this.currentWidth);
         // Recreate resize handle after updating content
-        this.setupResizeHandle();
+        const resizeCleanup = createResizeHandle(this.contentDiv, {
+          minWidth: 30,
+          maxWidth: 400,
+          onResize: (width: number) => {
+            this.currentWidth = width;
+            this.applyStyles(this.contentDiv!, width);
+            this.draw();
+            
+            if (onEdit) {
+              onEdit(this.content, {
+                ...this.style,
+                fontSize: this.baseFontSize,
+                width: width
+              });
+            }
+          }
+        });
+        if (resizeCleanup) {
+          this.cleanupFunctions.push(resizeCleanup);
+        }
       }
 
       this.draw();
@@ -548,8 +468,27 @@ export function createCustomTextOverlay(
 
       div.appendChild(contentDiv);
 
-      // Setup resize handle
-      this.setupResizeHandle();
+      // Add resize handle
+      const resizeCleanup = createResizeHandle(contentDiv, {
+        minWidth: 30,
+        maxWidth: 400,
+        onResize: (width: number) => {
+          this.currentWidth = width;
+          this.applyStyles(contentDiv, width);
+          this.draw();
+          
+          if (onEdit) {
+            onEdit(this.content, {
+              ...this.style,
+              fontSize: this.baseFontSize,
+              width: width
+            });
+          }
+        }
+      });
+      if (resizeCleanup) {
+        this.cleanupFunctions.push(resizeCleanup);
+      }
 
       const deleteCleanup = createDeleteButton(div, onDelete);
       if (deleteCleanup) {
