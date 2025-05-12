@@ -46,7 +46,6 @@ export function createCustomImageOverlay(
       this.url = config.url
       this.width = config.width
       this.style = config.style
-      console.log('[ImageOverlay] Constructor config:', config)
     }
 
     private getRgbaColor(hex: string, opacity: number) {
@@ -57,29 +56,18 @@ export function createCustomImageOverlay(
     }
 
     updateStyle(style: ContainerStyle) {
-      console.log('[ImageOverlay] updateStyle called with:', style)
       this.style = style
       if (this.container) {
         this.container.style.backgroundColor = this.getRgbaColor(style.backgroundColor, style.backgroundOpacity)
         this.container.style.border = `${style.borderWidth}px solid ${this.getRgbaColor(style.borderColor, style.borderOpacity)}`
         this.container.style.padding = `${style.padding}px`
-        console.log('[ImageOverlay] Updated container style:', this.container.style.cssText)
       }
     }
     onAdd() {
       const map = this.getMap();
-      console.log('[Overlay] onAdd - Initial state:', {
-        hasMap: !!map,
-        isMapInstance: map instanceof google.maps.Map,
-        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
-        initialPosition: this.initialPosition.toJSON(),
-        isMapReady: this.isMapReady
-      });
 
       if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
-        console.log('[Overlay] Map not ready, waiting for idle event');
         map?.addListener('idle', () => {
-          console.log('[Overlay] Map became idle, setting ready state');
           this.isMapReady = true;
           this.draw();
         });
@@ -125,7 +113,6 @@ export function createCustomImageOverlay(
         if (this.imageWrapper) {
           this.imageWrapper.style.height = 'auto'
         }
-        console.log('[ImageOverlay] Image loaded, aspectRatio:', this.aspectRatio)
       }
 
       imageWrapper.appendChild(img)
@@ -215,13 +202,6 @@ export function createCustomImageOverlay(
           if (newPosition) {
             this.position = newPosition;
             this.initialPosition = newPosition;
-            console.log('[Overlay] Drag position update:', {
-              oldPosition: this.initialPosition.toJSON(),
-              newPosition: newPosition.toJSON(),
-              pixelDelta: { x: e.movementX, y: e.movementY },
-              oldPixelPoint: oldPoint,
-              newPixelPoint: { x: newPoint.x, y: newPoint.y }
-            });
             this.draw();
           }
         }
@@ -250,23 +230,10 @@ export function createCustomImageOverlay(
 
       const panes = this.getPanes()
       panes?.overlayMouseTarget.appendChild(div)
-
-      console.log('[Overlay] onAdd - Map state:', {
-        hasMap: !!map,
-        isMapInstance: map instanceof google.maps.Map,
-        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
-        initialPosition: this.initialPosition.toJSON(),
-        isMapReady: this.isMapReady
-      })
     }
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        console.log('[Overlay] draw skipped - missing requirements:', {
-          hasDiv: !!this.div,
-          isMapReady: this.isMapReady,
-          hasProjection: !!this.getProjection()
-        });
         return;
       }
       
@@ -284,13 +251,6 @@ export function createCustomImageOverlay(
         
         // Only update if position has changed
         if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
-          console.log('[Overlay] draw calculation:', {
-            initialPosition: this.initialPosition.toJSON(),
-            calculatedPoint: { x: point.x, y: point.y },
-            divDimensions: { width, height },
-            finalPosition: { left, top }
-          });
-          
           this.div.style.left = `${left}px`;
           this.div.style.top = `${top}px`;
         }
@@ -364,7 +324,6 @@ export function createCustomTextOverlay(
       this.baseWidth = style.width || 80
       this.currentWidth = this.baseWidth
       this.baseFontSize = style.fontSize || 14
-      console.log('[TextOverlay] Constructor position:', position, 'content:', content, 'style:', style)
     }
 
     private getRgbaColor(hex: string, opacity: number) {
@@ -384,7 +343,6 @@ export function createCustomTextOverlay(
     }
 
     updateContent(content: string, style: any) {
-      console.log('[TextOverlay] updateContent called with:', content, style)
       this.content = content
       this.style = style
       this.baseWidth = style.width || this.baseWidth
@@ -416,25 +374,15 @@ export function createCustomTextOverlay(
         this.contentDiv.style.boxSizing = 'border-box'
         this.contentDiv.style.lineHeight = '1.2'
         this.contentDiv.style.verticalAlign = 'middle'
-        console.log('[TextOverlay] Updated contentDiv style:', this.contentDiv.style.cssText)
       }
 
       this.draw()
     }
     onAdd() {
       const map = this.getMap();
-      console.log('[Overlay] onAdd - Initial state:', {
-        hasMap: !!map,
-        isMapInstance: map instanceof google.maps.Map,
-        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
-        initialPosition: this.initialPosition.toJSON(),
-        isMapReady: this.isMapReady
-      });
 
       if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
-        console.log('[Overlay] Map not ready, waiting for idle event');
         map?.addListener('idle', () => {
-          console.log('[Overlay] Map became idle, setting ready state');
           this.isMapReady = true;
           this.draw();
         });
@@ -605,11 +553,6 @@ export function createCustomTextOverlay(
         this.initialPosition = newPosition;
         this.draw();
         this.startPos = { x: e.clientX, y: e.clientY };
-        console.log('[Overlay] Drag - Position update:', {
-          oldPosition: this.initialPosition.toJSON(),
-          newPosition: newPosition.toJSON(),
-          movement: { x: dx, y: dy }
-        });
       }
 
       const handleDragEnd = () => {
@@ -632,23 +575,10 @@ export function createCustomTextOverlay(
       this.div = div
       const panes = this.getPanes()
       panes?.overlayMouseTarget.appendChild(div)
-
-      console.log('[Overlay] onAdd - Map state:', {
-        hasMap: !!map,
-        isMapInstance: map instanceof google.maps.Map,
-        hasProjection: map instanceof google.maps.Map ? !!map.getProjection() : false,
-        initialPosition: this.initialPosition.toJSON(),
-        isMapReady: this.isMapReady
-      })
     }
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        console.log('[Overlay] draw skipped - missing requirements:', {
-          hasDiv: !!this.div,
-          isMapReady: this.isMapReady,
-          hasProjection: !!this.getProjection()
-        });
         return;
       }
       
@@ -666,13 +596,6 @@ export function createCustomTextOverlay(
         
         // Only update if position has changed
         if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
-          console.log('[Overlay] draw calculation:', {
-            initialPosition: this.initialPosition.toJSON(),
-            calculatedPoint: { x: point.x, y: point.y },
-            divDimensions: { width, height },
-            finalPosition: { left, top }
-          });
-          
           this.div.style.left = `${left}px`;
           this.div.style.top = `${top}px`;
         }

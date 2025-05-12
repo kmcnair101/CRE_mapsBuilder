@@ -108,7 +108,10 @@ export default function MapEditor() {
         if (error) throw error
 
         if (data) {
-          console.log('Loaded map data:', JSON.stringify(data, null, 2))
+          console.log('[MapEditor] Loading map data - Before setting state:', {
+            overlays: data.overlays,
+            overlayCount: data.overlays?.length || 0
+          })
           setMapData({
             title: data.title,
             center_lat: data.center_lat,
@@ -128,6 +131,14 @@ export default function MapEditor() {
 
     loadMapData()
   }, [id, user])
+
+  // Add effect to log overlays after state update
+  useEffect(() => {
+    console.log('[MapEditor] Map data after state update:', {
+      overlays: mapData.overlays,
+      overlayCount: mapData.overlays.length
+    })
+  }, [mapData.overlays])
 
   useEffect(() => {
     if (!id) {
@@ -151,6 +162,10 @@ export default function MapEditor() {
   }
 
   const handleTextEdit = (id: string, text: string, style: any) => {
+    console.log('[MapEditor] Before text edit:', {
+      overlays: mapData.overlays,
+      overlayCount: mapData.overlays.length
+    })
     setMapData(prev => ({
       ...prev,
       overlays: prev.overlays.map(o => 
@@ -167,6 +182,10 @@ export default function MapEditor() {
   }
 
   const handleContainerEdit = (id: string, style: any) => {
+    console.log('[MapEditor] Before container edit:', {
+      overlays: mapData.overlays,
+      overlayCount: mapData.overlays.length
+    })
     setMapData(prev => ({
       ...prev,
       overlays: prev.overlays.map(o => 
@@ -189,6 +208,10 @@ export default function MapEditor() {
     fillOpacity: number
     strokeOpacity: number
   }) => {
+    console.log('[MapEditor] Before shape edit:', {
+      overlays: mapData.overlays,
+      overlayCount: mapData.overlays.length
+    })
     setMapData(prev => ({
       ...prev,
       overlays: prev.overlays.map(o => 
@@ -676,6 +699,11 @@ export default function MapEditor() {
       const mapType = googleMapRef.current.getMapTypeId()
       const styles = googleMapRef.current.get('styles')
 
+      console.log('[MapEditor] Before saving - Current overlays:', {
+        overlays: mapData.overlays,
+        overlayCount: mapData.overlays.length
+      })
+
       // Capture current positions and properties of all overlays
       const updatedOverlays = mapData.overlays.map(overlay => {
         const currentOverlay = overlaysRef.current[overlay.id]
@@ -738,6 +766,11 @@ export default function MapEditor() {
         return overlay
       })
 
+      console.log('[MapEditor] After updating overlay positions:', {
+        overlays: updatedOverlays,
+        overlayCount: updatedOverlays.length
+      })
+
       // Generate thumbnail before saving
       const thumbnail = await handleDownload(mapRef, true)
 
@@ -764,7 +797,10 @@ export default function MapEditor() {
         map_style: simplifiedMapStyle
       }
 
-      console.log('Saving map data:', JSON.stringify(mapUpdate, null, 2))
+      console.log('[MapEditor] Final map data being saved:', {
+        overlays: mapUpdate.overlays,
+        overlayCount: mapUpdate.overlays.length
+      })
 
       if (id) {
         const { error } = await supabase
