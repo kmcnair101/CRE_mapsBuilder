@@ -50,6 +50,7 @@ export function DownloadMapModal({
   // Sync preview map with main map data
   useEffect(() => {
     if (open && googleMapRef.current) {
+      console.log('[DownloadModal] Syncing preview map with main map data')
       setPreviewMapData(mapData)
       const map = googleMapRef.current
       
@@ -77,11 +78,29 @@ export function DownloadMapModal({
   const [previewCenter, setPreviewCenter] = useState<{ lat: number, lng: number } | null>(null)
   const [previewZoom, setPreviewZoom] = useState<number | null>(null)
 
+  // Add this new effect to initialize preview center and zoom
+  useEffect(() => {
+    if (open && googleMapRef.current) {
+      console.log('[DownloadModal] Initializing preview center and zoom')
+      const map = googleMapRef.current
+      const center = map.getCenter()
+      if (center) {
+        setPreviewCenter({ lat: center.lat(), lng: center.lng() })
+      }
+      const zoom = map.getZoom()
+      if (zoom !== undefined) {
+        setPreviewZoom(zoom)
+      }
+    }
+  }, [open, googleMapRef.current])
+
+  // Modify the existing effect to update center and zoom
   useEffect(() => {
     if (!googleMapRef.current) return
     const map = googleMapRef.current
 
     const update = () => {
+      console.log('[DownloadModal] Updating preview center and zoom')
       const center = map.getCenter()
       if (center) {
         setPreviewCenter({ lat: center.lat(), lng: center.lng() })
@@ -111,7 +130,10 @@ export function DownloadMapModal({
     })
     
     if (!previewCenter || previewZoom === null) {
-      console.log('[DownloadModal] Missing preview center or zoom')
+      console.log('[DownloadModal] Missing preview center or zoom, using map data values')
+      // Use mapData values as fallback
+      await handleDownload(previewMapRef, false, width, height, googleMapRef)
+      onClose()
       return
     }
     
