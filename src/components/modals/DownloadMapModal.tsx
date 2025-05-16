@@ -43,6 +43,32 @@ export function DownloadMapModal({
     { setMapData: setPreviewMapData }
   )
 
+  // Sync preview map with main map data
+  useEffect(() => {
+    if (open && googleMapRef.current) {
+      setPreviewMapData(mapData)
+      const map = googleMapRef.current
+      
+      // Update map center and zoom
+      map.setCenter({ lat: mapData.center_lat, lng: mapData.center_lng })
+      map.setZoom(mapData.zoom_level)
+      
+      // Apply map style
+      if (mapData.mapStyle) {
+        if (mapData.mapStyle.type === 'satellite') {
+          map.setMapTypeId('satellite')
+        } else if (mapData.mapStyle.type === 'terrain') {
+          map.setMapTypeId('terrain')
+        } else {
+          map.setMapTypeId('roadmap')
+        }
+
+        if (mapData.mapStyle.customStyles) {
+          map.setOptions({ styles: mapData.mapStyle.customStyles })
+        }
+      }
+    }
+  }, [open, mapData, googleMapRef.current])
   
   const [previewCenter, setPreviewCenter] = useState<{ lat: number, lng: number } | null>(null)
   const [previewZoom, setPreviewZoom] = useState<number | null>(null)
@@ -53,8 +79,13 @@ export function DownloadMapModal({
 
     const update = () => {
       const center = map.getCenter()
-      setPreviewCenter({ lat: center.lat(), lng: center.lng() })
-      setPreviewZoom(map.getZoom())
+      if (center) {
+        setPreviewCenter({ lat: center.lat(), lng: center.lng() })
+      }
+      const zoom = map.getZoom()
+      if (zoom !== undefined) {
+        setPreviewZoom(zoom)
+      }
     }
 
     map.addListener('center_changed', update)
@@ -86,7 +117,6 @@ export function DownloadMapModal({
     }
   }
 
-  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full h-[800px]">
