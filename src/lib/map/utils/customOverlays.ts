@@ -409,6 +409,7 @@ export function createCustomTextOverlay(
       contentDiv.innerHTML = this.content;
     }
 
+    
     updateContent(content: string, style: any) {
       this.content = content;
       this.style = {
