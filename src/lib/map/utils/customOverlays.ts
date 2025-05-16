@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { TextEditModal } from '@/components/modals/TextEditModal'
 import { ImageEditModal } from '@/components/modals/ImageEditModal'
 import type { MapOverlay, ContainerStyle } from '@/lib/types'
+import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
 
 interface ImageOverlayConfig {
   position: google.maps.LatLng
