@@ -75,15 +75,23 @@ export function useMapDownload() {
     height?: number,
     googleMapRef?: React.RefObject<google.maps.Map>
   ) => {
-    console.log('[Download] Starting download process:', { forThumbnail, width, height })
-    
+    console.log('[useMapDownload] handleDownload called', {
+      hasMapRef: !!mapRef,
+      hasMapRefCurrent: !!mapRef?.current,
+      forThumbnail,
+      width,
+      height,
+      hasGoogleMapRef: !!googleMapRef,
+      hasGoogleMapRefCurrent: !!googleMapRef?.current
+    })
+
     if (!hasAccess()) {
-      console.log('[Download] No access - subscription check failed')
+      console.log('[useMapDownload] No access - subscription check failed')
       return null
     }
 
     if (!mapRef.current) {
-      console.log('[Download] No map reference')
+      console.log('[useMapDownload] No map reference')
       return null
     }
 

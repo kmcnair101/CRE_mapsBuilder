@@ -688,11 +688,14 @@ export default function MapEditor() {
   }
 
   const handleMapDownload = async () => {
+    console.log('[MapEditor] Download button clicked')
     setDownloading(true)
     try {
+      console.log('[MapEditor] Starting download process')
       await handleDownload(mapRef, false, undefined, undefined, googleMapRef)
+      console.log('[MapEditor] Download completed successfully')
     } catch (error) {
-      console.error('Error downloading map:', error)
+      console.error('[MapEditor] Error downloading map:', error)
     } finally {
       setDownloading(false)
     }
@@ -903,7 +906,10 @@ export default function MapEditor() {
               <span>{saving ? 'Saving...' : 'Save'}</span>
             </button>
             <DownloadButton
-              onDownload={() => setDownloadModalOpen(true)}
+              onDownload={() => {
+                console.log('[MapEditor] DownloadButton clicked, opening modal')
+                setDownloadModalOpen(true)
+              }}
               loading={downloading}
               className="flex-1 flex items-center justify-center px-2 py-1.5 rounded-md text-sm font-medium bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
             />
