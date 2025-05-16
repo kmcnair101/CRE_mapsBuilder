@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { useMapInitialization } from '@/lib/map/hooks/useMapInitialization'
 import { useMapOverlays } from '@/lib/map/hooks/useMapOverlays'
+import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
 
 interface DownloadMapModalProps {
   open: boolean
@@ -11,7 +12,7 @@ interface DownloadMapModalProps {
   onClose: () => void
   onDownload: (center: { lat: number, lng: number }, zoom: number) => void
   mapRef: React.RefObject<HTMLDivElement>
-  mapData: any // Replace with your map data type
+  mapData: any
 }
 
 export function DownloadMapModal({
@@ -29,6 +30,9 @@ export function DownloadMapModal({
 
   const previewMapRef = useRef<HTMLDivElement>(null)
   const [previewMapData, setPreviewMapData] = useState(mapData)
+  const [downloading, setDownloading] = useState(false)
+  const { handleDownload } = useMapDownload()
+  
   const { addOverlayToMap } = useMapOverlays(
     () => {}, // no-op for handleDeleteLayer
     undefined, // handleTextEdit
@@ -97,6 +101,20 @@ export function DownloadMapModal({
       google.maps.event.clearListeners(map, 'zoom_changed')
     }
   }, [googleMapRef.current])
+
+  const handlePreviewDownload = async () => {
+    if (!previewCenter || previewZoom === null) return
+    
+    setDownloading(true)
+    try {
+      await handleDownload(previewMapRef, false, width, height, googleMapRef)
+      onClose()
+    } catch (error) {
+      console.error('Error downloading map:', error)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   // Increased maximum dimensions for the preview
   const maxPreviewWidth = 800 // Increased from 600 to 800
@@ -167,14 +185,11 @@ export function DownloadMapModal({
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    if (previewCenter && previewZoom !== null) {
-                      onDownload(previewCenter, previewZoom)
-                    }
-                  }}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  onClick={handlePreviewDownload}
+                  disabled={downloading}
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Download
+                  {downloading ? 'Downloading...' : 'Download'}
                 </button>
               </div>
             </div>
