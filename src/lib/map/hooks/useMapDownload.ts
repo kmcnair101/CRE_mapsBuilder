@@ -6,45 +6,35 @@ import { useMapOverlays } from './useMapOverlays'
 
 // Helper function to load images with retries
 const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
-  console.log('[Download] Loading image:', { src: img.src, complete: img.complete, retries })
-  
   if (img.complete) {
-    console.log('[Download] Image already complete:', img.src)
     return Promise.resolve()
   }
 
-  // If the image is from an external source and not already proxied, proxy it
   if (img.src.startsWith('http') && !img.src.includes('/api/proxy-image')) {
     const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`
-    console.log('[Download] Proxying image:', { original: img.src, proxied: proxiedUrl })
     img.src = proxiedUrl
   }
 
   return new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
-      console.log('[Download] Image load timeout:', { src: img.src, retries })
       if (retries > 0) {
         loadImage(img, retries - 1).then(resolve).catch(reject)
       } else {
-        console.log('[Download] Max retries reached for image:', img.src)
-        resolve() // Resolve anyway to continue with the process
+        resolve()
       }
     }, 5000)
 
     img.onload = () => {
-      console.log('[Download] Image loaded successfully:', img.src)
       clearTimeout(timeout)
       resolve()
     }
 
     img.onerror = () => {
-      console.log('[Download] Image load error:', img.src)
       clearTimeout(timeout)
       if (retries > 0) {
         loadImage(img, retries - 1).then(resolve).catch(reject)
       } else {
-        console.log('[Download] Max retries reached after error for image:', img.src)
-        resolve() // Resolve anyway to continue with the process
+        resolve()
       }
     }
   })
@@ -75,40 +65,23 @@ export function useMapDownload() {
     height?: number,
     googleMapRef?: React.RefObject<google.maps.Map>
   ) => {
-    console.log('[useMapDownload] handleDownload called', {
-      hasMapRef: !!mapRef,
-      hasMapRefCurrent: !!mapRef?.current,
-      forThumbnail,
-      width,
-      height,
-      hasGoogleMapRef: !!googleMapRef,
-      hasGoogleMapRefCurrent: !!googleMapRef?.current
-    })
-
     if (!hasAccess()) {
-      console.log('[useMapDownload] No access - subscription check failed')
       return null
     }
 
     if (!mapRef.current) {
-      console.log('[useMapDownload] No map reference')
       return null
     }
 
     try {
-      // Store original dimensions
       const originalWidth = mapRef.current.style.width
       const originalHeight = mapRef.current.style.height
-      console.log('[Download] Original dimensions:', { width: originalWidth, height: originalHeight })
 
-      // Set dimensions for capture if provided
       if (width && height) {
-        console.log('[Download] Setting new dimensions:', { width, height })
         mapRef.current.style.width = `${width}px`
         mapRef.current.style.height = `${height}px`
       }
 
-      // Hide controls temporarily
       const controls = mapRef.current.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
       controls.forEach(control => {
         if (control instanceof HTMLElement) {
@@ -121,37 +94,30 @@ export function useMapDownload() {
         logo.style.visibility = 'hidden'
       }
 
-      // Wait for map to be idle
       const map = googleMapRef?.current
       if (map) {
-        console.log('[Download] Waiting for map to be idle')
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => {
-            console.log('[Download] Map idle timeout')
             reject(new Error('Map idle timeout'))
           }, 10000)
 
           google.maps.event.addListenerOnce(map, 'idle', () => {
-            console.log('[Download] Map is now idle')
             clearTimeout(timeout)
             resolve()
           })
         })
       }
 
-      console.log('[Download] Starting html2canvas process')
       const canvas = await html2canvas(mapRef.current, {
         useCORS: true,
         allowTaint: true,
         backgroundColor: null,
         scale: forThumbnail ? 0.5 : 2,
-        logging: true, // Enable html2canvas logging
+        logging: false,
         width: width || mapRef.current.offsetWidth,
         height: height || mapRef.current.offsetHeight,
         onclone: async (clonedDoc) => {
-          console.log('[Download] Starting clone process')
           try {
-            // Hide controls in the cloned document as well
             const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
             clonedControls.forEach(control => {
               if (control instanceof HTMLElement) {
@@ -169,17 +135,11 @@ export function useMapDownload() {
               clonedMap.style.background = 'transparent'
             }
 
-            // Ensure all images are loaded with retries
             const images = clonedDoc.getElementsByTagName('img')
-            console.log('[Download] Found images to load:', images.length)
             
-            // Load all images in parallel with retries
             await Promise.all(Array.from(images).map(async (img) => {
-              console.log('[Download] Processing image:', img.src)
-              // Set crossOrigin for all images
               img.crossOrigin = 'anonymous'
               
-              // Proxy any external URLs, including Google Maps tiles
               if (img.src.includes('vt?pb=') || (img.src.startsWith('http') && !img.src.includes('/api/proxy-image'))) {
                 const originalSrc = img.src
                 img.src = `/api/proxy-image?url=${encodeURIComponent(originalSrc)}`
@@ -188,27 +148,21 @@ export function useMapDownload() {
               return loadImage(img)
             }))
 
-            console.log('[Download] All images processed, waiting additional time')
             await new Promise(resolve => setTimeout(resolve, 2000))
-            console.log('[Download] Clone process complete')
           } catch (error) {
-            console.error('[Download] Error in clone process:', error)
+            console.error('Error in onclone:', error)
             throw error
           }
         }
       })
 
-      console.log('[Download] Canvas created, checking for taint')
       checkTaintedCanvas(canvas)
 
-      // Restore original dimensions
       if (width && height) {
-        console.log('[Download] Restoring original dimensions')
         mapRef.current.style.width = originalWidth
         mapRef.current.style.height = originalHeight
       }
 
-      // Restore visibility of controls
       controls.forEach(control => {
         if (control instanceof HTMLElement) {
           control.style.visibility = ''
@@ -219,21 +173,17 @@ export function useMapDownload() {
       }
 
       if (forThumbnail) {
-        console.log('[Download] Generating thumbnail')
         try {
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-          console.log('[Download] Thumbnail generated successfully')
           return dataUrl
         } catch (err) {
-          console.error('[Download] Error generating thumbnail:', err)
+          console.error('Error generating thumbnail:', err)
           return null
         }
       }
 
-      console.log('[Download] Generating final image')
       try {
         const dataUrl = canvas.toDataURL('image/png', 1.0)
-        console.log('[Download] Image generated successfully, triggering download')
         
         const link = document.createElement('a')
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -241,14 +191,13 @@ export function useMapDownload() {
         link.href = dataUrl
         link.click()
 
-        console.log('[Download] Download triggered successfully')
         return null
       } catch (err) {
-        console.error('[Download] Error generating download:', err)
+        console.error('Error generating download:', err)
         throw new Error('Failed to generate download image')
       }
     } catch (error) {
-      console.error('[Download] Error in handleDownload:', error)
+      console.error('Error in handleDownload:', error)
       throw error
     }
   }
