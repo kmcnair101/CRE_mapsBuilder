@@ -163,35 +163,31 @@ export function useMapDownload() {
               if (original instanceof HTMLElement && cloned instanceof HTMLElement) {
                 const computedStyle = window.getComputedStyle(original)
                 Object.assign(cloned.style, {
-                  // Only preserve horizontal padding/margin
-                  paddingLeft: computedStyle.paddingLeft,
-                  paddingRight: computedStyle.paddingRight,
-                  marginLeft: computedStyle.marginLeft,
-                  marginRight: computedStyle.marginRight,
-                  // Zero out vertical spacing
-                  paddingTop: '0',
-                  paddingBottom: '0',
-                  marginTop: '0',
-                  marginBottom: '0',
-                  // Preserve other important styles
-                  lineHeight: computedStyle.lineHeight,
-                  verticalAlign: computedStyle.verticalAlign,
-                  boxSizing: computedStyle.boxSizing,
-                  display: computedStyle.display,
-                  position: computedStyle.position,
-                  width: computedStyle.width,
-                  height: computedStyle.height,
-                  minWidth: computedStyle.minWidth,
-                  maxWidth: computedStyle.maxWidth,
-                  whiteSpace: computedStyle.whiteSpace,
+                  // Text alignment and positioning
                   textAlign: computedStyle.textAlign,
+                  verticalAlign: 'middle',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  
+                  // Font properties
                   fontSize: computedStyle.fontSize,
                   fontFamily: computedStyle.fontFamily,
                   fontWeight: computedStyle.fontWeight,
+                  lineHeight: `${Math.round(parseFloat(computedStyle.fontSize) * 1.2)}px`,
+                  
+                  // Spacing
+                  padding: computedStyle.padding,
+                  margin: computedStyle.margin,
+                  
+                  // Other important styles
                   color: computedStyle.color,
                   backgroundColor: computedStyle.backgroundColor,
                   border: computedStyle.border,
-                  borderRadius: computedStyle.borderRadius
+                  borderRadius: computedStyle.borderRadius,
+                  position: computedStyle.position,
+                  width: computedStyle.width,
+                  height: computedStyle.height
                 })
               }
             })
