@@ -129,7 +129,7 @@ export function useMapDownload() {
               clonedLogo.style.visibility = 'hidden'
             }
 
-            // Preserve text overlay styles exactly
+            // Preserve text overlay styles exactly, but handle padding/margin carefully
             const originalTextOverlays = document.querySelectorAll('.text-content')
             const clonedTextOverlays = clonedDoc.querySelectorAll('.text-content')
             
@@ -138,11 +138,35 @@ export function useMapDownload() {
               if (original instanceof HTMLElement && cloned instanceof HTMLElement) {
                 const computedStyle = window.getComputedStyle(original)
                 Object.assign(cloned.style, {
-                  padding: computedStyle.padding,
-                  margin: computedStyle.margin,
+                  // Only preserve horizontal padding/margin
+                  paddingLeft: computedStyle.paddingLeft,
+                  paddingRight: computedStyle.paddingRight,
+                  marginLeft: computedStyle.marginLeft,
+                  marginRight: computedStyle.marginRight,
+                  // Zero out vertical spacing
+                  paddingTop: '0',
+                  paddingBottom: '0',
+                  marginTop: '0',
+                  marginBottom: '0',
+                  // Preserve other important styles
                   lineHeight: computedStyle.lineHeight,
                   verticalAlign: computedStyle.verticalAlign,
-                  boxSizing: computedStyle.boxSizing
+                  boxSizing: computedStyle.boxSizing,
+                  display: computedStyle.display,
+                  position: computedStyle.position,
+                  width: computedStyle.width,
+                  height: computedStyle.height,
+                  minWidth: computedStyle.minWidth,
+                  maxWidth: computedStyle.maxWidth,
+                  whiteSpace: computedStyle.whiteSpace,
+                  textAlign: computedStyle.textAlign,
+                  fontSize: computedStyle.fontSize,
+                  fontFamily: computedStyle.fontFamily,
+                  fontWeight: computedStyle.fontWeight,
+                  color: computedStyle.color,
+                  backgroundColor: computedStyle.backgroundColor,
+                  border: computedStyle.border,
+                  borderRadius: computedStyle.borderRadius
                 })
               }
             })
