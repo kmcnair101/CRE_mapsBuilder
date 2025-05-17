@@ -252,6 +252,44 @@ export function useMapDownload() {
                 clientHeight: clonedMapElement.clientHeight
               })
             }
+
+            // Also log the style comparison
+            if (clonedMapElement instanceof HTMLElement) {
+              console.log('Style comparison:', {
+                original: {
+                  width: mapRef.current.style.width,
+                  height: mapRef.current.style.height,
+                  position: mapRef.current.style.position,
+                  display: mapRef.current.style.display,
+                  className: mapRef.current.className
+                },
+                cloned: {
+                  width: clonedMapElement.style.width,
+                  height: clonedMapElement.style.height,
+                  position: clonedMapElement.style.position,
+                  display: clonedMapElement.style.display,
+                  className: clonedMapElement.className
+                }
+              })
+
+              // Also log the computed styles
+              const originalComputed = window.getComputedStyle(mapRef.current)
+              const clonedComputed = window.getComputedStyle(clonedMapElement)
+              console.log('Computed style comparison:', {
+                original: {
+                  width: originalComputed.width,
+                  height: originalComputed.height,
+                  position: originalComputed.position,
+                  display: originalComputed.display
+                },
+                cloned: {
+                  width: clonedComputed.width,
+                  height: clonedComputed.height,
+                  position: clonedComputed.position,
+                  display: clonedComputed.display
+                }
+              })
+            }
           } catch (error) {
             console.error('Error in onclone:', error)
             throw error
