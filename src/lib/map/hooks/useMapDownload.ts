@@ -154,54 +154,38 @@ export function useMapDownload() {
               clonedLogo.style.visibility = 'hidden'
             }
 
-            // Preserve text overlay styles exactly, but handle padding/margin carefully
+            // Preserve text overlay styles exactly
             const originalTextOverlays = document.querySelectorAll('.text-content')
             const clonedTextOverlays = clonedDoc.querySelectorAll('.text-content')
             
             originalTextOverlays.forEach((original, index) => {
               const cloned = clonedTextOverlays[index]
               if (original instanceof HTMLElement && cloned instanceof HTMLElement) {
-                const computedStyle = window.getComputedStyle(original)
-                const padding = computedStyle.padding
-                const paddingLeft = computedStyle.paddingLeft
-                const paddingRight = computedStyle.paddingRight
-                
+                // First, copy all styles from the original element
+                cloned.style.cssText = original.style.cssText
+
+                // Then override only the specific properties we need to ensure proper rendering
                 Object.assign(cloned.style, {
-                  // Text alignment and positioning
-                  textAlign: computedStyle.textAlign,
-                  verticalAlign: 'middle',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  
-                  // Font properties
-                  fontSize: computedStyle.fontSize,
-                  fontFamily: computedStyle.fontFamily,
-                  fontWeight: computedStyle.fontWeight,
-                  lineHeight: `${Math.round(parseFloat(computedStyle.fontSize) * 1.2)}px`,
-                  
-                  // Spacing - only preserve horizontal padding
-                  paddingTop: '0',
-                  paddingBottom: '0',
-                  paddingLeft: paddingLeft,
-                  paddingRight: paddingRight,
-                  margin: computedStyle.margin,
-                  
-                  // Other important styles
-                  color: computedStyle.color,
-                  backgroundColor: computedStyle.backgroundColor,
-                  border: computedStyle.border,
-                  borderRadius: computedStyle.borderRadius,
-                  position: computedStyle.position,
-                  width: computedStyle.width,
-                  height: computedStyle.height
+                  lineHeight: '1',
+                  height: 'auto',
+                  minHeight: '0',
+                  maxHeight: 'none'
                 })
 
                 // Log the applied styles for debugging
                 console.log('Applied styles to cloned text overlay:', {
-                  element: cloned,
-                  styles: cloned.style.cssText,
-                  computedStyles: window.getComputedStyle(cloned)
+                  originalStyles: original.style.cssText,
+                  clonedStyles: cloned.style.cssText,
+                  computedStyles: {
+                    display: window.getComputedStyle(cloned).display,
+                    alignItems: window.getComputedStyle(cloned).alignItems,
+                    justifyContent: window.getComputedStyle(cloned).justifyContent,
+                    lineHeight: window.getComputedStyle(cloned).lineHeight,
+                    height: window.getComputedStyle(cloned).height
+                  }
                 })
               }
             })
