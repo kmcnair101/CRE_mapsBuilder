@@ -375,42 +375,36 @@ export function createCustomTextOverlay(
         padding: Math.round(this.style.padding * scale),
         borderWidth: Math.round(this.style.borderWidth * scale)
       };
-      
+
       const styles = {
-        // Text styles
         color: this.style.color || '#000000',
         fontSize: `${scaled.fontSize}px`,
         fontFamily: this.style.fontFamily || 'Arial',
         fontWeight: this.style.fontWeight || 'normal',
         textAlign: this.style.textAlign || 'center',
-        
-        // Container styles
+
         backgroundColor: this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1),
         border: `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`,
         padding: `${scaled.padding}px`,
         borderRadius: '4px',
-        
-        // Layout styles
+
         minWidth: 'min-content',
         width: `${width}px`,
         maxWidth: '400px',
         whiteSpace: 'pre',
-        display: 'inline-block',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        lineHeight: `${scaled.fontSize}px`,
         position: 'relative',
         boxSizing: 'border-box',
-        lineHeight: '1.2',
-        verticalAlign: 'middle',
         cursor: 'move'
       };
 
-      // Apply all styles at once
       Object.assign(contentDiv.style, styles);
-      
-      // Set content after styles
       contentDiv.innerHTML = this.content;
     }
 
-    
     updateContent(content: string, style: any) {
       this.content = content;
       this.style = {
