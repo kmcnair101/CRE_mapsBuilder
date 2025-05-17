@@ -73,6 +73,20 @@ export function useMapDownload() {
       const originalWidth = mapRef.current.style.width
       const originalHeight = mapRef.current.style.height
 
+      console.log('Map styles before download:', {
+        width: mapRef.current.style.width,
+        height: mapRef.current.style.height,
+        visibility: mapRef.current.style.visibility,
+        position: mapRef.current.style.position,
+        display: mapRef.current.style.display,
+        padding: mapRef.current.style.padding,
+        paddingTop: mapRef.current.style.paddingTop,
+        paddingRight: mapRef.current.style.paddingRight,
+        paddingBottom: mapRef.current.style.paddingBottom,
+        paddingLeft: mapRef.current.style.paddingLeft,
+        lineHeight: mapRef.current.style.lineHeight
+      })
+
       if (width && height) {
         mapRef.current.style.width = `${width}px`
         mapRef.current.style.height = `${height}px`
@@ -199,6 +213,20 @@ export function useMapDownload() {
         mapRef.current.style.width = originalWidth
         mapRef.current.style.height = originalHeight
       }
+
+      console.log('Map styles after download:', {
+        width: mapRef.current.style.width,
+        height: mapRef.current.style.height,
+        visibility: mapRef.current.style.visibility,
+        position: mapRef.current.style.position,
+        display: mapRef.current.style.display,
+        padding: mapRef.current.style.padding,
+        paddingTop: mapRef.current.style.paddingTop,
+        paddingRight: mapRef.current.style.paddingRight,
+        paddingBottom: mapRef.current.style.paddingBottom,
+        paddingLeft: mapRef.current.style.paddingLeft,
+        lineHeight: mapRef.current.style.lineHeight
+      })
 
       // Restore controls visibility
       controls.forEach(control => {
