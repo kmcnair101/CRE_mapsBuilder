@@ -391,11 +391,9 @@ export function createCustomTextOverlay(
         minWidth: 'min-content',
         width: `${width}px`,
         maxWidth: '400px',
-        whiteSpace: 'pre',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        lineHeight: `${scaled.fontSize}px`,
+        whiteSpace: 'pre-line', // changed from 'pre'
+        display: 'block',       // changed from 'flex'
+        lineHeight: '1.2',      // changed from pixel value
         position: 'relative',
         boxSizing: 'border-box',
         cursor: 'move'
