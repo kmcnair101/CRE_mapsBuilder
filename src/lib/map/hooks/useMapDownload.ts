@@ -213,13 +213,22 @@ export function useMapDownload() {
             await new Promise(resolve => setTimeout(resolve, 2000))
             console.log('Completed onclone process')
 
+            console.log('Cloned document structure:', {
+              rootElement: clonedDoc.documentElement.tagName,
+              bodyChildren: Array.from(clonedDoc.body.children).map(el => ({
+                tagName: el.tagName,
+                className: el.className,
+                id: el.id
+              }))
+            })
+
             console.log('Cloned map dimensions:', {
-              styleWidth: clonedDoc.querySelector('.map-container')?.style.width,
-              styleHeight: clonedDoc.querySelector('.map-container')?.style.height,
-              offsetWidth: clonedDoc.querySelector('.map-container')?.offsetWidth,
-              offsetHeight: clonedDoc.querySelector('.map-container')?.offsetHeight,
-              clientWidth: clonedDoc.querySelector('.map-container')?.clientWidth,
-              clientHeight: clonedDoc.querySelector('.map-container')?.clientHeight
+              styleWidth: mapRef.current?.style.width,
+              styleHeight: mapRef.current?.style.height,
+              offsetWidth: mapRef.current?.offsetWidth,
+              offsetHeight: mapRef.current?.offsetHeight,
+              clientWidth: mapRef.current?.clientWidth,
+              clientHeight: mapRef.current?.clientHeight
             })
           } catch (error) {
             console.error('Error in onclone:', error)
