@@ -218,18 +218,40 @@ export function useMapDownload() {
               bodyChildren: Array.from(clonedDoc.body.children).map(el => ({
                 tagName: el.tagName,
                 className: el.className,
-                id: el.id
+                id: el.id,
+                children: Array.from(el.children).map(child => ({
+                  tagName: child.tagName,
+                  className: child.className,
+                  id: child.id
+                }))
               }))
             })
 
-            console.log('Cloned map dimensions:', {
-              styleWidth: mapRef.current?.style.width,
-              styleHeight: mapRef.current?.style.height,
-              offsetWidth: mapRef.current?.offsetWidth,
-              offsetHeight: mapRef.current?.offsetHeight,
-              clientWidth: mapRef.current?.clientWidth,
-              clientHeight: mapRef.current?.clientHeight
+            // Find the corresponding element in the cloned document
+            const clonedMapElement = clonedDoc.querySelector('div[style*="width: 1280px"]')
+            console.log('Cloned map element found:', {
+              element: clonedMapElement ? {
+                tagName: clonedMapElement.tagName,
+                className: clonedMapElement.className,
+                id: clonedMapElement.id,
+                style: {
+                  width: clonedMapElement.style.width,
+                  height: clonedMapElement.style.height
+                }
+              } : 'Not found'
             })
+
+            // Then log the dimensions of the actual cloned element
+            if (clonedMapElement instanceof HTMLElement) {
+              console.log('Cloned map element dimensions:', {
+                styleWidth: clonedMapElement.style.width,
+                styleHeight: clonedMapElement.style.height,
+                offsetWidth: clonedMapElement.offsetWidth,
+                offsetHeight: clonedMapElement.offsetHeight,
+                clientWidth: clonedMapElement.clientWidth,
+                clientHeight: clonedMapElement.clientHeight
+              })
+            }
           } catch (error) {
             console.error('Error in onclone:', error)
             throw error
