@@ -162,6 +162,10 @@ export function useMapDownload() {
               const cloned = clonedTextOverlays[index]
               if (original instanceof HTMLElement && cloned instanceof HTMLElement) {
                 const computedStyle = window.getComputedStyle(original)
+                const padding = computedStyle.padding
+                const paddingLeft = computedStyle.paddingLeft
+                const paddingRight = computedStyle.paddingRight
+                
                 Object.assign(cloned.style, {
                   // Text alignment and positioning
                   textAlign: computedStyle.textAlign,
@@ -176,8 +180,11 @@ export function useMapDownload() {
                   fontWeight: computedStyle.fontWeight,
                   lineHeight: `${Math.round(parseFloat(computedStyle.fontSize) * 1.2)}px`,
                   
-                  // Spacing
-                  padding: computedStyle.padding,
+                  // Spacing - only preserve horizontal padding
+                  paddingTop: '0',
+                  paddingBottom: '0',
+                  paddingLeft: paddingLeft,
+                  paddingRight: paddingRight,
                   margin: computedStyle.margin,
                   
                   // Other important styles
@@ -187,14 +194,7 @@ export function useMapDownload() {
                   borderRadius: computedStyle.borderRadius,
                   position: computedStyle.position,
                   width: computedStyle.width,
-                  height: computedStyle.height,
-                  
-                  // Additional flex properties to ensure proper centering
-                  flexDirection: 'column',
-                  flexWrap: 'nowrap',
-                  flexShrink: '0',
-                  flexGrow: '0',
-                  flexBasis: 'auto'
+                  height: computedStyle.height
                 })
 
                 // Log the applied styles for debugging
