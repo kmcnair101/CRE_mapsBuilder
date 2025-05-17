@@ -4,7 +4,7 @@ import type { MapData } from '@/lib/types'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useMapOverlays } from './useMapOverlays'
 
-// Helper function to load images with retries
+// Helper function to load images with retries 
 const loadImage = async (img: HTMLImageElement, retries = 3): Promise<void> => {
   if (img.complete) {
     return Promise.resolve()
