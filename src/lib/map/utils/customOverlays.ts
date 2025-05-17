@@ -403,6 +403,11 @@ export function createCustomTextOverlay(
 
       Object.assign(contentDiv.style, styles);
       contentDiv.innerHTML = this.content;
+
+      // Debug: Log computed and inline styles
+      console.log('[CustomTextOverlay] Inline styles:', contentDiv.style.cssText);
+      console.log('[CustomTextOverlay] Computed styles:', window.getComputedStyle(contentDiv));
+      console.log('[CustomTextOverlay] Content:', contentDiv.innerHTML);
     }
 
     updateContent(content: string, style: any) {
