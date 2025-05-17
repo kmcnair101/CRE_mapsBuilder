@@ -161,15 +161,40 @@ export function useMapDownload() {
             originalTextOverlays.forEach((original, index) => {
               const cloned = clonedTextOverlays[index]
               if (original instanceof HTMLElement && cloned instanceof HTMLElement) {
-                // First, copy all styles from the original element
-                cloned.style.cssText = original.style.cssText
-
-                // Then override only the specific properties we need to ensure proper rendering
+                const computedStyle = window.getComputedStyle(original)
+                
+                // Get horizontal padding values
+                const paddingLeft = computedStyle.paddingLeft
+                const paddingRight = computedStyle.paddingRight
+                
+                // Apply all original styles but override padding
                 Object.assign(cloned.style, {
+                  // Text alignment and positioning
+                  textAlign: computedStyle.textAlign,
+                  verticalAlign: 'middle',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  
+                  // Font properties
+                  fontSize: computedStyle.fontSize,
+                  fontFamily: computedStyle.fontFamily,
+                  fontWeight: computedStyle.fontWeight,
                   lineHeight: '1',
+                  
+                  // Spacing - only horizontal padding, no vertical padding
+                  padding: `0 ${paddingRight} 0 ${paddingLeft}`,
+                  paddingTop: '0',
+                  paddingBottom: '0',
+                  margin: computedStyle.margin,
+                  
+                  // Other important styles
+                  color: computedStyle.color,
+                  backgroundColor: computedStyle.backgroundColor,
+                  border: computedStyle.border,
+                  borderRadius: computedStyle.borderRadius,
+                  position: computedStyle.position,
+                  width: computedStyle.width,
                   height: 'auto',
                   minHeight: '0',
                   maxHeight: 'none'
@@ -180,11 +205,11 @@ export function useMapDownload() {
                   originalStyles: original.style.cssText,
                   clonedStyles: cloned.style.cssText,
                   computedStyles: {
-                    display: window.getComputedStyle(cloned).display,
-                    alignItems: window.getComputedStyle(cloned).alignItems,
-                    justifyContent: window.getComputedStyle(cloned).justifyContent,
-                    lineHeight: window.getComputedStyle(cloned).lineHeight,
-                    height: window.getComputedStyle(cloned).height
+                    padding: window.getComputedStyle(cloned).padding,
+                    paddingTop: window.getComputedStyle(cloned).paddingTop,
+                    paddingBottom: window.getComputedStyle(cloned).paddingBottom,
+                    paddingLeft: window.getComputedStyle(cloned).paddingLeft,
+                    paddingRight: window.getComputedStyle(cloned).paddingRight
                   }
                 })
               }
