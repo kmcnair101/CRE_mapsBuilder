@@ -187,7 +187,21 @@ export function useMapDownload() {
                   borderRadius: computedStyle.borderRadius,
                   position: computedStyle.position,
                   width: computedStyle.width,
-                  height: computedStyle.height
+                  height: computedStyle.height,
+                  
+                  // Additional flex properties to ensure proper centering
+                  flexDirection: 'column',
+                  flexWrap: 'nowrap',
+                  flexShrink: '0',
+                  flexGrow: '0',
+                  flexBasis: 'auto'
+                })
+
+                // Log the applied styles for debugging
+                console.log('Applied styles to cloned text overlay:', {
+                  element: cloned,
+                  styles: cloned.style.cssText,
+                  computedStyles: window.getComputedStyle(cloned)
                 })
               }
             })
