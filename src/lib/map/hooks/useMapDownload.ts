@@ -65,11 +65,7 @@ export function useMapDownload() {
     height?: number,
     googleMapRef?: React.RefObject<google.maps.Map>
   ) => {
-    if (!hasAccess()) {
-      return null
-    }
-
-    if (!mapRef.current) {
+    if (!hasAccess() || !mapRef.current) {
       return null
     }
 
@@ -82,6 +78,7 @@ export function useMapDownload() {
         mapRef.current.style.height = `${height}px`
       }
 
+      // Hide controls
       const controls = mapRef.current.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
       controls.forEach(control => {
         if (control instanceof HTMLElement) {
@@ -94,6 +91,7 @@ export function useMapDownload() {
         logo.style.visibility = 'hidden'
       }
 
+      // Wait for map to be idle
       const map = googleMapRef?.current
       if (map) {
         await new Promise<void>((resolve, reject) => {
@@ -118,6 +116,7 @@ export function useMapDownload() {
         height: height || mapRef.current.offsetHeight,
         onclone: async (clonedDoc) => {
           try {
+            // Only hide controls, don't modify any other styles
             const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
             clonedControls.forEach(control => {
               if (control instanceof HTMLElement) {
@@ -130,13 +129,8 @@ export function useMapDownload() {
               clonedLogo.style.visibility = 'hidden'
             }
 
-            const clonedMap = clonedDoc.querySelector('.gm-style') as HTMLElement
-            if (clonedMap) {
-              clonedMap.style.background = 'transparent'
-            }
-
+            // Handle images without modifying styles
             const images = clonedDoc.getElementsByTagName('img')
-            
             await Promise.all(Array.from(images).map(async (img) => {
               img.crossOrigin = 'anonymous'
               
@@ -158,11 +152,13 @@ export function useMapDownload() {
 
       checkTaintedCanvas(canvas)
 
+      // Restore original dimensions
       if (width && height) {
         mapRef.current.style.width = originalWidth
         mapRef.current.style.height = originalHeight
       }
 
+      // Restore controls visibility
       controls.forEach(control => {
         if (control instanceof HTMLElement) {
           control.style.visibility = ''
