@@ -116,7 +116,7 @@ export function useMapDownload() {
         height: height || mapRef.current.offsetHeight,
         onclone: async (clonedDoc) => {
           try {
-            // Only hide controls, don't modify any other styles
+            // Hide controls
             const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
             clonedControls.forEach(control => {
               if (control instanceof HTMLElement) {
@@ -129,7 +129,25 @@ export function useMapDownload() {
               clonedLogo.style.visibility = 'hidden'
             }
 
-            // Handle images without modifying styles
+            // Preserve text overlay styles exactly
+            const originalTextOverlays = document.querySelectorAll('.text-content')
+            const clonedTextOverlays = clonedDoc.querySelectorAll('.text-content')
+            
+            originalTextOverlays.forEach((original, index) => {
+              const cloned = clonedTextOverlays[index]
+              if (original instanceof HTMLElement && cloned instanceof HTMLElement) {
+                const computedStyle = window.getComputedStyle(original)
+                Object.assign(cloned.style, {
+                  padding: computedStyle.padding,
+                  margin: computedStyle.margin,
+                  lineHeight: computedStyle.lineHeight,
+                  verticalAlign: computedStyle.verticalAlign,
+                  boxSizing: computedStyle.boxSizing
+                })
+              }
+            })
+
+            // Handle images
             const images = clonedDoc.getElementsByTagName('img')
             await Promise.all(Array.from(images).map(async (img) => {
               img.crossOrigin = 'anonymous'
