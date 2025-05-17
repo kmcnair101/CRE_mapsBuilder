@@ -127,7 +127,6 @@ export function useMapDownload() {
           })
         })
       }
-
       // Add log before html2canvas
       console.log('About to start html2canvas generation')
 
