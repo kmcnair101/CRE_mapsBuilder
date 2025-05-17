@@ -90,6 +90,14 @@ export function useMapDownload() {
       if (width && height) {
         mapRef.current.style.width = `${width}px`
         mapRef.current.style.height = `${height}px`
+        console.log('Map dimensions after setting:', {
+          styleWidth: mapRef.current.style.width,
+          styleHeight: mapRef.current.style.height,
+          offsetWidth: mapRef.current.offsetWidth,
+          offsetHeight: mapRef.current.offsetHeight,
+          clientWidth: mapRef.current.clientWidth,
+          clientHeight: mapRef.current.clientHeight
+        })
       }
 
       // Hide controls
@@ -204,6 +212,15 @@ export function useMapDownload() {
 
             await new Promise(resolve => setTimeout(resolve, 2000))
             console.log('Completed onclone process')
+
+            console.log('Cloned map dimensions:', {
+              styleWidth: clonedDoc.querySelector('.map-container')?.style.width,
+              styleHeight: clonedDoc.querySelector('.map-container')?.style.height,
+              offsetWidth: clonedDoc.querySelector('.map-container')?.offsetWidth,
+              offsetHeight: clonedDoc.querySelector('.map-container')?.offsetHeight,
+              clientWidth: clonedDoc.querySelector('.map-container')?.clientWidth,
+              clientHeight: clonedDoc.querySelector('.map-container')?.clientHeight
+            })
           } catch (error) {
             console.error('Error in onclone:', error)
             throw error
