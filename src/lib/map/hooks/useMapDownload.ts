@@ -120,15 +120,19 @@ export function useMapDownload() {
         })
       }
 
+      // Add log before html2canvas
+      console.log('About to start html2canvas generation')
+
       const canvas = await html2canvas(mapRef.current, {
         useCORS: true,
         allowTaint: true,
         backgroundColor: null,
         scale: forThumbnail ? 0.5 : 2,
-        logging: false,
+        logging: true, // Enable html2canvas logging
         width: width || mapRef.current.offsetWidth,
         height: height || mapRef.current.offsetHeight,
         onclone: async (clonedDoc) => {
+          console.log('Starting onclone process')
           try {
             // Hide controls
             const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
@@ -199,12 +203,15 @@ export function useMapDownload() {
             }))
 
             await new Promise(resolve => setTimeout(resolve, 2000))
+            console.log('Completed onclone process')
           } catch (error) {
             console.error('Error in onclone:', error)
             throw error
           }
         }
       })
+
+      console.log('Canvas generation completed')
 
       checkTaintedCanvas(canvas)
 
