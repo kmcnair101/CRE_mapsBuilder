@@ -157,22 +157,18 @@ export async function createSubjectPropertyOverlay(
 
       // Add edit button if no image
       if (!this.content.image) {
-        const editCleanup = createEditButton(contentDiv, () => {
-          console.log('Edit button clicked'); // Debug log
-          
+        const editCleanup = createEditButton(div, () => {
+          console.log('Edit button clicked');
           if (!this.modalRoot) {
-            console.log('Creating modal root'); // Debug log
             this.modalRoot = document.createElement('div')
             document.body.appendChild(this.modalRoot)
             this.modalReactRoot = createRoot(this.modalRoot)
           }
 
-          console.log('Rendering SubjectPropertyModal'); // Debug log
           this.modalReactRoot?.render(
             createElement(SubjectPropertyModal, {
               isOpen: true,
               onClose: () => {
-                console.log('Modal closing'); // Debug log
                 this.modalReactRoot?.render(null)
                 if (this.modalRoot && this.modalRoot.parentNode) {
                   this.modalRoot.parentNode.removeChild(this.modalRoot)
@@ -194,7 +190,6 @@ export async function createSubjectPropertyOverlay(
                 borderOpacity: this.content.style.borderOpacity
               },
               onSave: (data) => {
-                console.log('Modal saving:', data); // Debug log
                 this.content.name = data.name
                 this.content.image = data.image
                 if (data.style) {
