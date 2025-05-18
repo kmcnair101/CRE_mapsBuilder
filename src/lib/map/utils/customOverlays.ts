@@ -20,6 +20,7 @@ interface ResizeConfig {
   onResize: (width: number) => void
 }
 
+
 export function createCustomImageOverlay(
   config: ImageOverlayConfig,
   map: google.maps.Map,
