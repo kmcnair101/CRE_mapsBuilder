@@ -95,10 +95,13 @@ export function createDeleteButton(container: HTMLElement | null, onDelete: () =
 }
 
 export function createEditButton(container: HTMLElement | null, onEdit: () => void) {
-  if (!container) return null
+  if (!container) {
+    console.log('Edit button: container is null');
+    return null;
+  }
 
-  const editButton = document.createElement('button')
-  editButton.className = 'edit-button'
+  const editButton = document.createElement('button');
+  editButton.className = 'edit-button';
   Object.assign(editButton.style, {
     position: 'absolute',
     top: '-12px',
@@ -117,82 +120,82 @@ export function createEditButton(container: HTMLElement | null, onEdit: () => vo
     border: 'none',
     transition: 'opacity 0.2s, background-color 0.2s',
     opacity: '0'
-  })
+  });
 
-  let iconRoot: ReturnType<typeof createRoot> | null = null
+  let iconRoot: ReturnType<typeof createRoot> | null = null;
   try {
-    iconRoot = createRoot(editButton)
-    iconRoot.render(createElement(Pencil, { size: 14 }))
+    iconRoot = createRoot(editButton);
+    iconRoot.render(createElement(Pencil, { size: 14 }));
   } catch (error) {
-    console.warn('Failed to create edit button icon')
-    return null
+    console.warn('Failed to create edit button icon');
+    return null;
   }
 
   const handleClick = (e: MouseEvent) => {
-    console.log('Edit button clicked!');
-    e.stopPropagation()
-    onEdit()
-  }
+    console.log('Edit button DOM click event fired');
+    e.stopPropagation();
+    onEdit();
+  };
 
   const handleMouseEnter = () => {
-    editButton.style.backgroundColor = '#2563EB'
-  }
+    editButton.style.backgroundColor = '#2563EB';
+  };
 
   const handleMouseLeave = () => {
-    editButton.style.backgroundColor = '#3B82F6'
-  }
+    editButton.style.backgroundColor = '#3B82F6';
+  };
 
   const handleContainerMouseEnter = () => {
-    editButton.style.display = 'flex'
+    editButton.style.display = 'flex';
     setTimeout(() => {
-      editButton.style.opacity = '1'
-    }, 0)
-  }
+      editButton.style.opacity = '1';
+    }, 0);
+  };
 
   const handleContainerMouseLeave = (e: MouseEvent) => {
-    const rect = editButton.getBoundingClientRect()
+    const rect = editButton.getBoundingClientRect();
     const isOverButton = e.clientX >= rect.left && e.clientX <= rect.right &&
-                        e.clientY >= rect.top && e.clientY <= rect.bottom
+                        e.clientY >= rect.top && e.clientY <= rect.bottom;
     
     if (!isOverButton) {
-      editButton.style.opacity = '0'
+      editButton.style.opacity = '0';
       setTimeout(() => {
         if (editButton.style.opacity === '0') {
-          editButton.style.display = 'none'
+          editButton.style.display = 'none';
         }
-      }, 200)
+      }, 200);
     }
-  }
+  };
 
-  editButton.addEventListener('click', handleClick)
-  editButton.addEventListener('mouseenter', handleMouseEnter)
-  editButton.addEventListener('mouseleave', handleMouseLeave)
-  container.addEventListener('mouseenter', handleContainerMouseEnter)
-  container.addEventListener('mouseleave', handleContainerMouseLeave)
+  editButton.addEventListener('click', handleClick);
+  editButton.addEventListener('mouseenter', handleMouseEnter);
+  editButton.addEventListener('mouseleave', handleMouseLeave);
+  container.addEventListener('mouseenter', handleContainerMouseEnter);
+  container.addEventListener('mouseleave', handleContainerMouseLeave);
 
   try {
-    container.appendChild(editButton)
+    container.appendChild(editButton);
   } catch (error) {
-    console.warn('Failed to append edit button')
-    iconRoot?.unmount()
-    return null
+    console.warn('Failed to append edit button');
+    iconRoot?.unmount();
+    return null;
   }
 
   return () => {
-    editButton.removeEventListener('click', handleClick)
-    editButton.removeEventListener('mouseenter', handleMouseEnter)
-    editButton.removeEventListener('mouseleave', handleMouseLeave)
-    container.removeEventListener('mouseenter', handleContainerMouseEnter)
-    container.removeEventListener('mouseleave', handleContainerMouseLeave)
-    iconRoot?.unmount()
+    editButton.removeEventListener('click', handleClick);
+    editButton.removeEventListener('mouseenter', handleMouseEnter);
+    editButton.removeEventListener('mouseleave', handleMouseLeave);
+    container.removeEventListener('mouseenter', handleContainerMouseEnter);
+    container.removeEventListener('mouseleave', handleContainerMouseLeave);
+    iconRoot?.unmount();
     try {
       if (editButton.parentNode === container) {
-        container.removeChild(editButton)
+        container.removeChild(editButton);
       }
     } catch (error) {
-      console.warn('Failed to remove edit button')
+      console.warn('Failed to remove edit button');
     }
-  }
+  };
 }
 
 interface ResizeConfig {
