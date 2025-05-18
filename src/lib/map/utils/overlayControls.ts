@@ -129,6 +129,7 @@ export function createEditButton(container: HTMLElement | null, onEdit: () => vo
   }
 
   const handleClick = (e: MouseEvent) => {
+    console.log('Edit button clicked!');
     e.stopPropagation()
     onEdit()
   }
