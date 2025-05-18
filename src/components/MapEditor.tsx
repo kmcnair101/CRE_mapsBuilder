@@ -154,6 +154,33 @@ export default function MapEditor() {
     }
   }, [mapData.subject_property?.name, mapData.subject_property?.address, id])
 
+  const saveMapState = () => {
+    if (!id) return // Only save if we have a map ID
+
+    // Save the current state
+    const mapState = {
+      title: mapData.title,
+      center_lat: googleMapRef.current?.getCenter()?.lat() || mapData.center_lat,
+      center_lng: googleMapRef.current?.getCenter()?.lng() || mapData.center_lng,
+      zoom_level: googleMapRef.current?.getZoom() || mapData.zoom_level,
+      overlays: mapData.overlays,
+      subject_property: mapData.subject_property,
+      mapStyle: mapData.mapStyle
+    }
+
+    localStorage.setItem('pendingMapId', id)
+    localStorage.setItem('pendingMapEdits', JSON.stringify({ state: mapState }))
+  }
+
+  const handleFeatureAccess = () => {
+    if (!hasAccess()) {
+      saveMapState() // Save the current state
+      setShowPricingPlans(true)
+      return false
+    }
+    return true
+  }
+
   const handleDeleteLayer = (id: string) => {
     setMapData(prev => ({
       ...prev,
