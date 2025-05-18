@@ -2,7 +2,7 @@ import { loader } from '@/lib/google-maps'
 import type { MapData } from '@/lib/types'
 import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
-import { TextEditModal } from '@/components/modals/TextEditModal'
+import { SubjectPropertyModal } from '@/components/modals/SubjectPropertyModal'
 import { createEditButton } from '../utils/overlayControls'
 
 export async function createSubjectPropertyOverlay(
@@ -165,7 +165,7 @@ export async function createSubjectPropertyOverlay(
           }
 
           this.modalReactRoot?.render(
-            createElement(TextEditModal, {
+            createElement(SubjectPropertyModal, {
               isOpen: true,
               onClose: () => {
                 this.modalReactRoot?.render(null)
@@ -175,7 +175,8 @@ export async function createSubjectPropertyOverlay(
                 this.modalRoot = null
                 this.modalReactRoot = null
               },
-              initialText: this.content.name,
+              initialName: this.content.name,
+              initialImage: this.content.image,
               initialStyle: {
                 color: this.content.style.color,
                 fontSize: this.baseFontSize,
@@ -187,21 +188,25 @@ export async function createSubjectPropertyOverlay(
                 backgroundOpacity: this.content.style.backgroundOpacity,
                 borderOpacity: this.content.style.borderOpacity
               },
-              onSave: (text, style) => {
-                this.content.name = text
-                this.content.style = {
-                  ...this.content.style,
-                  ...style,
-                  width: this.baseWidth
+              onSave: (data) => {
+                this.content.name = data.name
+                this.content.image = data.image
+                if (data.style) {
+                  this.content.style = {
+                    ...this.content.style,
+                    ...data.style,
+                    width: this.baseWidth
+                  }
+                  this.baseWidth = this.content.style.width
+                  this.currentWidth = this.baseWidth
+                  this.baseFontSize = data.style.fontSize
                 }
-                this.baseWidth = this.content.style.width
-                this.currentWidth = this.baseWidth
-                this.baseFontSize = style.fontSize
                 this.updateContentStyles(this.currentWidth)
                 this.draw()
                 onUpdate({
                   ...mapData.subject_property,
-                  name: text,
+                  name: data.name,
+                  image: data.image,
                   style: this.content.style
                 })
                 this.modalReactRoot?.render(null)
