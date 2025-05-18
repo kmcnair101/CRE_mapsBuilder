@@ -330,11 +330,15 @@ export async function createSubjectPropertyOverlay(
 
       // Handle dragging
       const handleDragStart = (e: MouseEvent) => {
-        if (this.isResizing) return
-        e.stopPropagation()
-        this.isDragging = true
-        this.startPos = { x: e.clientX, y: e.clientY }
-        document.body.style.cursor = 'move'
+        const target = e.target as HTMLElement;
+        if (target.closest('.edit-button') || target.closest('.delete-button')) {
+          return;
+        }
+        if (this.isResizing) return;
+        e.stopPropagation();
+        this.isDragging = true;
+        this.startPos = { x: e.clientX, y: e.clientY };
+        document.body.style.cursor = 'move';
       }
 
       const handleDragMove = (e: MouseEvent) => {
