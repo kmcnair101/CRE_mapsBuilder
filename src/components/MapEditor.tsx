@@ -31,6 +31,7 @@ export default function MapEditor() {
   const [downloadModalOpen, setDownloadModalOpen] = useState(false)
   const [downloadWidth, setDownloadWidth] = useState(1280)
   const [downloadHeight, setDownloadHeight] = useState(720)
+  const [mapToDelete, setMapToDelete] = useState<boolean>(false)
 
   const [mapData, setMapData] = useState<MapData>(() => {
     // Default initialization
@@ -837,7 +838,7 @@ export default function MapEditor() {
   }
 
   const handleDeleteMap = async () => {
-    if (!id || !user) return
+    if (!id || !user || !mapToDelete) return
 
     try {
       const { error } = await supabase
@@ -847,7 +848,8 @@ export default function MapEditor() {
         .eq('user_id', user.id)
 
       if (error) throw error
-
+      setMapToDelete(false)
+      setShowDeleteModal(false)
       navigate('/maps')
     } catch (error) {
       console.error('Error deleting map:', error)
@@ -922,7 +924,10 @@ export default function MapEditor() {
             onMapStyleChange={handleMapStyleChange}
             onSubjectPropertyEdit={handleSubjectPropertyEdit}
             onCenterSubjectProperty={handleCenterSubjectProperty}
-            onDeleteMap={handleDeleteMap}
+            onDeleteMap={() => {
+              setShowDeleteModal(true)
+              setMapToDelete(true)
+            }}
             subjectProperty={mapData.subject_property ? {
               name: mapData.subject_property.name || 'Subject Property',
               image: mapData.subject_property.image || null,
@@ -997,6 +1002,19 @@ export default function MapEditor() {
         }}
         mapRef={mapRef}
         mapData={mapData}
+      />
+
+      <DeleteMapModal
+        open={showDeleteModal}
+        onCancel={() => {
+          setShowDeleteModal(false)
+          setMapToDelete(false)
+        }}
+        onConfirm={async () => {
+          if (mapToDelete) {
+            await handleDeleteMap()
+          }
+        }}
       />
     </div>
   )
