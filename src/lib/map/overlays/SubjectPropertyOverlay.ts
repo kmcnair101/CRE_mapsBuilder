@@ -167,7 +167,14 @@ export async function createSubjectPropertyOverlay(
           this.modalReactRoot?.render(
             createElement(TextEditModal, {
               isOpen: true,
-              onClose: () => this.modalReactRoot?.render(null),
+              onClose: () => {
+                this.modalReactRoot?.render(null)
+                if (this.modalRoot && this.modalRoot.parentNode) {
+                  this.modalRoot.parentNode.removeChild(this.modalRoot)
+                }
+                this.modalRoot = null
+                this.modalReactRoot = null
+              },
               initialText: this.content.name,
               initialStyle: {
                 color: this.content.style.color,
@@ -198,6 +205,11 @@ export async function createSubjectPropertyOverlay(
                   style: this.content.style
                 })
                 this.modalReactRoot?.render(null)
+                if (this.modalRoot && this.modalRoot.parentNode) {
+                  this.modalRoot.parentNode.removeChild(this.modalRoot)
+                }
+                this.modalRoot = null
+                this.modalReactRoot = null
               }
             })
           )
