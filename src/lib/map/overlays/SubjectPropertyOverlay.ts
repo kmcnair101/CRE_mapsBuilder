@@ -157,7 +157,7 @@ export async function createSubjectPropertyOverlay(
 
       // Add edit button if no image
       if (!this.content.image) {
-        const editCleanup = createEditButton(div, () => {
+        const editCleanup = createEditButton(contentDiv, () => {
           console.log('Edit button clicked'); // Debug log
           
           if (!this.modalRoot) {
