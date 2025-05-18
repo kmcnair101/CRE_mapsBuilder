@@ -1,5 +1,9 @@
 import { loader } from '@/lib/google-maps'
 import type { MapData } from '@/lib/types'
+import { createElement } from 'react'
+import { createRoot } from 'react-dom/client'
+import { TextEditModal } from '@/components/modals/TextEditModal'
+import { createEditButton } from '../utils/overlayControls'
 
 export async function createSubjectPropertyOverlay(
   mapData: MapData,
@@ -10,6 +14,8 @@ export async function createSubjectPropertyOverlay(
   class SubjectPropertyOverlay extends google.maps.OverlayView {
     private div: HTMLDivElement | null = null
     private contentDiv: HTMLDivElement | null = null
+    private modalRoot: HTMLDivElement | null = null
+    private modalReactRoot: ReturnType<typeof createRoot> | null = null
     private position: google.maps.LatLng
     private content: {
       image: string | null
@@ -24,7 +30,7 @@ export async function createSubjectPropertyOverlay(
         padding: number
         backgroundOpacity: number
         borderOpacity: number
-        width?: number
+        width: number
       }
     }
     private isDragging = false
@@ -147,6 +153,58 @@ export async function createSubjectPropertyOverlay(
         contentDiv.style.whiteSpace = 'pre'
         contentDiv.style.display = 'inline-block'
         contentDiv.style.width = `${this.currentWidth}px`
+      }
+
+      // Add edit button if no image
+      if (!this.content.image) {
+        const editCleanup = createEditButton(div, () => {
+          if (!this.modalRoot) {
+            this.modalRoot = document.createElement('div')
+            document.body.appendChild(this.modalRoot)
+            this.modalReactRoot = createRoot(this.modalRoot)
+          }
+
+          this.modalReactRoot?.render(
+            createElement(TextEditModal, {
+              isOpen: true,
+              onClose: () => this.modalReactRoot?.render(null),
+              initialText: this.content.name,
+              initialStyle: {
+                color: this.content.style.color,
+                fontSize: this.baseFontSize,
+                fontFamily: this.content.style.fontFamily,
+                backgroundColor: this.content.style.backgroundColor,
+                borderColor: this.content.style.borderColor,
+                borderWidth: this.content.style.borderWidth,
+                padding: this.content.style.padding,
+                backgroundOpacity: this.content.style.backgroundOpacity,
+                borderOpacity: this.content.style.borderOpacity
+              },
+              onSave: (text, style) => {
+                this.content.name = text
+                this.content.style = {
+                  ...this.content.style,
+                  ...style,
+                  width: this.baseWidth
+                }
+                this.baseWidth = this.content.style.width
+                this.currentWidth = this.baseWidth
+                this.baseFontSize = style.fontSize
+                this.updateContentStyles(this.currentWidth)
+                this.draw()
+                onUpdate({
+                  ...mapData.subject_property,
+                  name: text,
+                  style: this.content.style
+                })
+                this.modalReactRoot?.render(null)
+              }
+            })
+          )
+        })
+        if (editCleanup) {
+          this.cleanupFunctions.push(editCleanup)
+        }
       }
 
       // Add resize handle
