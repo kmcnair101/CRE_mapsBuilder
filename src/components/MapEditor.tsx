@@ -754,52 +754,94 @@ export default function MapEditor() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!googleMapRef.current || !user) return
+    if (!user) return
 
     setSaving(true)
+    console.log('[MAP SAVE] Starting save process...')
 
     try {
-      // Ensure map is ready
-      await new Promise<void>((resolve) => {
-        const map = googleMapRef.current
-        if (!map) {
-          resolve()
-          return
-        }
-
-        const checkMapReady = () => {
-          if (map.getDiv().offsetWidth > 0 && map.getDiv().offsetHeight > 0) {
-            resolve()
-          } else {
-            setTimeout(checkMapReady, 100)
-          }
-        }
-
-        checkMapReady()
+      // Log initial state
+      console.log('[MAP SAVE] Initial state:', {
+        mapExists: !!googleMapRef.current,
+        mapRefExists: !!mapRef.current,
+        mapDivDimensions: googleMapRef.current ? {
+          width: googleMapRef.current.getDiv().offsetWidth,
+          height: googleMapRef.current.getDiv().offsetHeight
+        } : null,
+        center: googleMapRef.current?.getCenter()?.toJSON(),
+        zoom: googleMapRef.current?.getZoom()
       })
 
-      // Try to generate thumbnail with retries
+      // Wait for Google Maps to be fully initialized
+      const waitForMap = async (attempts = 0, maxAttempts = 5): Promise<boolean> => {
+        console.log(`[MAP SAVE] Attempt ${attempts + 1}/${maxAttempts} to initialize map`)
+        
+        if (attempts >= maxAttempts) {
+          console.error('[MAP SAVE] Max attempts reached waiting for map initialization')
+          return false
+        }
+
+        if (!googleMapRef.current) {
+          console.log('[MAP SAVE] Map not ready, waiting...')
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          return waitForMap(attempts + 1)
+        }
+
+        // Verify map is fully loaded
+        const mapDiv = googleMapRef.current.getDiv()
+        const isMapReady = mapDiv.offsetWidth > 0 && 
+                          mapDiv.offsetHeight > 0 && 
+                          googleMapRef.current.getCenter() !== undefined
+
+        console.log('[MAP SAVE] Map readiness check:', {
+          divWidth: mapDiv.offsetWidth,
+          divHeight: mapDiv.offsetHeight,
+          hasCenter: !!googleMapRef.current.getCenter(),
+          isReady: isMapReady
+        })
+
+        if (!isMapReady) {
+          console.log('[MAP SAVE] Map not fully loaded, waiting...')
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          return waitForMap(attempts + 1)
+        }
+
+        return true
+      }
+
+      const isMapReady = await waitForMap()
+      if (!isMapReady) {
+        throw new Error('Map failed to initialize')
+      }
+
+      console.log('[MAP SAVE] Map is ready, attempting thumbnail generation')
+
+      // Generate thumbnail with retry logic
       let thumbnail = null
       let retryCount = 0
       const maxRetries = 3
 
       while (retryCount < maxRetries) {
         try {
-          thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
-          break
+          console.log(`[MAP SAVE] Thumbnail generation attempt ${retryCount + 1}/${maxRetries}`)
+          if (mapRef.current) {
+            thumbnail = await handleDownload(mapRef, true)
+            console.log('[MAP SAVE] Thumbnail generated successfully')
+            break
+          }
         } catch (error) {
-          console.log(`Thumbnail generation attempt ${retryCount + 1} failed:`, error)
+          console.error(`[MAP SAVE] Thumbnail generation attempt ${retryCount + 1} failed:`, error)
           retryCount++
           if (retryCount === maxRetries) {
-            console.error('Failed to generate thumbnail after multiple attempts')
+            console.warn('[MAP SAVE] Failed to generate thumbnail after multiple attempts')
             break
           }
           await new Promise(resolve => setTimeout(resolve, 1000))
         }
       }
 
-      // Continue with save even if thumbnail generation failed
-      const mapData = {
+      // Proceed with save
+      const mapUpdateData = {
         user_id: user.id,
         title: mapData.title,
         center_lat: googleMapRef.current?.getCenter()?.lat() || mapData.center_lat,
@@ -811,24 +853,33 @@ export default function MapEditor() {
         map_style: mapData.mapStyle
       }
 
+      console.log('[MAP SAVE] Preparing to save map data:', {
+        title: mapUpdateData.title,
+        overlayCount: mapUpdateData.overlays.length,
+        hasThumbnail: !!thumbnail,
+        center: { lat: mapUpdateData.center_lat, lng: mapUpdateData.center_lng },
+        zoom: mapUpdateData.zoom_level
+      })
+
       if (id) {
         const { error } = await supabase
           .from('maps')
-          .update(mapData)
+          .update(mapUpdateData)
           .eq('id', id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('maps')
-          .insert([mapData])
+          .insert([mapUpdateData])
 
         if (error) throw error
       }
 
       navigate('/')
     } catch (error) {
-      console.error('Error saving map:', error)
+      console.error('[MAP SAVE] Error saving map:', error)
+      // You might want to show an error message to the user here
     } finally {
       setSaving(false)
     }
