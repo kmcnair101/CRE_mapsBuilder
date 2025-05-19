@@ -51,33 +51,34 @@ export function TextEditModal({
   const [backgroundOpacity, setBackgroundOpacity] = useState(initialStyle.backgroundOpacity || 1)
   const [borderOpacity, setBorderOpacity] = useState(initialStyle.borderOpacity || 1)
   const editorRef = useRef<HTMLDivElement>(null)
+  const [isEditorFocused, setIsEditorFocused] = useState(false)
 
-  // Add logging to the useEffect that sets up initial content
+  // Update the useEffect that sets initial content
   useEffect(() => {
     if (isOpen && editorRef.current) {
-      console.log('[MODAL OPEN] Setting initial content:', {
-        initialText,
-        editorExists: !!editorRef.current
-      })
-      
+      // Set content
       editorRef.current.innerHTML = initialText
-      editorRef.current.focus()
       
+      // Focus the editor
+      editorRef.current.focus()
+      setIsEditorFocused(true)
+      
+      // Select all text
       const range = document.createRange()
       range.selectNodeContents(editorRef.current)
       const selection = window.getSelection()
       selection?.removeAllRanges()
       selection?.addRange(range)
       
-      console.log('[MODAL OPEN] Initial selection set:', {
+      console.log('[MODAL OPEN] Editor setup:', {
+        content: editorRef.current.innerHTML,
+        isFocused: document.activeElement === editorRef.current,
         hasSelection: !!selection?.toString(),
-        selectionLength: selection?.toString().length,
-        selectedContent: selection?.toString()
+        selectionInEditor: editorRef.current.contains(selection?.getRangeAt(0)?.commonAncestorContainer || null)
       })
     }
   }, [isOpen, initialText])
 
-  // Add logging to handleInput
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
     console.log('[INPUT] Content changed:', {
@@ -104,59 +105,43 @@ export function TextEditModal({
     "[&:empty]:before:content-['Select_text_to_format'] [&:empty]:before:text-gray-400"
   );
 
+  // Update handleFormat to ensure selection is in editor
   const handleFormat = (command: string) => {
-    if (!editorRef.current) {
-      console.log('[FORMAT ERROR] Editor ref not found')
-      return
-    }
+    if (!editorRef.current) return
 
-    // Log initial state
-    const initialState = {
-      command,
-      editorExists: !!editorRef.current,
-      editorContent: editorRef.current.innerHTML,
-      activeElement: document.activeElement,
-      isEditorFocused: document.activeElement === editorRef.current
-    }
-    console.log('[FORMAT BUTTON] Initial state:', initialState)
-
-    // Log selection state before any changes
-    const selection = window.getSelection()
-    const selectionState = {
-      selectionExists: !!selection,
-      rangeCount: selection?.rangeCount || 0,
-      selectedText: selection?.toString() || '',
-      isCollapsed: selection?.isCollapsed,
-      range: selection?.getRangeAt(0)
-    }
-    console.log('[FORMAT BUTTON] Selection before any changes:', selectionState)
-
-    // Check if selection is inside editor
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
-      const isInsideEditor = editorRef.current.contains(range.commonAncestorContainer)
-      console.log('[FORMAT BUTTON] Selection is inside editor:', isInsideEditor)
-    }
-
-    const selectedText = selection?.toString() || ''
-    if (!selectedText) {
-      console.log('[FORMAT BUTTON] No text selected, cannot apply format')
-      return
-    }
-
-    // Focus and format
+    // Focus editor first
     editorRef.current.focus()
-    console.log('[FORMAT BUTTON] Editor focused, applying command:', command)
     
+    // Get selection after focusing
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) {
+      console.log('[FORMAT ERROR] No selection available')
+      return
+    }
+
+    // Verify selection is in editor
+    const range = selection.getRangeAt(0)
+    const isInsideEditor = editorRef.current.contains(range.commonAncestorContainer)
+    
+    if (!isInsideEditor) {
+      console.log('[FORMAT ERROR] Selection not in editor')
+      // Re-select editor content
+      const newRange = document.createRange()
+      newRange.selectNodeContents(editorRef.current)
+      selection.removeAllRanges()
+      selection.addRange(newRange)
+    }
+
+    // Now format
     document.execCommand(command, false)
     const newContent = editorRef.current.innerHTML
-    console.log('[FORMAT BUTTON] Content after format:', {
+    setText(newContent)
+    
+    console.log('[FORMAT SUCCESS]', {
       command,
       newContent,
-      hasHTMLTags: newContent.includes('<b>') || newContent.includes('<i>') || newContent.includes('<u>')
+      hasFormatting: newContent.includes(`<${command}>`)
     })
-
-    setText(newContent)
   }
 
   return (
@@ -268,7 +253,22 @@ export function TextEditModal({
                   ref={editorRef}
                   contentEditable
                   onInput={handleInput}
-                  className={editorClassName}
+                  onFocus={() => setIsEditorFocused(true)}
+                  onBlur={() => setIsEditorFocused(false)}
+                  className={cn(
+                    editorClassName,
+                    isEditorFocused && 'ring-2 ring-blue-500'
+                  )}
+                  onClick={() => {
+                    // Ensure text is selected on click
+                    const selection = window.getSelection()
+                    if (selection?.isCollapsed) {
+                      const range = document.createRange()
+                      range.selectNodeContents(editorRef.current!)
+                      selection.removeAllRanges()
+                      selection.addRange(range)
+                    }
+                  }}
                   onPaste={(e) => {
                     e.preventDefault()
                     const text = e.clipboardData.getData('text/plain')
