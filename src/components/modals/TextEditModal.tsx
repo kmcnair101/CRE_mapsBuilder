@@ -62,34 +62,73 @@ export function TextEditModal({
   // 2. Use execCommand for formatting
   const handleFormat = (command: string) => {
     if (!editorRef.current) return;
+    
+    // Log initial state
+    console.log('[FORMAT BUTTON] Initial state:', {
+      command,
+      editorExists: !!editorRef.current,
+      editorContent: editorRef.current.innerHTML,
+      activeElement: document.activeElement,
+      isEditorFocused: document.activeElement === editorRef.current
+    });
+
+    // Log selection before focus
+    const initialSelection = window.getSelection();
+    console.log('[FORMAT BUTTON] Selection before focus:', {
+      selectionExists: !!initialSelection,
+      rangeCount: initialSelection?.rangeCount || 0,
+      selectedText: initialSelection?.toString() || '',
+      isCollapsed: initialSelection?.isCollapsed
+    });
+
     editorRef.current.focus();
 
-    // Log the current selection inside the editor
+    // Log selection after focus
     const selection = window.getSelection();
     let selectedText = '';
     if (selection && selection.rangeCount > 0) {
       selectedText = selection.toString();
-      // Check if selection is inside the editor
       const range = selection.getRangeAt(0);
       const editorNode = editorRef.current;
+      
+      console.log('[FORMAT BUTTON] Selection after focus:', {
+        selectionExists: !!selection,
+        rangeCount: selection.rangeCount,
+        selectedText,
+        isCollapsed: selection.isCollapsed,
+        isInsideEditor: editorNode.contains(range.startContainer) && editorNode.contains(range.endContainer),
+        startOffset: range.startOffset,
+        endOffset: range.endOffset,
+        startContainer: range.startContainer,
+        endContainer: range.endContainer
+      });
+
       if (!editorNode.contains(range.startContainer) || !editorNode.contains(range.endContainer)) {
         console.log('[FORMAT BUTTON] Warning: Selection is NOT inside the editor!');
-        return; // Exit if selection is outside editor
+        return;
       }
     } else {
-      console.log('[FORMAT BUTTON] No selection found.');
-      return; // Exit if no selection
+      console.log('[FORMAT BUTTON] No selection found after focus');
+      return;
     }
 
-    console.log(`[FORMAT BUTTON] ${command} button pressed`);
-    console.log('[FORMAT BUTTON] Selected text:', selectedText);
+    console.log(`[FORMAT BUTTON] Applying ${command} format to text: "${selectedText}"`);
 
     // Only proceed if there's actually text selected
     if (selectedText) {
       document.execCommand(command, false);
       const html = editorRef.current.innerHTML;
       setText(html);
-      console.log('Formatted content (HTML):', html);
+      
+      // Log final state
+      console.log('[FORMAT BUTTON] After formatting:', {
+        newContent: html,
+        containsBold: html.includes('<b>'),
+        containsItalic: html.includes('<i>'),
+        containsUnderline: html.includes('<u>'),
+        selectionExists: !!window.getSelection()?.rangeCount,
+        selectedText: window.getSelection()?.toString() || ''
+      });
     } else {
       console.log('[FORMAT BUTTON] No text selected, cannot apply format');
     }
