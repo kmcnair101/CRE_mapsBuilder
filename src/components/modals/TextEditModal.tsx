@@ -61,33 +61,39 @@ export function TextEditModal({
 
   // 2. Use execCommand for formatting
   const handleFormat = (command: string) => {
-    if (!editorRef.current) return
-    editorRef.current.focus()
+    if (!editorRef.current) return;
+    editorRef.current.focus();
 
     // Log the current selection inside the editor
-    const selection = window.getSelection()
-    let selectedText = ''
+    const selection = window.getSelection();
+    let selectedText = '';
     if (selection && selection.rangeCount > 0) {
-      selectedText = selection.toString()
+      selectedText = selection.toString();
       // Check if selection is inside the editor
-      const range = selection.getRangeAt(0)
-      const editorNode = editorRef.current
+      const range = selection.getRangeAt(0);
+      const editorNode = editorRef.current;
       if (!editorNode.contains(range.startContainer) || !editorNode.contains(range.endContainer)) {
-        console.log('[FORMAT BUTTON] Warning: Selection is NOT inside the editor!')
-      } else {
-        console.log('[FORMAT BUTTON] Selection IS inside the editor.')
+        console.log('[FORMAT BUTTON] Warning: Selection is NOT inside the editor!');
+        return; // Exit if selection is outside editor
       }
     } else {
-      console.log('[FORMAT BUTTON] No selection found.')
+      console.log('[FORMAT BUTTON] No selection found.');
+      return; // Exit if no selection
     }
-    console.log(`[FORMAT BUTTON] ${command} button pressed`)
-    console.log('[FORMAT BUTTON] Selected text:', selectedText)
 
-    document.execCommand(command, false)
-    const html = editorRef.current.innerHTML
-    setText(html)
-    console.log('Formatted content (HTML):', html)
-  }
+    console.log(`[FORMAT BUTTON] ${command} button pressed`);
+    console.log('[FORMAT BUTTON] Selected text:', selectedText);
+
+    // Only proceed if there's actually text selected
+    if (selectedText) {
+      document.execCommand(command, false);
+      const html = editorRef.current.innerHTML;
+      setText(html);
+      console.log('Formatted content (HTML):', html);
+    } else {
+      console.log('[FORMAT BUTTON] No text selected, cannot apply format');
+    }
+  };
 
   // 3. Capture content changes
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
