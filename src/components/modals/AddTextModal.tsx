@@ -96,53 +96,10 @@ export function AddTextModal({
 
   const handleFormat = (command: string) => {
     if (!editorRef.current) return;
-    
-    const selection = window.getSelection();
-    if (!selection) return;
-
-    // If no text is selected, select all text
-    if (selection.rangeCount === 0 || selection.isCollapsed) {
-      const range = document.createRange();
-      range.selectNodeContents(editorRef.current);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-
-    // Get the selected text and its HTML
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
-    const selectedHtml = range.cloneContents();
-    const tempDiv = document.createElement('div');
-    tempDiv.appendChild(selectedHtml);
-
-    // Determine the tag to use
-    const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
-    
-    // Check if the selection is already formatted with this tag
-    const isFormatted = tempDiv.querySelector(tag) !== null;
-
-    // Create new content
-    let newContent;
-    if (isFormatted) {
-      // Remove formatting
-      newContent = selectedText;
-    } else {
-      // Add formatting
-      newContent = `<${tag}>${selectedText}</${tag}>`;
-    }
-
-    // Replace the selection with new content
-    range.deleteContents();
-    const fragment = range.createContextualFragment(newContent);
-    range.insertNode(fragment);
-
-    // Update the editor content and state
-    const updatedContent = editorRef.current.innerHTML;
-    setText(updatedContent);
+    editorRef.current.focus(); // Ensure editor is focused
+    document.execCommand(command, false);
+    setText(editorRef.current.innerHTML); // Update state with new HTML
     updateFormatState();
-
-    // Maintain focus
-    editorRef.current.focus();
   };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
@@ -281,6 +238,7 @@ export function AddTextModal({
                 <div className="flex gap-2 border-b border-gray-200 pb-2">
                   <button
                     type="button"
+                    onMouseDown={e => e.preventDefault()} // Prevent losing focus
                     onClick={() => handleFormat('bold')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
@@ -292,6 +250,7 @@ export function AddTextModal({
                   </button>
                   <button
                     type="button"
+                    onMouseDown={e => e.preventDefault()}
                     onClick={() => handleFormat('italic')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
@@ -303,6 +262,7 @@ export function AddTextModal({
                   </button>
                   <button
                     type="button"
+                    onMouseDown={e => e.preventDefault()}
                     onClick={() => handleFormat('underline')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',

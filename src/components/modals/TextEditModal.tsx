@@ -77,9 +77,10 @@ export function TextEditModal({
   }
 
   const handleFormat = (command: string) => {
-    document.execCommand(command, false)
-    // Log the formatted content for debugging
-    console.log('Formatted content:', editorRef.current?.innerHTML)
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    document.execCommand(command, false);
+    setText(editorRef.current.innerHTML);
   }
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
@@ -152,6 +153,7 @@ export function TextEditModal({
                 <div className="flex gap-2 border-b border-gray-200 pb-2">
                   <button
                     type="button"
+                    onMouseDown={e => e.preventDefault()}
                     onClick={() => handleFormat('bold')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
@@ -163,6 +165,7 @@ export function TextEditModal({
                   </button>
                   <button
                     type="button"
+                    onMouseDown={e => e.preventDefault()}
                     onClick={() => handleFormat('italic')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
@@ -174,6 +177,7 @@ export function TextEditModal({
                   </button>
                   <button
                     type="button"
+                    onMouseDown={e => e.preventDefault()}
                     onClick={() => handleFormat('underline')}
                     className={cn(
                       'p-1.5 rounded hover:bg-gray-100 transition-colors',
