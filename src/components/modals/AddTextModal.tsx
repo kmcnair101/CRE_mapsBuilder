@@ -50,10 +50,25 @@ export function AddTextModal({
   }, [isOpen])
 
   useEffect(() => {
-    const handler = () => updateFormatState()
-    document.addEventListener('selectionchange', handler)
-    return () => document.removeEventListener('selectionchange', handler)
-  }, [])
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const handleSelectionChange = () => {
+      updateFormatState();
+    };
+
+    const handleKeyUp = () => {
+      updateFormatState();
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    editor.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      editor.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   useEffect(() => {
     updateFormatState()
@@ -79,69 +94,55 @@ export function AddTextModal({
   }
 
   const handleFormat = (command: string) => {
-    const timestamp = new Date().toISOString()
-    const selection = window.getSelection()
-    const beforeContent = editorRef.current?.innerHTML || ''
+    if (!editorRef.current) return;
     
-    console.log('🎯 Text Formatting Operation')
-    console.log(`Command: ${command}`)
-    console.log(`Timestamp: ${timestamp}`)
-    
-    const selectionState = {
-      exists: !!selection,
-      rangeCount: selection?.rangeCount || 0,
-      type: selection?.type || 'None',
-      isCollapsed: selection?.isCollapsed || true,
-      hasRange: selection?.rangeCount > 0,
-      selectedText: selection?.toString() || ''
-    }
-    
-    console.log('🔍 Selection Details')
-    console.log('Selection object:', selectionState)
+    const selection = window.getSelection();
+    if (!selection) return;
 
-    // If caret only (no selection), select all text
-    if (
-      editorRef.current &&
-      selection &&
-      (selection.rangeCount === 0 || (selection.rangeCount === 1 && selection.isCollapsed))
-    ) {
-      const range = document.createRange()
-      range.selectNodeContents(editorRef.current)
-      selection.removeAllRanges()
-      selection.addRange(range)
-      console.log('⚠️ No Selection - Auto-selected all content for formatting')
+    // If no text is selected, select all text
+    if (selection.rangeCount === 0 || selection.isCollapsed) {
+      const range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
 
-    const isFormatted = document.queryCommandState(command)
-    console.log('Current content:', beforeContent)
-    console.log('Is formatted:', isFormatted)
+    // Get the selected text and its HTML
+    const range = selection.getRangeAt(0);
+    const selectedText = range.toString();
+    const selectedHtml = range.cloneContents();
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(selectedHtml);
 
-    try {
-      document.execCommand(command, false)
-      
-      const afterContent = editorRef.current?.innerHTML || ''
-      const formatTag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u'
-      
-      console.log('✅ Format toggle result:', {
-        before: beforeContent,
-        after: afterContent,
-        tag: formatTag,
-        wasFormatted: isFormatted
-      })
+    // Determine the tag to use
+    const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
+    
+    // Check if the selection is already formatted with this tag
+    const isFormatted = tempDiv.querySelector(tag) !== null;
 
-      // Optionally, clear selection after formatting
-      if (selection) selection.removeAllRanges()
-
-      updateFormatState()
-
-    } catch (error) {
-      console.error('❌ Format operation failed:', {
-        command,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        currentContent: beforeContent
-      })
+    // Create new content
+    let newContent;
+    if (isFormatted) {
+      // Remove formatting
+      newContent = selectedText;
+    } else {
+      // Add formatting
+      newContent = `<${tag}>${selectedText}</${tag}>`;
     }
-  }
+
+    // Replace the selection with new content
+    range.deleteContents();
+    const fragment = range.createContextualFragment(newContent);
+    range.insertNode(fragment);
+
+    // Update the editor content and state
+    const updatedContent = editorRef.current.innerHTML;
+    setText(updatedContent);
+    updateFormatState();
+
+    // Maintain focus
+    editorRef.current.focus();
+  };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
@@ -170,12 +171,44 @@ export function AddTextModal({
   }
 
   const updateFormatState = () => {
-    setFormatState({
-      bold: document.queryCommandState('bold'),
-      italic: document.queryCommandState('italic'),
-      underline: document.queryCommandState('underline'),
-    })
-  }
+    if (!editorRef.current) return;
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      // If no selection, check the entire content
+      const content = editorRef.current.innerHTML;
+      setFormatState({
+        bold: content.includes('<b>') || content.includes('<strong>'),
+        italic: content.includes('<i>') || content.includes('<em>'),
+        underline: content.includes('<u>')
+      });
+      return;
+    }
+
+    // Check formatting at cursor position
+    const range = selection.getRangeAt(0);
+    const node = range.commonAncestorContainer;
+    
+    // Walk up the DOM tree to find formatting
+    let current: Node | null = node;
+    const formatState = {
+      bold: false,
+      italic: false,
+      underline: false
+    };
+
+    while (current && current !== editorRef.current) {
+      if (current.nodeType === Node.ELEMENT_NODE) {
+        const element = current as HTMLElement;
+        formatState.bold = formatState.bold || element.tagName.toLowerCase() === 'b' || element.tagName.toLowerCase() === 'strong';
+        formatState.italic = formatState.italic || element.tagName.toLowerCase() === 'i' || element.tagName.toLowerCase() === 'em';
+        formatState.underline = formatState.underline || element.tagName.toLowerCase() === 'u';
+      }
+      current = current.parentNode;
+    }
+
+    setFormatState(formatState);
+  };
 
   // Convert hex color to rgba
   const getRgbaColor = (hex: string, opacity: number) => {
@@ -283,11 +316,11 @@ export function AddTextModal({
                   ref={editorRef}
                   contentEditable
                   onInput={handleInput}
-                  className="min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto"
+                  className="min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto [&>b]:font-bold [&>i]:italic [&>u]:underline"
                   onPaste={(e) => {
-                    e.preventDefault()
-                    const text = e.clipboardData.getData('text/plain')
-                    document.execCommand('insertText', false, text)
+                    e.preventDefault();
+                    const text = e.clipboardData.getData('text/plain');
+                    document.execCommand('insertText', false, text);
                   }}
                 />
               </div>
