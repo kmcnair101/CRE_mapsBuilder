@@ -11,7 +11,8 @@ export function useMapOverlays(
   handleDeleteLayer: (id: string) => void,
   handleTextEdit?: (id: string, text: string, style: any) => void,
   handleContainerEdit?: (id: string, style: any) => void,
-  handleShapeEdit?: (id: string, style: any) => void
+  handleShapeEdit?: (id: string, style: any) => void,
+  handlePositionUpdate?: (id: string, position: { lat: number, lng: number }) => void
 ) {
   const overlaysRef = useRef<{
     [key: string]: google.maps.Marker | google.maps.OverlayView
@@ -94,7 +95,13 @@ export function useMapOverlays(
             () => removeOverlay(overlay.id),
             createDeleteButton,
             createEditButton,
-            (text: string, style: any) => handleTextEdit?.(overlay.id, text, style),
+            (text: string, style: any) => {
+              if (style?.position) {
+                handlePositionUpdate?.(overlay.id, style.position)
+              } else {
+                handleTextEdit?.(overlay.id, text, style)
+              }
+            },
             createResizeHandle
           )
           overlaysRef.current[overlay.id] = textOverlay

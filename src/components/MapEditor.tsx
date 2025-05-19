@@ -221,25 +221,14 @@ export default function MapEditor() {
       overlays: prev.overlays.map(o =>
         o.id === id ? {
           ...o,
+          position: style.lat && style.lng ? {
+            lat: style.lat,
+            lng: style.lng
+          } : o.position,
           properties: {
             ...o.properties,
             content: text,
-            textStyle: {
-              color: style.color,
-              fontSize: style.fontSize,
-              fontFamily: style.fontFamily,
-              fontWeight: style.fontWeight,
-              textAlign: style.textAlign,
-            },
-            containerStyle: {
-              backgroundColor: style.backgroundColor,
-              borderColor: style.borderColor,
-              borderWidth: style.borderWidth,
-              padding: style.padding,
-              backgroundOpacity: style.backgroundOpacity,
-              borderOpacity: style.borderOpacity,
-            },
-            width: style.width
+            style
           }
         } : o
       )
@@ -297,11 +286,24 @@ export default function MapEditor() {
     }))
   }
 
-  const { overlaysRef, addOverlayToMap, removeOverlay } = useMapOverlays(
+  const handleOverlayPositionUpdate = (id: string, position: {lat: number, lng: number}) => {
+    setMapData(prev => ({
+      ...prev,
+      overlays: prev.overlays.map(o =>
+        o.id === id ? {
+          ...o,
+          position: position
+        } : o
+      )
+    }))
+  }
+
+  const { overlaysRef, addOverlayToMap } = useMapOverlays(
     handleDeleteLayer,
     handleTextEdit,
     handleContainerEdit,
-    handleShapeEdit
+    handleShapeEdit,
+    handleOverlayPositionUpdate
   )
 
   const { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition } = useMapInitialization(

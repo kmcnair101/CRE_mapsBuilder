@@ -230,8 +230,19 @@ export function createCustomImageOverlay(
 
       const handleDragEnd = () => {
         if (this.isDragging) {
-          this.isDragging = false
-          document.body.style.cursor = 'default'
+          this.isDragging = false;
+          document.body.style.cursor = 'default';
+
+          if (onEdit) {
+            const updatedStyle = {
+              ...this.style,
+              position: {
+                lat: this.position.lat(),
+                lng: this.position.lng() 
+              }
+            };
+            onEdit(this.content, updatedStyle);
+          }
         }
       }
 
@@ -571,10 +582,16 @@ export function createCustomTextOverlay(
         if (this.isDragging) {
           this.isDragging = false;
           document.body.style.cursor = 'default';
-        }
-        if (this.isResizing) {
-          this.isResizing = false;
-          document.body.style.cursor = 'default';
+
+          // Notify parent of position change
+          if (onEdit) {
+            onEdit(this.content, {
+              position: {
+                lat: this.position.lat(),
+                lng: this.position.lng()
+              }
+            });
+          }
         }
       }
 
