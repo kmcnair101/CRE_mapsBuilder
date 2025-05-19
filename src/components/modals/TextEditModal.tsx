@@ -52,45 +52,39 @@ export function TextEditModal({
   const [borderOpacity, setBorderOpacity] = useState(initialStyle.borderOpacity || 1)
   const editorRef = useRef<HTMLDivElement>(null)
 
-  // 1. Set editor HTML when modal opens
+  // Add logging to the useEffect that sets up initial content
   useEffect(() => {
     if (isOpen && editorRef.current) {
+      console.log('[MODAL OPEN] Setting initial content:', {
+        initialText,
+        editorExists: !!editorRef.current
+      })
+      
       editorRef.current.innerHTML = initialText
       editorRef.current.focus()
       
-      // Select all text by default (optional)
       const range = document.createRange()
       range.selectNodeContents(editorRef.current)
       const selection = window.getSelection()
       selection?.removeAllRanges()
       selection?.addRange(range)
+      
+      console.log('[MODAL OPEN] Initial selection set:', {
+        hasSelection: !!selection?.toString(),
+        selectionLength: selection?.toString().length,
+        selectedContent: selection?.toString()
+      })
     }
   }, [isOpen, initialText])
 
-  // 2. Use execCommand for formatting
-  const handleFormat = (command: string) => {
-    if (!editorRef.current) return;
-    
-    const selection = window.getSelection();
-    const selectedText = selection?.toString() || '';
-    
-    if (!selectedText) {
-      // Add visual feedback
-      console.log('Please select some text first');
-      // You could show a tooltip or message here
-      return;
-    }
-
-    editorRef.current.focus();
-    document.execCommand(command, false);
-    setText(editorRef.current.innerHTML);
-  };
-
-  // 3. Capture content changes
+  // Add logging to handleInput
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
+    console.log('[INPUT] Content changed:', {
+      newContent: content,
+      hasHTMLTags: content.includes('<b>') || content.includes('<i>') || content.includes('<u>')
+    })
     setText(content)
-    console.log('Content changed:', content)
   }
 
   // Convert hex color to rgba
@@ -109,6 +103,61 @@ export function TextEditModal({
     "focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto",
     "[&:empty]:before:content-['Select_text_to_format'] [&:empty]:before:text-gray-400"
   );
+
+  const handleFormat = (command: string) => {
+    if (!editorRef.current) {
+      console.log('[FORMAT ERROR] Editor ref not found')
+      return
+    }
+
+    // Log initial state
+    const initialState = {
+      command,
+      editorExists: !!editorRef.current,
+      editorContent: editorRef.current.innerHTML,
+      activeElement: document.activeElement,
+      isEditorFocused: document.activeElement === editorRef.current
+    }
+    console.log('[FORMAT BUTTON] Initial state:', initialState)
+
+    // Log selection state before any changes
+    const selection = window.getSelection()
+    const selectionState = {
+      selectionExists: !!selection,
+      rangeCount: selection?.rangeCount || 0,
+      selectedText: selection?.toString() || '',
+      isCollapsed: selection?.isCollapsed,
+      range: selection?.getRangeAt(0)
+    }
+    console.log('[FORMAT BUTTON] Selection before any changes:', selectionState)
+
+    // Check if selection is inside editor
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      const isInsideEditor = editorRef.current.contains(range.commonAncestorContainer)
+      console.log('[FORMAT BUTTON] Selection is inside editor:', isInsideEditor)
+    }
+
+    const selectedText = selection?.toString() || ''
+    if (!selectedText) {
+      console.log('[FORMAT BUTTON] No text selected, cannot apply format')
+      return
+    }
+
+    // Focus and format
+    editorRef.current.focus()
+    console.log('[FORMAT BUTTON] Editor focused, applying command:', command)
+    
+    document.execCommand(command, false)
+    const newContent = editorRef.current.innerHTML
+    console.log('[FORMAT BUTTON] Content after format:', {
+      command,
+      newContent,
+      hasHTMLTags: newContent.includes('<b>') || newContent.includes('<i>') || newContent.includes('<u>')
+    })
+
+    setText(newContent)
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
