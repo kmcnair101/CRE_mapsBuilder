@@ -32,6 +32,8 @@ export default function MapEditor() {
   const [downloadWidth, setDownloadWidth] = useState(1280)
   const [downloadHeight, setDownloadHeight] = useState(720)
   const [mapToDelete, setMapToDelete] = useState<boolean>(false)
+  const [isEditorFocused, setIsEditorFocused] = useState(false)
+  const [editorRef, setEditorRef] = useState<HTMLDivElement | null>(null)
 
   const [mapData, setMapData] = useState<MapData>(() => {
     // Default initialization
@@ -906,6 +908,30 @@ export default function MapEditor() {
       console.error('Error deleting map:', error)
     }
   }
+
+  const handleFormat = (command: string) => {
+    if (!editorRef.current) return;
+
+    // Focus editor first
+    editorRef.current.focus();
+    setIsEditorFocused(true);
+
+    // Get selection after focus
+    const selection = window.getSelection();
+    
+    // If no selection or selection is collapsed, select all text
+    if (!selection || selection.isCollapsed) {
+      const range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+
+    // Apply format
+    document.execCommand(command, false);
+    const newContent = editorRef.current.innerHTML;
+    setText(newContent);
+  };
 
   if (loading) {
     return (

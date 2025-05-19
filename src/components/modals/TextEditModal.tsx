@@ -107,58 +107,64 @@ export function TextEditModal({
 
   // Update handleFormat with more detailed logging
   const handleFormat = (command: string) => {
-    if (!editorRef.current) return
+    if (!editorRef.current) {
+      console.log('[FORMAT ERROR] Editor ref not found')
+      return
+    }
 
-    // Initial state logging
-    console.log('[FORMAT BUTTON] Initial state:', {
+    console.log('[FORMAT] Starting format process:', {
       command,
-      editorExists: !!editorRef.current,
       editorContent: editorRef.current.innerHTML,
-      activeElement: document.activeElement,
-      isEditorFocused: document.activeElement === editorRef.current
+      activeElement: document.activeElement?.tagName,
+      editorHasFocus: document.activeElement === editorRef.current
     })
 
-    // Selection state before any changes
-    const selection = window.getSelection()
-    console.log('[FORMAT BUTTON] Selection before any changes:', {
-      selectionExists: !!selection,
-      rangeCount: selection?.rangeCount || 0,
-      selectedText: selection?.toString() || '',
-      isCollapsed: selection?.isCollapsed,
-      range: selection?.getRangeAt(0)
-    })
-
-    if (!selection || selection.rangeCount === 0) {
-      console.log('[FORMAT ERROR] No selection available')
-      return
-    }
-
-    const range = selection.getRangeAt(0)
-    const isInsideEditor = editorRef.current.contains(range.commonAncestorContainer)
-    
-    console.log('[FORMAT BUTTON] Selection is inside editor:', isInsideEditor)
-
-    if (!selection.toString().trim()) {
-      console.log('[FORMAT BUTTON] No text selected, cannot apply format')
-      return
-    }
-
-    // Focus editor and apply format
+    // First, focus the editor
     editorRef.current.focus()
-    console.log('[FORMAT BUTTON] Editor focused, applying format:', command)
     
+    // Get the current selection or create a new one
+    const selection = window.getSelection()
+    
+    console.log('[FORMAT] Selection state before:', {
+      hasSelection: !!selection?.toString(),
+      selectionText: selection?.toString(),
+      isCollapsed: selection?.isCollapsed,
+      rangeCount: selection?.rangeCount,
+      anchorNode: selection?.anchorNode?.nodeName,
+      focusNode: selection?.focusNode?.nodeName,
+      isInEditor: editorRef.current.contains(selection?.anchorNode || null)
+    })
+
+    // If no text is selected, select all content
+    if (!selection?.toString()) {
+      console.log('[FORMAT] No selection, attempting to select all text')
+      const range = document.createRange()
+      range.selectNodeContents(editorRef.current)
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+      
+      console.log('[FORMAT] Selection after auto-select:', {
+        newSelection: window.getSelection()?.toString(),
+        rangeCount: window.getSelection()?.rangeCount,
+        isInEditor: editorRef.current.contains(window.getSelection()?.anchorNode || null)
+      })
+    }
+
+    // Try to apply formatting
+    console.log('[FORMAT] Attempting execCommand:', command)
     document.execCommand(command, false)
     const newContent = editorRef.current.innerHTML
     
-    console.log('[FORMAT BUTTON] After formatting:', {
+    console.log('[FORMAT] Result:', {
       command,
+      successfulFormat: newContent !== editorRef.current.innerHTML,
       newContent,
       hasFormattingTags: {
         bold: newContent.includes('<b>') || newContent.includes('<strong>'),
         italic: newContent.includes('<i>') || newContent.includes('<em>'),
         underline: newContent.includes('<u>')
       },
-      selection: window.getSelection()?.toString()
+      finalSelection: window.getSelection()?.toString()
     })
 
     setText(newContent)
@@ -273,26 +279,61 @@ export function TextEditModal({
                   ref={editorRef}
                   contentEditable
                   onInput={handleInput}
-                  onFocus={() => setIsEditorFocused(true)}
-                  onBlur={() => setIsEditorFocused(false)}
-                  className={cn(
-                    editorClassName,
-                    isEditorFocused && 'ring-2 ring-blue-500'
-                  )}
-                  onClick={() => {
-                    // Ensure text is selected on click
+                  onFocus={() => {
+                    setIsEditorFocused(true)
+                    console.log('[EDITOR] Focus gained')
+                    // Select all text when gaining focus if nothing is selected
                     const selection = window.getSelection()
                     if (selection?.isCollapsed) {
                       const range = document.createRange()
                       range.selectNodeContents(editorRef.current!)
                       selection.removeAllRanges()
                       selection.addRange(range)
+                      console.log('[EDITOR] Auto-selected text on focus')
                     }
                   }}
+                  onBlur={() => {
+                    setIsEditorFocused(false)
+                    console.log('[EDITOR] Focus lost')
+                  }}
+                  onClick={(e) => {
+                    console.log('[EDITOR] Clicked')
+                    // Prevent click from clearing selection
+                    e.preventDefault()
+                    
+                    // Re-focus if needed
+                    if (!isEditorFocused) {
+                      editorRef.current?.focus()
+                      setIsEditorFocused(true)
+                    }
+
+                    // Ensure text remains selected
+                    const selection = window.getSelection()
+                    if (!selection?.toString()) {
+                      const range = document.createRange()
+                      range.selectNodeContents(editorRef.current!)
+                      selection?.removeAllRanges()
+                      selection?.addRange(range)
+                      console.log('[EDITOR] Restored selection on click')
+                    }
+                  }}
+                  onKeyUp={() => {
+                    // Log current selection state after key events
+                    const selection = window.getSelection()
+                    console.log('[EDITOR] Selection after keyup:', {
+                      hasSelection: !!selection?.toString(),
+                      selectedText: selection?.toString()
+                    })
+                  }}
+                  className={cn(
+                    editorClassName,
+                    isEditorFocused && 'ring-2 ring-blue-500'
+                  )}
                   onPaste={(e) => {
                     e.preventDefault()
                     const text = e.clipboardData.getData('text/plain')
                     document.execCommand('insertText', false, text)
+                    console.log('[EDITOR] Pasted plain text')
                   }}
                 />
               </div>
