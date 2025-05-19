@@ -63,7 +63,26 @@ export function TextEditModal({
   const handleFormat = (command: string) => {
     if (!editorRef.current) return
     editorRef.current.focus()
+
+    // Log the current selection inside the editor
+    const selection = window.getSelection()
+    let selectedText = ''
+    if (selection && selection.rangeCount > 0) {
+      selectedText = selection.toString()
+      // Check if selection is inside the editor
+      const range = selection.getRangeAt(0)
+      const editorNode = editorRef.current
+      if (!editorNode.contains(range.startContainer) || !editorNode.contains(range.endContainer)) {
+        console.log('[FORMAT BUTTON] Warning: Selection is NOT inside the editor!')
+      } else {
+        console.log('[FORMAT BUTTON] Selection IS inside the editor.')
+      }
+    } else {
+      console.log('[FORMAT BUTTON] No selection found.')
+    }
     console.log(`[FORMAT BUTTON] ${command} button pressed`)
+    console.log('[FORMAT BUTTON] Selected text:', selectedText)
+
     document.execCommand(command, false)
     const html = editorRef.current.innerHTML
     setText(html)
