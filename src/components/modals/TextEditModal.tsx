@@ -105,43 +105,63 @@ export function TextEditModal({
     "[&:empty]:before:content-['Select_text_to_format'] [&:empty]:before:text-gray-400"
   );
 
-  // Update handleFormat to ensure selection is in editor
+  // Update handleFormat with more detailed logging
   const handleFormat = (command: string) => {
     if (!editorRef.current) return
 
-    // Focus editor first
-    editorRef.current.focus()
-    
-    // Get selection after focusing
+    // Initial state logging
+    console.log('[FORMAT BUTTON] Initial state:', {
+      command,
+      editorExists: !!editorRef.current,
+      editorContent: editorRef.current.innerHTML,
+      activeElement: document.activeElement,
+      isEditorFocused: document.activeElement === editorRef.current
+    })
+
+    // Selection state before any changes
     const selection = window.getSelection()
+    console.log('[FORMAT BUTTON] Selection before any changes:', {
+      selectionExists: !!selection,
+      rangeCount: selection?.rangeCount || 0,
+      selectedText: selection?.toString() || '',
+      isCollapsed: selection?.isCollapsed,
+      range: selection?.getRangeAt(0)
+    })
+
     if (!selection || selection.rangeCount === 0) {
       console.log('[FORMAT ERROR] No selection available')
       return
     }
 
-    // Verify selection is in editor
     const range = selection.getRangeAt(0)
     const isInsideEditor = editorRef.current.contains(range.commonAncestorContainer)
     
-    if (!isInsideEditor) {
-      console.log('[FORMAT ERROR] Selection not in editor')
-      // Re-select editor content
-      const newRange = document.createRange()
-      newRange.selectNodeContents(editorRef.current)
-      selection.removeAllRanges()
-      selection.addRange(newRange)
+    console.log('[FORMAT BUTTON] Selection is inside editor:', isInsideEditor)
+
+    if (!selection.toString().trim()) {
+      console.log('[FORMAT BUTTON] No text selected, cannot apply format')
+      return
     }
 
-    // Now format
+    // Focus editor and apply format
+    editorRef.current.focus()
+    console.log('[FORMAT BUTTON] Editor focused, applying format:', command)
+    
     document.execCommand(command, false)
     const newContent = editorRef.current.innerHTML
-    setText(newContent)
     
-    console.log('[FORMAT SUCCESS]', {
+    console.log('[FORMAT BUTTON] After formatting:', {
       command,
       newContent,
-      hasFormatting: newContent.includes(`<${command}>`)
+      hasFormattingTags: {
+        bold: newContent.includes('<b>') || newContent.includes('<strong>'),
+        italic: newContent.includes('<i>') || newContent.includes('<em>'),
+        underline: newContent.includes('<u>')
+      },
+      selection: window.getSelection()?.toString()
     })
+
+    setText(newContent)
   }
 
   return (
