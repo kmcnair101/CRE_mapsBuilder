@@ -759,125 +759,69 @@ export default function MapEditor() {
     setSaving(true)
 
     try {
-      const center = googleMapRef.current.getCenter()
-      const zoom = googleMapRef.current.getZoom()
-      const mapType = googleMapRef.current.getMapTypeId()
-      const styles = googleMapRef.current.get('styles')
+      // Ensure map is ready
+      await new Promise<void>((resolve) => {
+        const map = googleMapRef.current
+        if (!map) {
+          resolve()
+          return
+        }
 
-      console.log('[MapEditor] Before saving - Current overlays:', {
-        overlays: mapData.overlays,
-        overlayCount: mapData.overlays.length
-      })
-
-      // Capture current positions and properties of all overlays
-      const updatedOverlays = mapData.overlays.map(overlay => {
-        const currentOverlay = overlaysRef.current[overlay.id]
-        
-        if (currentOverlay) {
-          let updatedPosition = overlay.position
-          let updatedProperties = { ...overlay.properties }
-          
-          // Get current position based on overlay type
-          if (overlay.type === 'shape' && 'shape' in currentOverlay) {
-            const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
-            let position: google.maps.LatLng | null = null
-            
-            if ('getCenter' in shape) {
-              position = shape.getCenter()
-            } else if ('getBounds' in shape) {
-              position = shape.getBounds()?.getCenter() || null
-            } else if ('getPath' in shape) {
-              const bounds = new google.maps.LatLngBounds()
-              shape.getPath().forEach((point: google.maps.LatLng) => bounds.extend(point))
-              position = bounds.getCenter()
-            }
-            
-            if (position) {
-              updatedPosition = {
-                lat: position.lat(),
-                lng: position.lng()
-              }
-            }
-            
-            // Update shape properties
-            updatedProperties = {
-              ...updatedProperties,
-              style: {
-                fillColor: shape.fillColor || '#FFFFFF',
-                strokeColor: shape.strokeColor || '#000000',
-                strokeWeight: shape.strokeWeight || 2,
-                fillOpacity: shape.fillOpacity || 0.5,
-                strokeOpacity: shape.strokeOpacity || 1
-              }
-            }
-          } else if ('getPosition' in currentOverlay) {
-            // Handle custom overlays (text, images, etc.)
-            const position = currentOverlay.getPosition()
-            if (position) {
-              updatedPosition = {
-                lat: position.lat(),
-                lng: position.lng()
-              }
-            }
-          }
-          
-          return {
-            ...overlay,
-            position: updatedPosition,
-            properties: updatedProperties
+        const checkMapReady = () => {
+          if (map.getDiv().offsetWidth > 0 && map.getDiv().offsetHeight > 0) {
+            resolve()
+          } else {
+            setTimeout(checkMapReady, 100)
           }
         }
-        
-        return overlay
+
+        checkMapReady()
       })
 
-      console.log('[MapEditor] After updating overlay positions:', {
-        overlays: updatedOverlays,
-        overlayCount: updatedOverlays.length
-      })
+      // Try to generate thumbnail with retries
+      let thumbnail = null
+      let retryCount = 0
+      const maxRetries = 3
 
-      // Generate thumbnail before saving
-      const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
-
-      // Simplify the map style object
-      const simplifiedMapStyle = {
-        type: mapType as MapStyleName | 'satellite' | 'terrain',
-        customStyles: styles ? styles.map((style: any) => ({
-          featureType: style.featureType,
-          elementType: style.elementType,
-          stylers: style.stylers
-        })) : []
+      while (retryCount < maxRetries) {
+        try {
+          thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
+          break
+        } catch (error) {
+          console.log(`Thumbnail generation attempt ${retryCount + 1} failed:`, error)
+          retryCount++
+          if (retryCount === maxRetries) {
+            console.error('Failed to generate thumbnail after multiple attempts')
+            break
+          }
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
       }
 
-      // Prepare complete map data with simplified structure
-      const mapUpdate = {
+      // Continue with save even if thumbnail generation failed
+      const mapData = {
         user_id: user.id,
         title: mapData.title,
-        center_lat: center?.lat() || 0,
-        center_lng: center?.lng() || 0,
-        zoom_level: zoom || 12,
-        overlays: updatedOverlays,
+        center_lat: googleMapRef.current?.getCenter()?.lat() || mapData.center_lat,
+        center_lng: googleMapRef.current?.getCenter()?.lng() || mapData.center_lng,
+        zoom_level: googleMapRef.current?.getZoom() || mapData.zoom_level,
+        overlays: mapData.overlays,
         subject_property: mapData.subject_property,
-        thumbnail,
-        map_style: simplifiedMapStyle
+        thumbnail: thumbnail || null,
+        map_style: mapData.mapStyle
       }
-
-      console.log('[MapEditor] Final map data being saved:', {
-        overlays: mapUpdate.overlays,
-        overlayCount: mapUpdate.overlays.length
-      })
 
       if (id) {
         const { error } = await supabase
           .from('maps')
-          .update(mapUpdate)
+          .update(mapData)
           .eq('id', id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('maps')
-          .insert([mapUpdate])
+          .insert([mapData])
 
         if (error) throw error
       }
