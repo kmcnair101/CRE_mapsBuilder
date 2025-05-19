@@ -56,6 +56,14 @@ export function TextEditModal({
   useEffect(() => {
     if (isOpen && editorRef.current) {
       editorRef.current.innerHTML = initialText
+      editorRef.current.focus()
+      
+      // Select all text by default (optional)
+      const range = document.createRange()
+      range.selectNodeContents(editorRef.current)
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(range)
     }
   }, [isOpen, initialText])
 
@@ -63,74 +71,19 @@ export function TextEditModal({
   const handleFormat = (command: string) => {
     if (!editorRef.current) return;
     
-    // Log initial state
-    console.log('[FORMAT BUTTON] Initial state:', {
-      command,
-      editorExists: !!editorRef.current,
-      editorContent: editorRef.current.innerHTML,
-      activeElement: document.activeElement,
-      isEditorFocused: document.activeElement === editorRef.current
-    });
-
-    // Store the current selection before any focus changes
     const selection = window.getSelection();
-    let selectedText = '';
-    let range: Range | null = null;
+    const selectedText = selection?.toString() || '';
     
-    if (selection && selection.rangeCount > 0) {
-      range = selection.getRangeAt(0);
-      selectedText = selection.toString();
+    if (!selectedText) {
+      // Add visual feedback
+      console.log('Please select some text first');
+      // You could show a tooltip or message here
+      return;
     }
 
-    console.log('[FORMAT BUTTON] Selection before any changes:', {
-      selectionExists: !!selection,
-      rangeCount: selection?.rangeCount || 0,
-      selectedText,
-      isCollapsed: selection?.isCollapsed,
-      range
-    });
-
-    // Focus the editor
     editorRef.current.focus();
-
-    // If we had a selection, try to restore it
-    if (range && selectedText) {
-      try {
-        const newRange = document.createRange();
-        newRange.setStart(range.startContainer, range.startOffset);
-        newRange.setEnd(range.endContainer, range.endOffset);
-        
-        selection?.removeAllRanges();
-        selection?.addRange(newRange);
-        
-        console.log('[FORMAT BUTTON] Restored selection:', {
-          selectedText: selection?.toString(),
-          isCollapsed: selection?.isCollapsed,
-          rangeCount: selection?.rangeCount
-        });
-      } catch (error) {
-        console.error('[FORMAT BUTTON] Error restoring selection:', error);
-      }
-    }
-
-    // Only proceed if there's actually text selected
-    if (selectedText) {
-      document.execCommand(command, false);
-      const html = editorRef.current.innerHTML;
-      setText(html);
-      
-      // Log final state
-      console.log('[FORMAT BUTTON] After formatting:', {
-        newContent: html,
-        containsBold: html.includes('<b>'),
-        containsItalic: html.includes('<i>'),
-        containsUnderline: html.includes('<u>'),
-        selectionExists: !!window.getSelection()?.rangeCount,
-        selectedText: window.getSelection()?.toString() || ''
-      });
-    } else {
-      console.log('[FORMAT BUTTON] No text selected, cannot apply format');
-    }
+    document.execCommand(command, false);
+    setText(editorRef.current.innerHTML);
   };
 
   // 3. Capture content changes
@@ -149,6 +102,13 @@ export function TextEditModal({
   }
 
   if (!isOpen) return null
+
+  // Add this CSS class to show when text needs to be selected
+  const editorClassName = cn(
+    "min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md",
+    "focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto",
+    "[&:empty]:before:content-['Select_text_to_format'] [&:empty]:before:text-gray-400"
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
@@ -259,7 +219,7 @@ export function TextEditModal({
                   ref={editorRef}
                   contentEditable
                   onInput={handleInput}
-                  className="min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto"
+                  className={editorClassName}
                   onPaste={(e) => {
                     e.preventDefault()
                     const text = e.clipboardData.getData('text/plain')
