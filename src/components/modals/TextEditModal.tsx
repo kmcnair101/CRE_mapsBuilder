@@ -114,6 +114,7 @@ export function TextEditModal({
 
     console.log('[FORMAT] Starting format process:', {
       command,
+      currentState: document.queryCommandState(command),
       editorContent: editorRef.current.innerHTML,
       activeElement: document.activeElement?.tagName,
       editorHasFocus: document.activeElement === editorRef.current
@@ -125,16 +126,6 @@ export function TextEditModal({
     // Get the current selection or create a new one
     const selection = window.getSelection()
     
-    console.log('[FORMAT] Selection state before:', {
-      hasSelection: !!selection?.toString(),
-      selectionText: selection?.toString(),
-      isCollapsed: selection?.isCollapsed,
-      rangeCount: selection?.rangeCount,
-      anchorNode: selection?.anchorNode?.nodeName,
-      focusNode: selection?.focusNode?.nodeName,
-      isInEditor: editorRef.current.contains(selection?.anchorNode || null)
-    })
-
     // If no text is selected, select all content
     if (!selection?.toString()) {
       console.log('[FORMAT] No selection, attempting to select all text')
@@ -142,32 +133,32 @@ export function TextEditModal({
       range.selectNodeContents(editorRef.current)
       selection?.removeAllRanges()
       selection?.addRange(range)
-      
-      console.log('[FORMAT] Selection after auto-select:', {
-        newSelection: window.getSelection()?.toString(),
-        rangeCount: window.getSelection()?.rangeCount,
-        isInEditor: editorRef.current.contains(window.getSelection()?.anchorNode || null)
-      })
     }
 
-    // Try to apply formatting
-    console.log('[FORMAT] Attempting execCommand:', command)
+    // Check current state of the command (on/off)
+    const isCurrentlyFormatted = document.queryCommandState(command)
+    console.log(`[FORMAT] Current ${command} state:`, isCurrentlyFormatted)
+
+    // Toggle the formatting
     document.execCommand(command, false)
     const newContent = editorRef.current.innerHTML
     
     console.log('[FORMAT] Result:', {
       command,
-      successfulFormat: newContent !== editorRef.current.innerHTML,
+      wasFormatted: isCurrentlyFormatted,
+      isNowFormatted: document.queryCommandState(command),
       newContent,
       hasFormattingTags: {
         bold: newContent.includes('<b>') || newContent.includes('<strong>'),
         italic: newContent.includes('<i>') || newContent.includes('<em>'),
         underline: newContent.includes('<u>')
-      },
-      finalSelection: window.getSelection()?.toString()
+      }
     })
 
     setText(newContent)
+    
+    // Maintain selection after formatting
+    editorRef.current.focus()
   }
 
   return (
