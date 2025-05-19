@@ -72,47 +72,46 @@ export function TextEditModal({
       isEditorFocused: document.activeElement === editorRef.current
     });
 
-    // Log selection before focus
-    const initialSelection = window.getSelection();
-    console.log('[FORMAT BUTTON] Selection before focus:', {
-      selectionExists: !!initialSelection,
-      rangeCount: initialSelection?.rangeCount || 0,
-      selectedText: initialSelection?.toString() || '',
-      isCollapsed: initialSelection?.isCollapsed
-    });
-
-    editorRef.current.focus();
-
-    // Log selection after focus
+    // Store the current selection before any focus changes
     const selection = window.getSelection();
     let selectedText = '';
+    let range: Range | null = null;
+    
     if (selection && selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
       selectedText = selection.toString();
-      const range = selection.getRangeAt(0);
-      const editorNode = editorRef.current;
-      
-      console.log('[FORMAT BUTTON] Selection after focus:', {
-        selectionExists: !!selection,
-        rangeCount: selection.rangeCount,
-        selectedText,
-        isCollapsed: selection.isCollapsed,
-        isInsideEditor: editorNode.contains(range.startContainer) && editorNode.contains(range.endContainer),
-        startOffset: range.startOffset,
-        endOffset: range.endOffset,
-        startContainer: range.startContainer,
-        endContainer: range.endContainer
-      });
-
-      if (!editorNode.contains(range.startContainer) || !editorNode.contains(range.endContainer)) {
-        console.log('[FORMAT BUTTON] Warning: Selection is NOT inside the editor!');
-        return;
-      }
-    } else {
-      console.log('[FORMAT BUTTON] No selection found after focus');
-      return;
     }
 
-    console.log(`[FORMAT BUTTON] Applying ${command} format to text: "${selectedText}"`);
+    console.log('[FORMAT BUTTON] Selection before any changes:', {
+      selectionExists: !!selection,
+      rangeCount: selection?.rangeCount || 0,
+      selectedText,
+      isCollapsed: selection?.isCollapsed,
+      range
+    });
+
+    // Focus the editor
+    editorRef.current.focus();
+
+    // If we had a selection, try to restore it
+    if (range && selectedText) {
+      try {
+        const newRange = document.createRange();
+        newRange.setStart(range.startContainer, range.startOffset);
+        newRange.setEnd(range.endContainer, range.endOffset);
+        
+        selection?.removeAllRanges();
+        selection?.addRange(newRange);
+        
+        console.log('[FORMAT BUTTON] Restored selection:', {
+          selectedText: selection?.toString(),
+          isCollapsed: selection?.isCollapsed,
+          rangeCount: selection?.rangeCount
+        });
+      } catch (error) {
+        console.error('[FORMAT BUTTON] Error restoring selection:', error);
+      }
+    }
 
     // Only proceed if there's actually text selected
     if (selectedText) {
