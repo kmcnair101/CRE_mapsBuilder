@@ -97,12 +97,57 @@ export function AddTextModal({
   }
 
   const handleFormat = (command: string) => {
-    if (!editorRef.current) return;
-    editorRef.current.focus(); // Ensure editor is focused
-    document.execCommand(command, false);
-    setText(editorRef.current.innerHTML); // Update state with new HTML
-    updateFormatState();
-  };
+    if (!editorRef.current) {
+      console.log('[FORMAT ERROR] Editor ref not found')
+      return
+    }
+
+    console.log('[FORMAT] Starting format process:', {
+      command,
+      currentState: document.queryCommandState(command),
+      editorContent: editorRef.current.innerHTML,
+      activeElement: document.activeElement?.tagName,
+      editorHasFocus: document.activeElement === editorRef.current
+    })
+
+    // First, focus the editor
+    editorRef.current.focus()
+    
+    // Get the current selection or create a new one
+    const selection = window.getSelection()
+    
+    // If no text is selected, select all content
+    if (!selection?.toString()) {
+      console.log('[FORMAT] No selection, attempting to select all text')
+      const range = document.createRange()
+      range.selectNodeContents(editorRef.current)
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+    }
+
+    // Check current state of the command
+    const isCurrentlyFormatted = document.queryCommandState(command)
+    console.log(`[FORMAT] Current ${command} state:`, isCurrentlyFormatted)
+
+    // Toggle the formatting
+    document.execCommand(command, false)
+    const newContent = editorRef.current.innerHTML
+    
+    console.log('[FORMAT] Result:', {
+      command,
+      wasFormatted: isCurrentlyFormatted,
+      isNowFormatted: document.queryCommandState(command),
+      newContent,
+      hasFormattingTags: {
+        bold: newContent.includes('<b>') || newContent.includes('<strong>'),
+        italic: newContent.includes('<i>') || newContent.includes('<em>'),
+        underline: newContent.includes('<u>')
+      }
+    })
+
+    setText(newContent)
+    updateFormatState()
+  }
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
@@ -279,11 +324,51 @@ export function AddTextModal({
                   ref={editorRef}
                   contentEditable
                   onInput={handleInput}
-                  className="min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto [&>b]:font-bold [&>i]:italic [&>u]:underline"
+                  onFocus={() => {
+                    console.log('[EDITOR] Focus gained')
+                    // Select all text when gaining focus if nothing is selected
+                    const selection = window.getSelection()
+                    if (selection?.isCollapsed) {
+                      const range = document.createRange()
+                      range.selectNodeContents(editorRef.current!)
+                      selection.removeAllRanges()
+                      selection.addRange(range)
+                      console.log('[EDITOR] Auto-selected text on focus')
+                    }
+                  }}
+                  onBlur={() => {
+                    console.log('[EDITOR] Focus lost')
+                  }}
+                  onClick={(e) => {
+                    console.log('[EDITOR] Clicked')
+                    // Prevent click from clearing selection
+                    e.preventDefault()
+                    
+                    // Ensure text remains selected
+                    const selection = window.getSelection()
+                    if (!selection?.toString()) {
+                      const range = document.createRange()
+                      range.selectNodeContents(editorRef.current!)
+                      selection?.removeAllRanges()
+                      selection?.addRange(range)
+                      console.log('[EDITOR] Restored selection on click')
+                    }
+                  }}
+                  onKeyUp={() => {
+                    // Log current selection state after key events
+                    const selection = window.getSelection()
+                    console.log('[EDITOR] Selection after keyup:', {
+                      hasSelection: !!selection?.toString(),
+                      selectedText: selection?.toString()
+                    })
+                    updateFormatState()
+                  }}
+                  className="min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto"
                   onPaste={(e) => {
-                    e.preventDefault();
-                    const text = e.clipboardData.getData('text/plain');
-                    document.execCommand('insertText', false, text);
+                    e.preventDefault()
+                    const text = e.clipboardData.getData('text/plain')
+                    document.execCommand('insertText', false, text)
+                    console.log('[EDITOR] Pasted plain text')
                   }}
                 />
               </div>
