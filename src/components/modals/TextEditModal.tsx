@@ -63,6 +63,7 @@ export function TextEditModal({
   const handleFormat = (command: string) => {
     if (!editorRef.current) return
     editorRef.current.focus()
+    console.log(`[FORMAT BUTTON] ${command} button pressed`)
     document.execCommand(command, false)
     setText(editorRef.current.innerHTML)
     console.log('Formatted content:', editorRef.current.innerHTML)
