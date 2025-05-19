@@ -53,6 +53,32 @@ export default function MapEditor() {
   // Add useEffect to check for saved state on mount and when browser back button is used
   useEffect(() => {
     const checkForSavedState = () => {
+      // First check for pending map state from subscription flow
+      const pendingMapState = localStorage.getItem('pendingMapState')
+      if (pendingMapState) {
+        const { pendingMapId, pendingMapEdits } = JSON.parse(pendingMapState)
+        if (pendingMapId === id && pendingMapEdits) {
+          const { state } = JSON.parse(pendingMapEdits)
+          localStorage.removeItem('pendingMapState')
+          localStorage.removeItem('pendingMapId')
+          localStorage.removeItem('pendingMapEdits')
+          
+          setMapData({
+            title: state?.subject_property?.name || 
+                   state?.subject_property?.address || 
+                   'New Map',
+            center_lat: state?.center_lat || 40.7128,
+            center_lng: state?.center_lng || -74.0060,
+            zoom_level: state?.zoom_level || 12,
+            overlays: state?.overlays || [],
+            subject_property: state?.subject_property || null,
+            mapStyle: state?.mapStyle
+          })
+          return
+        }
+      }
+
+      // Then check for regular pending edits
       const pendingMapId = localStorage.getItem('pendingMapId')
       const pendingEdits = localStorage.getItem('pendingMapEdits')
       
@@ -87,8 +113,6 @@ export default function MapEditor() {
 
     return () => {
       window.removeEventListener('popstate', checkForSavedState)
-      // Note: We can't remove the pageshow listener because it's an anonymous function
-      // This is fine since the component is rarely unmounted/remounted
     }
   }, [id])
 
