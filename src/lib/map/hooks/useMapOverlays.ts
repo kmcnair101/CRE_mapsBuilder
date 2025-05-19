@@ -97,8 +97,10 @@ export function useMapOverlays(
             createEditButton,
             (text: string, style: any) => {
               if (style?.position) {
+                // Handle position updates
                 handlePositionUpdate?.(overlay.id, style.position)
               } else {
+                // Handle text/style updates
                 handleTextEdit?.(overlay.id, text, style)
               }
             },

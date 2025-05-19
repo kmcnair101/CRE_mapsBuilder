@@ -298,12 +298,29 @@ export default function MapEditor() {
     }))
   }
 
+  const handlePositionUpdate = (id: string, position: { lat: number, lng: number }) => {
+    console.log('[MAP EDITOR] Updating overlay position:', { id, position })
+    
+    setMapData(prev => ({
+      ...prev,
+      overlays: prev.overlays.map(o =>
+        o.id === id ? {
+          ...o,
+          position: {
+            lat: position.lat,
+            lng: position.lng
+          }
+        } : o
+      )
+    }))
+  }
+
   const { overlaysRef, addOverlayToMap } = useMapOverlays(
     handleDeleteLayer,
     handleTextEdit,
     handleContainerEdit,
     handleShapeEdit,
-    handleOverlayPositionUpdate
+    handlePositionUpdate // Add this handler
   )
 
   const { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition } = useMapInitialization(
