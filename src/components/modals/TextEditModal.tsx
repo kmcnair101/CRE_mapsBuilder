@@ -52,44 +52,26 @@ export function TextEditModal({
   const [borderOpacity, setBorderOpacity] = useState(initialStyle.borderOpacity || 1)
   const editorRef = useRef<HTMLDivElement>(null)
 
+  // 1. Set editor HTML when modal opens
   useEffect(() => {
-    if (isOpen) {
-      console.log('[MODAL OPEN] TextEditModal opened');
-    }
     if (isOpen && editorRef.current) {
       editorRef.current.innerHTML = initialText
     }
   }, [isOpen, initialText])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (text.trim()) {
-      onSave(text, {
-        color,
-        fontSize,
-        fontFamily,
-        backgroundColor,
-        borderColor,
-        borderWidth,
-        padding,
-        backgroundOpacity,
-        borderOpacity
-      })
-      onClose()
-    }
-  }
-
+  // 2. Use execCommand for formatting
   const handleFormat = (command: string) => {
-    if (!editorRef.current) return;
-    editorRef.current.focus();
-    document.execCommand(command, false);
-    setText(editorRef.current.innerHTML);
+    if (!editorRef.current) return
+    editorRef.current.focus()
+    document.execCommand(command, false)
+    setText(editorRef.current.innerHTML)
+    console.log('Formatted content:', editorRef.current.innerHTML)
   }
 
+  // 3. Capture content changes
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
     setText(content)
-    // Log the content when it changes
     console.log('Content changed:', content)
   }
 
@@ -118,7 +100,23 @@ export function TextEditModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex">
+        <form onSubmit={(e) => {
+          e.preventDefault()
+          if (text.trim()) {
+            onSave(text, {
+              color,
+              fontSize,
+              fontFamily,
+              backgroundColor,
+              borderColor,
+              borderWidth,
+              padding,
+              backgroundOpacity,
+              borderOpacity
+            })
+            onClose()
+          }
+        }} className="flex">
           {/* Preview Section - Left Side */}
           <div className="w-2/5 p-6 border-r">
             <h3 className="text-sm font-medium text-gray-700 mb-4">Preview</h3>
@@ -141,6 +139,7 @@ export function TextEditModal({
                   transform: 'scale(0.9)',
                   transformOrigin: 'center center'
                 }}
+                // 4. Use dangerouslySetInnerHTML for preview
                 dangerouslySetInnerHTML={{ __html: text }}
               />
             </MapPreviewBackground>
