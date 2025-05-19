@@ -53,6 +53,9 @@ export function TextEditModal({
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (isOpen) {
+      console.log('[MODAL OPEN] TextEditModal opened');
+    }
     if (isOpen && editorRef.current) {
       editorRef.current.innerHTML = initialText
     }

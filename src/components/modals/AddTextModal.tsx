@@ -43,8 +43,10 @@ export function AddTextModal({
   })
   const editorRef = useRef<HTMLDivElement>(null)
 
-  
   useEffect(() => {
+    if (isOpen) {
+      console.log('[MODAL OPEN] AddTextModal opened');
+    }
     if (isOpen && editorRef.current) {
       editorRef.current.focus()
     }
