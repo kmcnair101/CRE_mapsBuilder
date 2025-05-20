@@ -62,6 +62,14 @@ export function DownloadMapModal({
     console.log('[DownloadMapModal] googleMapRef.current:', googleMapRef.current)
   }, [googleMapRef.current])
 
+  useEffect(() => {
+    console.log('[DownloadMapModal] mapData.subject_property:', mapData.subject_property)
+  }, [mapData.subject_property])
+
+  useEffect(() => {
+    console.log('[DownloadMapModal] previewMapData.subject_property:', previewMapData.subject_property)
+  }, [previewMapData.subject_property])
+
   // Deep clone mapData when modal opens or mapData changes
   useEffect(() => {
     if (open) {

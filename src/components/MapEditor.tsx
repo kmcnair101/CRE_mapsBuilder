@@ -156,6 +156,14 @@ export default function MapEditor() {
     }
   }, [mapData.subject_property?.name, mapData.subject_property?.address, id])
 
+  useEffect(() => {
+    console.log('[MapEditor] subject_property:', mapData.subject_property)
+  }, [mapData.subject_property])
+
+  useEffect(() => {
+    console.log('[MapEditor] overlays:', mapData.overlays)
+  }, [mapData.overlays])
+
   const handleDeleteLayer = (id: string) => {
     setMapData(prev => ({
       ...prev,

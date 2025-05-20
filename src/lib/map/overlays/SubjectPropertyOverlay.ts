@@ -110,6 +110,8 @@ export async function createSubjectPropertyOverlay(
     }
 
     onAdd() {
+      console.log('[SubjectPropertyOverlay] onAdd', { mapData: mapData, position: this.position });
+
       const div = document.createElement('div')
       div.style.position = 'absolute'
       div.style.cursor = 'move'
@@ -398,6 +400,8 @@ export async function createSubjectPropertyOverlay(
     }
 
     onRemove() {
+      console.log('[SubjectPropertyOverlay] onRemove', { mapData: mapData });
+
       this.cleanupFunctions.forEach(cleanup => cleanup())
       this.cleanupFunctions = []
       if (this.div) {
