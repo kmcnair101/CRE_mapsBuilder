@@ -29,7 +29,7 @@ export function DownloadMapModal({
   if (!open) return null
 
   const previewMapRef = useRef<HTMLDivElement>(null)
-  const [previewMapData, setPreviewMapData] = useState(mapData)
+  const [previewMapData, setPreviewMapData] = useState(() => JSON.parse(JSON.stringify(mapData)))
   const [downloading, setDownloading] = useState(false)
   const { handleDownload } = useMapDownload()
   
@@ -61,6 +61,13 @@ export function DownloadMapModal({
   useEffect(() => {
     console.log('[DownloadMapModal] googleMapRef.current:', googleMapRef.current)
   }, [googleMapRef.current])
+
+  // Deep clone mapData when modal opens or mapData changes
+  useEffect(() => {
+    if (open) {
+      setPreviewMapData(JSON.parse(JSON.stringify(mapData)))
+    }
+  }, [open, mapData])
 
   // Sync preview map with main map data
   useEffect(() => {
