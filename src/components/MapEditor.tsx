@@ -909,7 +909,10 @@ export default function MapEditor() {
               <span>{saving ? 'Saving...' : 'Save'}</span>
             </button>
             <DownloadButton
-              onDownload={() => setDownloadModalOpen(true)}
+              onDownload={() => {
+                console.log('[MapEditor] Download button clicked')
+                setDownloadModalOpen(true)
+              }}
               loading={downloading}
               className="flex-1 flex items-center justify-center px-2 py-1.5 rounded-md text-sm font-medium bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
             />
@@ -972,13 +975,22 @@ export default function MapEditor() {
         open={downloadModalOpen}
         width={downloadWidth}
         height={downloadHeight}
-        onWidthChange={setDownloadWidth}
-        onHeightChange={setDownloadHeight}
-        onClose={() => setDownloadModalOpen(false)}
+        onWidthChange={(w) => {
+          console.log('[MapEditor] Download modal width changed:', w)
+          setDownloadWidth(w)
+        }}
+        onHeightChange={(h) => {
+          console.log('[MapEditor] Download modal height changed:', h)
+          setDownloadHeight(h)
+        }}
+        onClose={() => {
+          console.log('[MapEditor] Download modal closed')
+          setDownloadModalOpen(false)
+        }}
         onDownload={async (center, zoom) => {
+          console.log('[MapEditor] Download modal onDownload called', { center, zoom })
           setDownloading(true)
           try {
-            // Save current center/zoom to restore after download
             const map = googleMapRef.current
             let originalCenter, originalZoom
             if (map) {
@@ -986,17 +998,17 @@ export default function MapEditor() {
               originalZoom = map.getZoom()
               map.setCenter(center)
               map.setZoom(zoom)
-              await new Promise(res => setTimeout(res, 400)) // let map update
+              await new Promise(res => setTimeout(res, 400))
             }
             await handleDownload(mapRef, false, downloadWidth, downloadHeight, googleMapRef)
             setDownloadModalOpen(false)
-            // Restore original center/zoom
             if (map && originalCenter && originalZoom !== undefined) {
               map.setCenter(originalCenter)
               map.setZoom(originalZoom)
             }
+            console.log('[MapEditor] Download completed')
           } catch (error) {
-            // handle error
+            console.error('[MapEditor] Error during download:', error)
           } finally {
             setDownloading(false)
           }
