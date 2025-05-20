@@ -98,13 +98,7 @@ export function SubjectPropertyModal({
   }
 
   const handleFormat = (command: string) => {
-    console.group('🎯 Text Formatting Operation');
-    console.log('Command:', command);
-    console.log('Timestamp:', new Date().toISOString());
-
     if (!editorRef.current) {
-      console.warn('❌ Editor reference not available');
-      console.groupEnd();
       return;
     }
     const hasFormatting = (content: string, tag: string) => {
@@ -128,30 +122,15 @@ export function SubjectPropertyModal({
     };
 
     const selection = window.getSelection();
-    console.group('🔍 Selection Details');
-    console.log('Selection object:', {
-      exists: !!selection,
-      rangeCount: selection?.rangeCount,
-      type: selection?.type,
-      isCollapsed: selection?.isCollapsed,
-      anchorNode: selection?.anchorNode?.nodeName,
-      focusNode: selection?.focusNode?.nodeName,
-      selectedText: selection?.toString()
-    });
-    console.groupEnd();
 
     const tag = command === 'bold' ? 'b' : command === 'italic' ? 'i' : 'u';
     let newContent = '';
 
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-      console.group('⚠️ No Selection - Toggle Format State');
-      
       try {
         const currentContent = editorRef.current.innerHTML;
-        console.log('Current content:', currentContent);
 
         const isFormatted = hasFormatting(currentContent, tag);
-        console.log('Is formatted:', isFormatted);
 
         if (isFormatted) {
           newContent = removeFormatting(currentContent, tag);
@@ -160,36 +139,18 @@ export function SubjectPropertyModal({
         }
 
         newContent = cleanNestedTags(newContent);
-        
+
         editorRef.current.innerHTML = newContent;
         setName(newContent);
 
-        console.log('✅ Format toggle result:', {
-          before: currentContent,
-          after: newContent,
-          tag,
-          wasFormatted: isFormatted
-        });
-
       } catch (error) {
-        console.error('❌ Format toggle error:', error);
       }
-      
-      console.groupEnd();
-      console.groupEnd();
       return;
     }
 
-    console.group('✂️ Selected Text Formatting');
-    
     try {
       const range = selection.getRangeAt(0);
       const selectedText = range.toString();
-      
-      console.log('Selection range details:', {
-        selectedText,
-        selectedHTML: range.cloneContents().textContent
-      });
 
       const selectedHtml = range.cloneContents();
       const tempDiv = document.createElement('div');
@@ -205,60 +166,19 @@ export function SubjectPropertyModal({
       range.deleteContents();
       const fragment = range.createContextualFragment(newContent);
       range.insertNode(fragment);
-      
+
       editorRef.current.innerHTML = cleanNestedTags(editorRef.current.innerHTML);
       setName(editorRef.current.innerHTML);
-      
-      console.log('✅ Selection formatting result:', {
-        before: selectedText,
-        after: newContent,
-        finalEditorContent: editorRef.current.innerHTML
-      });
 
       editorRef.current.focus();
 
     } catch (error) {
-      console.error('❌ Selection formatting error:', error);
     }
-    
-    console.groupEnd();
-    console.groupEnd();
   };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    console.group('📥 Input Event Handler');
-    console.log('Timestamp:', new Date().toISOString());
-    
     const content = e.currentTarget.innerHTML;
-    
-    console.log('Input event details:', {
-      type: e.type,
-      target: e.target,
-      currentTarget: e.currentTarget,
-      bubbles: e.bubbles,
-      eventPhase: e.eventPhase
-    });
-
-    console.log('Content analysis:', {
-      innerHTML: content,
-      textContent: e.currentTarget.textContent,
-      length: content.length,
-      formattingTags: {
-        bold: (content.match(/<b>/g) || []).length,
-        italic: (content.match(/<i>/g) || []).length,
-        underline: (content.match(/<u>/g) || []).length
-      },
-      nodeStructure: Array.from(e.currentTarget.childNodes).map(node => ({
-        type: node.nodeType,
-        name: node.nodeName,
-        value: node.nodeValue
-      }))
-    });
-
     setName(content);
-    console.log('✅ State updated with new content');
-
-    console.groupEnd();
   };
 
   const getRgbaColor = (hex: string, opacity: number) => {
@@ -370,46 +290,10 @@ export function SubjectPropertyModal({
                     contentEditable
                     onInput={handleInput}
                     className="min-h-[60px] max-h-[100px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto [&>b]:font-bold [&>i]:italic [&>u]:underline"
-                    onFocus={(e) => {
-                      console.group('📍 Editor Focus Event');
-                      console.log('Focus details:', {
-                        timestamp: new Date().toISOString(),
-                        activeElement: document.activeElement === e.target,
-                        selection: window.getSelection()?.toString(),
-                        editorContent: editorRef.current?.innerHTML
-                      });
-                      console.groupEnd();
-                    }}
-                    onBlur={(e) => {
-                      console.group('👻 Editor Blur Event');
-                      console.log('Blur details:', {
-                        timestamp: new Date().toISOString(),
-                        relatedTarget: e.relatedTarget,
-                        editorContent: editorRef.current?.innerHTML
-                      });
-                      console.groupEnd();
-                    }}
-                    onMouseUp={(e) => {
-                      console.group('🖱️ Mouse Up Event');
-                      console.log('Selection details:', {
-                        timestamp: new Date().toISOString(),
-                        selection: window.getSelection()?.toString(),
-                        button: e.button,
-                        buttons: e.buttons
-                      });
-                      console.groupEnd();
-                    }}
-                    onKeyUp={() => {
-                      console.log('⌨️ Key up on editor:', {
-                        hasSelection: !!window.getSelection()?.toString(),
-                        selectionContent: window.getSelection()?.toString()
-                      });
-                    }}
                     onPaste={(e) => {
                       e.preventDefault();
                       const text = e.clipboardData.getData('text/plain');
                       document.execCommand('insertText', false, text);
-                      console.log('📋 Pasted content:', text);
                     }}
                   />
                 </div>

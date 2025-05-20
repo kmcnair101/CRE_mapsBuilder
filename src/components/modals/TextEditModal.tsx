@@ -53,7 +53,6 @@ export function TextEditModal({
   const editorRef = useRef<HTMLDivElement>(null)
   const [isEditorFocused, setIsEditorFocused] = useState(false)
 
-  // Update the useEffect that sets initial content
   useEffect(() => {
     if (isOpen && editorRef.current) {
       // Set content
@@ -69,22 +68,11 @@ export function TextEditModal({
       const selection = window.getSelection()
       selection?.removeAllRanges()
       selection?.addRange(range)
-      
-      console.log('[MODAL OPEN] Editor setup:', {
-        content: editorRef.current.innerHTML,
-        isFocused: document.activeElement === editorRef.current,
-        hasSelection: !!selection?.toString(),
-        selectionInEditor: editorRef.current.contains(selection?.getRangeAt(0)?.commonAncestorContainer || null)
-      })
     }
   }, [isOpen, initialText])
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML
-    console.log('[INPUT] Content changed:', {
-      newContent: content,
-      hasHTMLTags: content.includes('<b>') || content.includes('<i>') || content.includes('<u>')
-    })
     setText(content)
   }
 
@@ -105,20 +93,10 @@ export function TextEditModal({
     "[&:empty]:before:content-['Select_text_to_format'] [&:empty]:before:text-gray-400"
   );
 
-  // Update handleFormat with more detailed logging
   const handleFormat = (command: string) => {
     if (!editorRef.current) {
-      console.log('[FORMAT ERROR] Editor ref not found')
       return
     }
-
-    console.log('[FORMAT] Starting format process:', {
-      command,
-      currentState: document.queryCommandState(command),
-      editorContent: editorRef.current.innerHTML,
-      activeElement: document.activeElement?.tagName,
-      editorHasFocus: document.activeElement === editorRef.current
-    })
 
     // First, focus the editor
     editorRef.current.focus()
@@ -128,7 +106,6 @@ export function TextEditModal({
     
     // If no text is selected, select all content
     if (!selection?.toString()) {
-      console.log('[FORMAT] No selection, attempting to select all text')
       const range = document.createRange()
       range.selectNodeContents(editorRef.current)
       selection?.removeAllRanges()
@@ -137,23 +114,10 @@ export function TextEditModal({
 
     // Check current state of the command (on/off)
     const isCurrentlyFormatted = document.queryCommandState(command)
-    console.log(`[FORMAT] Current ${command} state:`, isCurrentlyFormatted)
 
     // Toggle the formatting
     document.execCommand(command, false)
     const newContent = editorRef.current.innerHTML
-    
-    console.log('[FORMAT] Result:', {
-      command,
-      wasFormatted: isCurrentlyFormatted,
-      isNowFormatted: document.queryCommandState(command),
-      newContent,
-      hasFormattingTags: {
-        bold: newContent.includes('<b>') || newContent.includes('<strong>'),
-        italic: newContent.includes('<i>') || newContent.includes('<em>'),
-        underline: newContent.includes('<u>')
-      }
-    })
 
     setText(newContent)
     
@@ -215,7 +179,6 @@ export function TextEditModal({
                   transform: 'scale(0.9)',
                   transformOrigin: 'center center'
                 }}
-                // 4. Use dangerouslySetInnerHTML for preview
                 dangerouslySetInnerHTML={{ __html: text }}
               />
             </MapPreviewBackground>
@@ -272,7 +235,6 @@ export function TextEditModal({
                   onInput={handleInput}
                   onFocus={() => {
                     setIsEditorFocused(true)
-                    console.log('[EDITOR] Focus gained')
                     // Select all text when gaining focus if nothing is selected
                     const selection = window.getSelection()
                     if (selection?.isCollapsed) {
@@ -280,15 +242,12 @@ export function TextEditModal({
                       range.selectNodeContents(editorRef.current!)
                       selection.removeAllRanges()
                       selection.addRange(range)
-                      console.log('[EDITOR] Auto-selected text on focus')
                     }
                   }}
                   onBlur={() => {
                     setIsEditorFocused(false)
-                    console.log('[EDITOR] Focus lost')
                   }}
                   onClick={(e) => {
-                    console.log('[EDITOR] Clicked')
                     // Prevent click from clearing selection
                     e.preventDefault()
                     
@@ -305,16 +264,10 @@ export function TextEditModal({
                       range.selectNodeContents(editorRef.current!)
                       selection?.removeAllRanges()
                       selection?.addRange(range)
-                      console.log('[EDITOR] Restored selection on click')
                     }
                   }}
                   onKeyUp={() => {
-                    // Log current selection state after key events
                     const selection = window.getSelection()
-                    console.log('[EDITOR] Selection after keyup:', {
-                      hasSelection: !!selection?.toString(),
-                      selectedText: selection?.toString()
-                    })
                   }}
                   className={cn(
                     editorClassName,
@@ -324,7 +277,6 @@ export function TextEditModal({
                     e.preventDefault()
                     const text = e.clipboardData.getData('text/plain')
                     document.execCommand('insertText', false, text)
-                    console.log('[EDITOR] Pasted plain text')
                   }}
                 />
               </div>

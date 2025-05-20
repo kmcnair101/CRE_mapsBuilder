@@ -10,7 +10,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('🧪 Incoming request body:', req.body);
 
     const { userId, plan } = req.body;
 

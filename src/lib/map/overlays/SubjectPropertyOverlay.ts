@@ -148,7 +148,6 @@ export async function createSubjectPropertyOverlay(
         // Force redraw after image loads
         img.onload = () => {
           this.draw();
-          console.log('[SUBJECT_PROPERTY_OVERLAY] Redraw after image load');
         }
       } else {
         contentDiv.innerHTML = this.content.name
@@ -164,7 +163,6 @@ export async function createSubjectPropertyOverlay(
       // Add edit button if no image
       if (!this.content.image) {
         const editCleanup = createEditButton(div, () => {
-          console.log('Edit button clicked');
           if (!this.modalRoot) {
             this.modalRoot = document.createElement('div')
             document.body.appendChild(this.modalRoot)
@@ -396,18 +394,6 @@ export async function createSubjectPropertyOverlay(
         const height = this.div.offsetHeight;
         this.div.style.left = `${point.x - width / 2}px`;
         this.div.style.top = `${point.y - height / 2}px`;
-
-        // Add this log:
-        console.log('[SUBJECT_PROPERTY_OVERLAY] Drawing at:', {
-          latLng: {
-            lat: this.position.lat(),
-            lng: this.position.lng()
-          },
-          pixels: {
-            x: point.x,
-            y: point.y
-          }
-        });
       }
     }
 

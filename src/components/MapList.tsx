@@ -34,22 +34,11 @@ function MapPreview({
   const mapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    console.log('[MAP PREVIEW] Starting render:', {
-      center: { lat: center_lat, lng: center_lng },
-      zoom: zoom_level,
-      hasOverlays: overlays.length > 0,
-      hasSubjectProperty: !!subject_property
-    })
-
     if (!mapRef.current) {
-      console.log('[MAP PREVIEW] No map container ref')
       return
     }
 
-    
     loader.load().then(() => {
-      console.log('[MAP PREVIEW] Google Maps loaded')
-      
       const map = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
         zoom: zoom_level,
@@ -61,17 +50,8 @@ function MapPreview({
         clickableIcons: false
       })
 
-      console.log('[MAP PREVIEW] Map instance created')
-
       // Add overlays
       overlays.forEach(overlay => {
-        console.log('[MAP PREVIEW] Processing overlay:', {
-          type: overlay.type,
-          position: overlay.type === 'text' ? overlay.position : undefined,
-          center: overlay.type === 'circle' ? overlay.center : undefined,
-          paths: overlay.type === 'polygon' ? overlay.paths?.length : undefined
-        })
-
         if (overlay.type === 'circle') {
           new google.maps.Circle({
             map,
@@ -83,7 +63,6 @@ function MapPreview({
             strokeOpacity: overlay.strokeOpacity ?? 1,
             strokeWeight: overlay.strokeWeight ?? 2
           })
-          console.log('[MAP PREVIEW] Circle overlay added')
         } else if (overlay.type === 'polygon') {
           new google.maps.Polygon({
             map,
@@ -94,14 +73,7 @@ function MapPreview({
             strokeOpacity: overlay.strokeOpacity ?? 1,
             strokeWeight: overlay.strokeWeight ?? 2
           })
-          console.log('[MAP PREVIEW] Polygon overlay added')
         } else if (overlay.type === 'text') {
-          console.log('[MAP PREVIEW] Creating text overlay:', {
-            text: overlay.text,
-            position: overlay.position,
-            style: overlay.style
-          })
-
           const style = overlay.style || {}
           const textDiv = document.createElement('div')
           textDiv.className = 'map-text-overlay'
@@ -118,7 +90,6 @@ function MapPreview({
           textOverlay.onAdd = function() {
             const panes = this.getPanes()!
             panes.overlayLayer.appendChild(textDiv)
-            console.log('[MAP PREVIEW] Text overlay DOM element added')
           }
 
           textOverlay.draw = function() {
@@ -130,10 +101,6 @@ function MapPreview({
             textDiv.style.left = `${position.x}px`
             textDiv.style.top = `${position.y}px`
             textDiv.style.transform = 'translate(-50%, -50%)'
-            console.log('[MAP PREVIEW] Text overlay positioned:', {
-              x: position.x,
-              y: position.y
-            })
           }
 
           textOverlay.setMap(map)
@@ -142,11 +109,6 @@ function MapPreview({
 
       // Add subject property marker
       if (subject_property?.lat && subject_property?.lng) {
-        console.log('[MAP PREVIEW] Adding subject property marker:', {
-          position: { lat: subject_property.lat, lng: subject_property.lng },
-          style: subject_property.style
-        })
-
         const style = subject_property.style || {}
         new google.maps.Marker({
           map,
@@ -166,7 +128,6 @@ function MapPreview({
             fontFamily: style.fontFamily || 'Arial'
           } : undefined
         })
-        console.log('[MAP PREVIEW] Subject property marker added')
       }
     }).catch(error => {
       console.error('[MAP PREVIEW] Error loading map:', error)
@@ -290,7 +251,6 @@ export function MapList() {
           body: JSON.stringify({ userId: profile.id }),
         })
         const json = await res.json()
-        console.log('Portal link response:', json)
         if (json?.url) setPortalUrl(json.url)
       }
     } catch (error) {
