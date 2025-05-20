@@ -70,21 +70,36 @@ export function useMapOverlays(
               businessName: overlay.properties.businessName || '',
               width: overlay.properties.width || 200,
               style: {
-                backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
-                borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
-                borderWidth: overlay.properties.containerStyle?.borderWidth || 1,
-                padding: overlay.properties.containerStyle?.padding || 8,
-                backgroundOpacity: overlay.properties.containerStyle?.backgroundOpacity || 1,
-                borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
+                ...overlay.properties.containerStyle,
+                // Add position absolute to ensure proper positioning
+                position: 'absolute',
+                transform: 'translate(-50%, -50%)'
               }
             },
             map,
             () => removeOverlay(overlay.id),
             createDeleteButton,
             createEditButton,
-            (style: any) => handleContainerEdit?.(overlay.id, style),
+            (style: any) => {
+              // Add position handling similar to text overlay
+              if (style?.position) {
+                handlePositionUpdate?.(overlay.id, style.position)
+              }
+              handleContainerEdit?.(overlay.id, style)
+            },
             createResizeHandle
           )
+
+          // Add position change listener
+          google.maps.event.addListenerOnce(map, 'idle', () => {
+            if (businessOverlay && 'getPosition' in businessOverlay) {
+              handlePositionUpdate?.(overlay.id, {
+                lat: businessOverlay.getPosition().lat(),
+                lng: businessOverlay.getPosition().lng()
+              })
+            }
+          })
+
           overlaysRef.current[overlay.id] = businessOverlay
           break
         }
