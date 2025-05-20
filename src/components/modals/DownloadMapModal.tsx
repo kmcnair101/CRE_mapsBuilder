@@ -49,7 +49,7 @@ export function DownloadMapModal({
 
   // --- LOG: Check incoming mapData ---
   useEffect(() => {
-    console.log('[DownloadMapModal] Incoming mapData:', mapData)
+    console.log('[DownloadMapModal] Incoming mapData:', JSON.stringify(mapData, null, 2))
   }, [mapData])
 
   // --- LOG: Track setPreviewMapData ---
@@ -97,6 +97,15 @@ export function DownloadMapModal({
   const [previewZoom, setPreviewZoom] = useState<number | null>(null)
 
   useEffect(() => {
+    if (mapData && mapData.center_lat && mapData.center_lng && mapData.zoom_level !== undefined) {
+      const center = { lat: mapData.center_lat, lng: mapData.center_lng }
+      setPreviewCenter(center)
+      setPreviewZoom(mapData.zoom_level)
+      console.log('[DownloadMapModal] setPreviewCenter and setPreviewZoom from mapData:', center, mapData.zoom_level)
+    }
+  }, [mapData])
+
+  useEffect(() => {
     if (!googleMapRef.current) {
       console.warn('[DownloadMapModal] googleMapRef.current is not ready')
       return
@@ -111,10 +120,17 @@ export function DownloadMapModal({
         zoom
       })
       if (center) {
-        setPreviewCenter({ lat: center.lat(), lng: center.lng() })
+        setPreviewCenter(prev => {
+          const newVal = { lat: center.lat(), lng: center.lng() }
+          console.log('[DownloadMapModal] setPreviewCenter from map:', newVal)
+          return newVal
+        })
       }
       if (zoom !== undefined) {
-        setPreviewZoom(zoom)
+        setPreviewZoom(prev => {
+          console.log('[DownloadMapModal] setPreviewZoom from map:', zoom)
+          return zoom
+        })
       }
       // --- LOG: previewCenter and previewZoom after update ---
       console.log('[DownloadMapModal] previewCenter:', center ? { lat: center.lat(), lng: center.lng() } : null)
