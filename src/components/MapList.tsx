@@ -9,10 +9,45 @@ import type { Database } from '@/lib/supabase/types'
 import { useSubscription } from '@/hooks/useSubscription'
 import { PricingPlans } from './pricing/PricingPlans'
 import { DeleteMapModal } from './modals/DeleteMapModal'
-import { MapPreview } from './MapPreview'
+import { loader } from '@/lib/google-maps'
 
 type Map = Database['public']['Tables']['maps']['Row']
 type SortOption = 'updated_at' | 'created_at' | 'title'
+
+function MapPreview({ 
+  center_lat, 
+  center_lng, 
+  zoom_level,
+  mapStyle,
+  className 
+}: { 
+  center_lat: number
+  center_lng: number
+  zoom_level: number
+  mapStyle?: any
+  className?: string
+}) {
+  const mapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!mapRef.current) return
+
+    loader.load().then(() => {
+      const map = new google.maps.Map(mapRef.current!, {
+        center: { lat: center_lat, lng: center_lng },
+        zoom: zoom_level,
+        disableDefaultUI: true,
+        styles: mapStyle,
+        gestureHandling: 'none',
+        draggable: false
+      })
+    })
+  }, [center_lat, center_lng, zoom_level, mapStyle])
+
+  return (
+    <div ref={mapRef} className={className} />
+  )
+}
 
 export function MapList() {
   const { profile } = useAuthStore()
@@ -306,14 +341,14 @@ export function MapList() {
                             alt={map.title}
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           />
-                        ) : subjectProperty ? (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-4 h-4 rounded-full bg-blue-500 shadow-lg" />
-                          </div>
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <MapPin className="h-12 w-12 text-gray-300" />
-                          </div>
+                          <MapPreview
+                            center_lat={map.center_lat}
+                            center_lng={map.center_lng}
+                            zoom_level={map.zoom_level}
+                            mapStyle={map.map_style}
+                            className="w-full h-full"
+                          />
                         )}
                         
                         {/* Overlay on hover */}
