@@ -276,41 +276,48 @@ export function useMapDownload() {
         await new Promise(resolve => setTimeout(resolve, 4000))
 
         // Generate image
-        const canvas = await html2canvas(container, {
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: 'white',
-          scale: 2,
-          logging: false,
-          onclone: (clonedDoc) => {
-            // Hide all Google Maps controls in the cloned document
-            const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
-            clonedControls.forEach(control => {
-              if (control instanceof HTMLElement) {
-                control.style.visibility = 'hidden'
-              }
-            })
-
-            const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
-            if (clonedLogo instanceof HTMLElement) {
-              clonedLogo.style.visibility = 'hidden'
-            }
-
-            // Ensure all images are loaded
-            const images = clonedDoc.getElementsByTagName('img')
-            
-            return Promise.all(Array.from(images).map(img => {
-              if (img.complete) {
-                return Promise.resolve<void>(undefined)
-              }
-              return new Promise<void>(resolve => {
-                img.onload = () => resolve()
-                img.onerror = () => resolve()
-                setTimeout(() => resolve(), 3000)
+        let canvas: HTMLCanvasElement | null = null
+        try {
+          canvas = await html2canvas(container, {
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: 'white',
+            scale: 2,
+            logging: true,
+            onclone: (clonedDoc) => {
+              // Hide all Google Maps controls in the cloned document
+              const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
+              clonedControls.forEach(control => {
+                if (control instanceof HTMLElement) {
+                  control.style.visibility = 'hidden'
+                }
               })
-            }))
-          }
-        })
+
+              const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
+              if (clonedLogo instanceof HTMLElement) {
+                clonedLogo.style.visibility = 'hidden'
+              }
+
+              // Ensure all images are loaded
+              const images = clonedDoc.getElementsByTagName('img')
+              
+              return Promise.all(Array.from(images).map(img => {
+                if (img.complete) {
+                  return Promise.resolve<void>(undefined)
+                }
+                return new Promise<void>(resolve => {
+                  img.onload = () => resolve()
+                  img.onerror = () => resolve()
+                  setTimeout(() => resolve(), 3000)
+                })
+              }))
+            }
+          })
+          console.log('[useMapDownload] html2canvas finished, got canvas:', !!canvas)
+        } catch (err) {
+          console.error('[useMapDownload] html2canvas threw an error:', err)
+          throw err
+        }
 
         // Trigger download
         const link = document.createElement('a')

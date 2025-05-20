@@ -47,6 +47,21 @@ export function DownloadMapModal({
     { setMapData: setPreviewMapData }
   )
 
+  // --- LOG: Check incoming mapData ---
+  useEffect(() => {
+    console.log('[DownloadMapModal] Incoming mapData:', mapData)
+  }, [mapData])
+
+  // --- LOG: Track setPreviewMapData ---
+  useEffect(() => {
+    console.log('[DownloadMapModal] setPreviewMapData called:', previewMapData)
+  }, [previewMapData])
+
+  // --- LOG: Verify googleMapRef is ready ---
+  useEffect(() => {
+    console.log('[DownloadMapModal] googleMapRef.current:', googleMapRef.current)
+  }, [googleMapRef.current])
+
   // Sync preview map with main map data
   useEffect(() => {
     if (open && googleMapRef.current) {
@@ -71,6 +86,10 @@ export function DownloadMapModal({
           map.setOptions({ styles: mapData.mapStyle.customStyles })
         }
       }
+
+      // --- LOG: Map center and zoom after sync ---
+      console.log('[DownloadMapModal] After sync, map center:', map.getCenter()?.toJSON())
+      console.log('[DownloadMapModal] After sync, map zoom:', map.getZoom())
     }
   }, [open, mapData, googleMapRef.current])
   
@@ -97,6 +116,9 @@ export function DownloadMapModal({
       if (zoom !== undefined) {
         setPreviewZoom(zoom)
       }
+      // --- LOG: previewCenter and previewZoom after update ---
+      console.log('[DownloadMapModal] previewCenter:', center ? { lat: center.lat(), lng: center.lng() } : null)
+      console.log('[DownloadMapModal] previewZoom:', zoom)
     }
 
     map.addListener('center_changed', update)
@@ -111,6 +133,9 @@ export function DownloadMapModal({
 
   const handlePreviewDownload = async () => {
     console.log('[DownloadMapModal] Download button clicked')
+    console.log('[DownloadMapModal] googleMapRef.current:', googleMapRef.current)
+    console.log('[DownloadMapModal] previewCenter:', previewCenter)
+    console.log('[DownloadMapModal] previewZoom:', previewZoom)
     if (!previewCenter || previewZoom === null) {
       console.warn('[DownloadMapModal] Missing previewCenter or previewZoom', { previewCenter, previewZoom })
       return
