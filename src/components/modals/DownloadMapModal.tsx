@@ -103,16 +103,28 @@ export function DownloadMapModal({
   }, [googleMapRef.current])
 
   const handlePreviewDownload = async () => {
-    if (!previewCenter || previewZoom === null) return
-    
+    console.log('[DownloadMapModal] Download button clicked')
+    if (!previewCenter || previewZoom === null) {
+      console.warn('[DownloadMapModal] Missing previewCenter or previewZoom', { previewCenter, previewZoom })
+      return
+    }
     setDownloading(true)
     try {
-      await handleDownload(previewMapRef, false, width, height, googleMapRef)
+      console.log('[DownloadMapModal] Calling handleDownload', {
+        previewCenter,
+        previewZoom,
+        width,
+        height
+      })
+      const result = await handleDownload(previewMapRef, false, width, height, googleMapRef)
+      console.log('[DownloadMapModal] handleDownload result:', result)
+      console.log('[DownloadMapModal] handleDownload finished, calling onClose')
       onClose()
     } catch (error) {
-      console.error('Error downloading map:', error)
+      console.error('[DownloadMapModal] Error downloading map:', error)
     } finally {
       setDownloading(false)
+      console.log('[DownloadMapModal] Downloading state set to false')
     }
   }
 

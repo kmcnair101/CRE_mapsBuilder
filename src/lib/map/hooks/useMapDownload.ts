@@ -68,6 +68,16 @@ export function useMapDownload() {
     googleMapRef?: React.RefObject<google.maps.Map>
   ) => {
     try {
+      const access = hasAccess()
+      console.log('[useMapDownload] handleDownload called', { width, height, forThumbnail })
+      console.log('[useMapDownload] Subscription status:', access ? 'active' : 'inactive')
+
+      if (!access) {
+        console.warn('[useMapDownload] Download blocked: No active subscription')
+        alert('You need an active subscription to download maps.')
+        return false
+      }
+
       // Wait for map to be idle with increased timeout
       const map = googleMapRef?.current
       if (map) {
@@ -96,10 +106,59 @@ export function useMapDownload() {
         })
       }
 
-      // ... existing download logic ...
-    } catch (error) {
-      console.error('Error in handleDownload:', error)
-      throw error
+      // Wait a bit to ensure all tiles and overlays are rendered
+      await new Promise(resolve => setTimeout(resolve, 4000))
+      console.log('[useMapDownload] Waited for tiles and overlays to render')
+
+      // Generate image
+      console.log('[useMapDownload] Calling html2canvas...')
+      const canvas = await html2canvas(mapRef.current!, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: 'white',
+        scale: 2,
+        logging: true,
+        onclone: (clonedDoc) => {
+          // Hide all Google Maps controls in the cloned document
+          const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
+          clonedControls.forEach(control => {
+            if (control instanceof HTMLElement) {
+              control.style.visibility = 'hidden'
+            }
+          })
+
+          const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
+          if (clonedLogo instanceof HTMLElement) {
+            clonedLogo.style.visibility = 'hidden'
+          }
+
+          // Ensure all images are loaded
+          const images = clonedDoc.getElementsByTagName('img')
+          
+          return Promise.all(Array.from(images).map(img => {
+            if (img.complete) {
+              return Promise.resolve<void>(undefined)
+            }
+            return new Promise<void>(resolve => {
+              img.onload = () => resolve()
+              img.onerror = () => resolve()
+              setTimeout(() => resolve(), 3000)
+            })
+          }))
+        }
+      })
+      console.log('[useMapDownload] html2canvas finished, got canvas:', !!canvas)
+
+      // Trigger download
+      const link = document.createElement('a')
+      link.download = `${forThumbnail ? 'thumbnail' : 'map'}.png`
+      link.href = canvas.toDataURL('image/png', 1.0)
+      link.click()
+      console.log('[useMapDownload] Download triggered for', link.download)
+      
+      return true
+    } finally {
+      console.log('[useMapDownload] handleDownload cleanup complete')
     }
   }, [])
 
