@@ -72,13 +72,12 @@ export function DownloadMapModal({
   // Sync preview map with main map data
   useEffect(() => {
     if (open && googleMapRef.current) {
-      setPreviewMapData(mapData)
       const map = googleMapRef.current
-      
+
       // Update map center and zoom
       map.setCenter({ lat: mapData.center_lat, lng: mapData.center_lng })
       map.setZoom(mapData.zoom_level)
-      
+
       // Apply map style
       if (mapData.mapStyle) {
         if (mapData.mapStyle.type === 'satellite') {
