@@ -43,7 +43,9 @@ function MapPreview({
         disableDefaultUI: true,
         styles: mapStyle,
         gestureHandling: 'none',
-        draggable: false
+        draggable: false,
+        backgroundColor: '#f3f4f6', // Match the background color
+        clickableIcons: false
       })
 
       // Add overlays
@@ -53,50 +55,77 @@ function MapPreview({
             map,
             center: overlay.center,
             radius: overlay.radius,
-            fillColor: overlay.fillColor,
-            fillOpacity: overlay.fillOpacity,
-            strokeColor: overlay.strokeColor,
-            strokeOpacity: overlay.strokeOpacity,
-            strokeWeight: overlay.strokeWeight
+            fillColor: overlay.fillColor || '#3B82F6',
+            fillOpacity: overlay.fillOpacity ?? 0.2,
+            strokeColor: overlay.strokeColor || '#2563EB',
+            strokeOpacity: overlay.strokeOpacity ?? 1,
+            strokeWeight: overlay.strokeWeight ?? 2
           })
         } else if (overlay.type === 'polygon') {
           new google.maps.Polygon({
             map,
             paths: overlay.paths,
-            fillColor: overlay.fillColor,
-            fillOpacity: overlay.fillOpacity,
-            strokeColor: overlay.strokeColor,
-            strokeOpacity: overlay.strokeOpacity,
-            strokeWeight: overlay.strokeWeight
+            fillColor: overlay.fillColor || '#3B82F6',
+            fillOpacity: overlay.fillOpacity ?? 0.2,
+            strokeColor: overlay.strokeColor || '#2563EB',
+            strokeOpacity: overlay.strokeOpacity ?? 1,
+            strokeWeight: overlay.strokeWeight ?? 2
           })
         } else if (overlay.type === 'text') {
-          // Create a basic marker for text overlays
-          new google.maps.Marker({
-            map,
-            position: overlay.position,
-            label: {
-              text: overlay.text,
-              color: overlay.style?.color || '#000000',
-              fontSize: `${overlay.style?.fontSize || 14}px`,
-              fontFamily: overlay.style?.fontFamily || 'Arial'
-            }
-          })
+          const style = overlay.style || {}
+          // Create a custom text overlay for better text display
+          const textDiv = document.createElement('div')
+          textDiv.className = 'map-text-overlay'
+          textDiv.style.color = style.color || '#000000'
+          textDiv.style.fontSize = `${style.fontSize || 14}px`
+          textDiv.style.fontFamily = style.fontFamily || 'Arial'
+          textDiv.style.padding = `${style.padding || 8}px`
+          textDiv.style.backgroundColor = style.backgroundColor || '#FFFFFF'
+          textDiv.style.border = `${style.borderWidth || 1}px solid ${style.borderColor || '#000000'}`
+          textDiv.style.borderRadius = '4px'
+          textDiv.innerHTML = overlay.text
+
+          const textOverlay = new google.maps.OverlayView()
+          textOverlay.onAdd = function() {
+            const panes = this.getPanes()!
+            panes.overlayLayer.appendChild(textDiv)
+          }
+
+          textOverlay.draw = function() {
+            const overlayProjection = this.getProjection()
+            const position = overlayProjection.fromLatLngToDivPixel(
+              new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
+            )!
+            textDiv.style.position = 'absolute'
+            textDiv.style.left = `${position.x}px`
+            textDiv.style.top = `${position.y}px`
+            textDiv.style.transform = 'translate(-50%, -50%)'
+          }
+
+          textOverlay.setMap(map)
         }
       })
 
       // Add subject property marker if exists
       if (subject_property?.lat && subject_property?.lng) {
+        const style = subject_property.style || {}
         new google.maps.Marker({
           map,
           position: { lat: subject_property.lat, lng: subject_property.lng },
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: 8,
-            fillColor: '#FF0000',
-            fillOpacity: 1,
-            strokeColor: '#FFFFFF',
-            strokeWeight: 2
-          }
+            fillColor: style.backgroundColor || '#FF0000',
+            fillOpacity: style.backgroundOpacity ?? 1,
+            strokeColor: style.borderColor || '#FFFFFF',
+            strokeWeight: style.borderWidth ?? 2
+          },
+          label: subject_property.name ? {
+            text: subject_property.name,
+            color: style.color || '#000000',
+            fontSize: `${style.fontSize || 14}px`,
+            fontFamily: style.fontFamily || 'Arial'
+          } : undefined
         })
       }
     })
