@@ -56,6 +56,18 @@ export function createShapeOverlay(
       super()
       this.position = position
       this.properties = properties
+      console.log('[ShapeOverlay] Constructor:', {
+        position: position.toJSON(),
+        properties
+      })
+    }
+
+    setMap(map: google.maps.Map | null) {
+      console.log('[ShapeOverlay] setMap called:', {
+        map: !!map,
+        overlayId: overlay.id
+      })
+      super.setMap(map)
     }
 
     private createControls() {
@@ -240,6 +252,11 @@ export function createShapeOverlay(
     }
 
     onAdd() {
+      console.log('[ShapeOverlay] onAdd called:', {
+        overlayId: overlay.id,
+        position: this.position.toJSON(),
+        properties: this.properties
+      })
       // Create controls
       this.controlsDiv = this.createControls()
       const panes = this.getPanes()
@@ -413,6 +430,11 @@ export function createShapeOverlay(
     }
 
     onRemove() {
+      console.log('[ShapeOverlay] onRemove called:', {
+        overlayId: overlay.id,
+        position: this.position.toJSON(),
+        properties: this.properties
+      })
       this.cleanupFunctions.forEach(cleanup => cleanup())
       this.cleanupFunctions = []
       
@@ -483,10 +505,8 @@ export function createShapeOverlay(
           
           // Update the underlying shape based on its type
           if ('setCenter' in this.shape) {
-            console.log('[ShapeOverlay] Updating circle center')
             this.shape.setCenter(newPosition)
           } else if ('setBounds' in this.shape) {
-            console.log('[ShapeOverlay] Updating rectangle bounds')
             const bounds = this.shape.getBounds()
             if (bounds) {
               const ne = bounds.getNorthEast()
@@ -505,10 +525,8 @@ export function createShapeOverlay(
                 google.maps.geometry.spherical.computeOffset(newPosition, height/2, 0)
               )
               this.shape.setBounds(newBounds)
-              console.log('[ShapeOverlay] New bounds set:', newBounds.toJSON())
             }
           } else if ('setPath' in this.shape) {
-            console.log('[ShapeOverlay] Updating polygon path')
             const path = this.shape.getPath()
             const points = path.getArray()
             const center = this.position
@@ -545,6 +563,11 @@ export function createShapeOverlay(
   )
 
   shapeOverlay.setMap(map)
+
+  console.log('[ShapeOverlay] Overlay instance created and set on map:', {
+    overlayId: overlay.id,
+    map: !!map
+  })
 
   console.log('Saving position:', {
     original: overlay.position,
