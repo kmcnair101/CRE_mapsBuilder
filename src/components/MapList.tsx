@@ -43,7 +43,9 @@ function MapPreview({
         center: { lat: center_lat, lng: center_lng },
         zoom: zoom_level,
         disableDefaultUI: true,
-        styles: mapStyle,
+        styles: Array.isArray(mapStyle)
+          ? mapStyle
+          : (mapStyle?.customStyles || []),
         gestureHandling: 'none',
         draggable: false,
         backgroundColor: '#f3f4f6',
