@@ -144,6 +144,12 @@ export async function createSubjectPropertyOverlay(
         img.draggable = false
         contentDiv.appendChild(img)
         contentDiv.style.width = `${this.currentWidth}px`
+
+        // Force redraw after image loads
+        img.onload = () => {
+          this.draw();
+          console.log('[SUBJECT_PROPERTY_OVERLAY] Redraw after image load');
+        }
       } else {
         contentDiv.innerHTML = this.content.name
         contentDiv.style.color = this.content.style.color
