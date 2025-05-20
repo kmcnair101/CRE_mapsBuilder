@@ -63,6 +63,8 @@ export function useMapOverlays(
           break
         }
         case 'business': {
+          console.log('Initial position:', overlay.position);
+
           const businessOverlay = createBusinessLogoOverlay(
             {
               position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
@@ -99,6 +101,19 @@ export function useMapOverlays(
               })
             }
           })
+
+          // Add multiple listeners to track position
+          google.maps.event.addListener(map, 'bounds_changed', () => {
+            if (businessOverlay && 'getPosition' in businessOverlay) {
+              console.log('bounds_changed position:', businessOverlay.getPosition()?.toJSON());
+            }
+          });
+
+          google.maps.event.addListener(map, 'zoom_changed', () => {
+            if (businessOverlay && 'getPosition' in businessOverlay) {
+              console.log('zoom_changed position:', businessOverlay.getPosition()?.toJSON());
+            }
+          });
 
           overlaysRef.current[overlay.id] = businessOverlay
           break
