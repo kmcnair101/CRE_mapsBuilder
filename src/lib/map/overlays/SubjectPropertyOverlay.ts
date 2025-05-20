@@ -382,14 +382,26 @@ export async function createSubjectPropertyOverlay(
     }
 
     draw() {
-      if (!this.div) return
-      const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.position)
+      if (!this.div) return;
+      const overlayProjection = this.getProjection();
+      const point = overlayProjection.fromLatLngToDivPixel(this.position);
       if (point) {
-        const width = this.div.offsetWidth
-        const height = this.div.offsetHeight
-        this.div.style.left = `${point.x - width / 2}px`
-        this.div.style.top = `${point.y - height / 2}px`
+        const width = this.div.offsetWidth;
+        const height = this.div.offsetHeight;
+        this.div.style.left = `${point.x - width / 2}px`;
+        this.div.style.top = `${point.y - height / 2}px`;
+
+        // Add this log:
+        console.log('[SUBJECT_PROPERTY_OVERLAY] Drawing at:', {
+          latLng: {
+            lat: this.position.lat(),
+            lng: this.position.lng()
+          },
+          pixels: {
+            x: point.x,
+            y: point.y
+          }
+        });
       }
     }
 
