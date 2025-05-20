@@ -31,9 +31,6 @@ export default function MapEditor() {
   const [downloadModalOpen, setDownloadModalOpen] = useState(false)
   const [downloadWidth, setDownloadWidth] = useState(1280)
   const [downloadHeight, setDownloadHeight] = useState(720)
-  const [mapToDelete, setMapToDelete] = useState<boolean>(false)
-  const [isEditorFocused, setIsEditorFocused] = useState(false)
-  const [editorRef, setEditorRef] = useState<HTMLDivElement | null>(null)
 
   const [mapData, setMapData] = useState<MapData>(() => {
     // Default initialization
@@ -55,32 +52,6 @@ export default function MapEditor() {
   // Add useEffect to check for saved state on mount and when browser back button is used
   useEffect(() => {
     const checkForSavedState = () => {
-      // First check for pending map state from subscription flow
-      const pendingMapState = localStorage.getItem('pendingMapState')
-      if (pendingMapState) {
-        const { pendingMapId, pendingMapEdits } = JSON.parse(pendingMapState)
-        if (pendingMapId === id && pendingMapEdits) {
-          const { state } = JSON.parse(pendingMapEdits)
-          localStorage.removeItem('pendingMapState')
-          localStorage.removeItem('pendingMapId')
-          localStorage.removeItem('pendingMapEdits')
-          
-          setMapData({
-            title: state?.subject_property?.name || 
-                   state?.subject_property?.address || 
-                   'New Map',
-            center_lat: state?.center_lat || 40.7128,
-            center_lng: state?.center_lng || -74.0060,
-            zoom_level: state?.zoom_level || 12,
-            overlays: state?.overlays || [],
-            subject_property: state?.subject_property || null,
-            mapStyle: state?.mapStyle
-          })
-          return
-        }
-      }
-
-      // Then check for regular pending edits
       const pendingMapId = localStorage.getItem('pendingMapId')
       const pendingEdits = localStorage.getItem('pendingMapEdits')
       
@@ -115,6 +86,8 @@ export default function MapEditor() {
 
     return () => {
       window.removeEventListener('popstate', checkForSavedState)
+      // Note: We can't remove the pageshow listener because it's an anonymous function
+      // This is fine since the component is rarely unmounted/remounted
     }
   }, [id])
 
@@ -137,7 +110,10 @@ export default function MapEditor() {
         if (data) {
           console.log('[MapEditor] Loading map data - Before setting state:', {
             overlays: data.overlays,
-            overlayCount: data.overlays?.length || 0
+            overlayCount: data.overlays?.length || 0,
+            center_lat: data.center_lat,
+            center_lng: data.center_lng,
+            zoom_level: data.zoom_level
           })
           setMapData({
             title: data.title,
@@ -180,33 +156,6 @@ export default function MapEditor() {
     }
   }, [mapData.subject_property?.name, mapData.subject_property?.address, id])
 
-  const saveMapState = () => {
-    if (!id) return // Only save if we have a map ID
-
-    // Save the current state
-    const mapState = {
-      title: mapData.title,
-      center_lat: googleMapRef.current?.getCenter()?.lat() || mapData.center_lat,
-      center_lng: googleMapRef.current?.getCenter()?.lng() || mapData.center_lng,
-      zoom_level: googleMapRef.current?.getZoom() || mapData.zoom_level,
-      overlays: mapData.overlays,
-      subject_property: mapData.subject_property,
-      mapStyle: mapData.mapStyle
-    }
-
-    localStorage.setItem('pendingMapId', id)
-    localStorage.setItem('pendingMapEdits', JSON.stringify({ state: mapState }))
-  }
-
-  const handleFeatureAccess = () => {
-    if (!hasAccess()) {
-      saveMapState() // Save the current state
-      setShowPricingPlans(true)
-      return false
-    }
-    return true
-  }
-
   const handleDeleteLayer = (id: string) => {
     setMapData(prev => ({
       ...prev,
@@ -221,14 +170,25 @@ export default function MapEditor() {
       overlays: prev.overlays.map(o =>
         o.id === id ? {
           ...o,
-          position: style.lat && style.lng ? {
-            lat: style.lat,
-            lng: style.lng
-          } : o.position,
           properties: {
             ...o.properties,
             content: text,
-            style
+            textStyle: {
+              color: style.color,
+              fontSize: style.fontSize,
+              fontFamily: style.fontFamily,
+              fontWeight: style.fontWeight,
+              textAlign: style.textAlign,
+            },
+            containerStyle: {
+              backgroundColor: style.backgroundColor,
+              borderColor: style.borderColor,
+              borderWidth: style.borderWidth,
+              padding: style.padding,
+              backgroundOpacity: style.backgroundOpacity,
+              borderOpacity: style.borderOpacity,
+            },
+            width: style.width
           }
         } : o
       )
@@ -286,41 +246,11 @@ export default function MapEditor() {
     }))
   }
 
-  const handleOverlayPositionUpdate = (id: string, position: {lat: number, lng: number}) => {
-    setMapData(prev => ({
-      ...prev,
-      overlays: prev.overlays.map(o =>
-        o.id === id ? {
-          ...o,
-          position: position
-        } : o
-      )
-    }))
-  }
-
-  const handlePositionUpdate = (id: string, position: { lat: number, lng: number }) => {
-    console.log('[MAP EDITOR] Updating overlay position:', { id, position })
-    
-    setMapData(prev => ({
-      ...prev,
-      overlays: prev.overlays.map(o =>
-        o.id === id ? {
-          ...o,
-          position: {
-            lat: position.lat,
-            lng: position.lng
-          }
-        } : o
-      )
-    }))
-  }
-
-  const { overlaysRef, addOverlayToMap } = useMapOverlays(
+  const { overlaysRef, addOverlayToMap, removeOverlay } = useMapOverlays(
     handleDeleteLayer,
     handleTextEdit,
     handleContainerEdit,
-    handleShapeEdit,
-    handlePositionUpdate // Add this handler
+    handleShapeEdit
   )
 
   const { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition } = useMapInitialization(
@@ -773,139 +703,147 @@ export default function MapEditor() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
+    if (!googleMapRef.current || !user) return
 
     setSaving(true)
-    console.log('[MAP SAVE] Starting save process...')
 
     try {
-      // Log initial state
-      console.log('[MAP SAVE] Initial state:', {
-        mapExists: !!googleMapRef.current,
-        mapRefExists: !!mapRef.current,
-        mapDivDimensions: googleMapRef.current ? {
-          width: googleMapRef.current.getDiv().offsetWidth,
-          height: googleMapRef.current.getDiv().offsetHeight
-        } : null,
-        center: googleMapRef.current?.getCenter()?.toJSON(),
-        zoom: googleMapRef.current?.getZoom()
+      const center = googleMapRef.current.getCenter()
+      const zoom = googleMapRef.current.getZoom()
+      const mapType = googleMapRef.current.getMapTypeId()
+      const styles = googleMapRef.current.get('styles')
+
+      console.log('[MapEditor] Before saving - Current overlays:', {
+        overlays: mapData.overlays,
+        overlayCount: mapData.overlays.length,
+        center_lat: mapData.center_lat,
+        center_lng: mapData.center_lng,
+        zoom_level: mapData.zoom_level
       })
 
-      // Wait for Google Maps to be fully initialized
-      const waitForMap = async (attempts = 0, maxAttempts = 5): Promise<boolean> => {
-        console.log(`[MAP SAVE] Attempt ${attempts + 1}/${maxAttempts} to initialize map`)
+      // Capture current positions and properties of all overlays
+      const updatedOverlays = mapData.overlays.map(overlay => {
+        const currentOverlay = overlaysRef.current[overlay.id]
         
-        if (attempts >= maxAttempts) {
-          console.error('[MAP SAVE] Max attempts reached waiting for map initialization')
-          return false
-        }
-
-        if (!googleMapRef.current) {
-          console.log('[MAP SAVE] Map not ready, waiting...')
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          return waitForMap(attempts + 1)
-        }
-
-        // Verify map is fully loaded
-        const mapDiv = googleMapRef.current.getDiv()
-        const isMapReady = mapDiv.offsetWidth > 0 && 
-                          mapDiv.offsetHeight > 0 && 
-                          googleMapRef.current.getCenter() !== undefined
-
-        console.log('[MAP SAVE] Map readiness check:', {
-          divWidth: mapDiv.offsetWidth,
-          divHeight: mapDiv.offsetHeight,
-          hasCenter: !!googleMapRef.current.getCenter(),
-          isReady: isMapReady
-        })
-
-        if (!isMapReady) {
-          console.log('[MAP SAVE] Map not fully loaded, waiting...')
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          return waitForMap(attempts + 1)
-        }
-
-        return true
-      }
-
-      const isMapReady = await waitForMap()
-      if (!isMapReady) {
-        throw new Error('Map failed to initialize')
-      }
-
-      console.log('[MAP SAVE] Map is ready, attempting thumbnail generation')
-
-      // Generate thumbnail with retry logic
-      let thumbnail = null
-      let retryCount = 0
-      const maxRetries = 3
-
-      while (retryCount < maxRetries) {
-        try {
-          console.log(`[MAP SAVE] Thumbnail generation attempt ${retryCount + 1}/${maxRetries}`)
-          if (mapRef.current) {
-            thumbnail = await handleDownload(mapRef, true)
-            console.log('[MAP SAVE] Thumbnail generated successfully')
-            break
+        if (currentOverlay) {
+          let updatedPosition = overlay.position
+          let updatedProperties = { ...overlay.properties }
+          
+          // Get current position based on overlay type
+          if (overlay.type === 'shape' && 'shape' in currentOverlay) {
+            const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
+            let position: google.maps.LatLng | null = null
+            
+            if ('getCenter' in shape) {
+              position = shape.getCenter()
+            } else if ('getBounds' in shape) {
+              position = shape.getBounds()?.getCenter() || null
+            } else if ('getPath' in shape) {
+              const bounds = new google.maps.LatLngBounds()
+              shape.getPath().forEach((point: google.maps.LatLng) => bounds.extend(point))
+              position = bounds.getCenter()
+            }
+            
+            if (position) {
+              updatedPosition = {
+                lat: position.lat(),
+                lng: position.lng()
+              }
+            }
+            
+            // Update shape properties
+            updatedProperties = {
+              ...updatedProperties,
+              style: {
+                fillColor: shape.fillColor || '#FFFFFF',
+                strokeColor: shape.strokeColor || '#000000',
+                strokeWeight: shape.strokeWeight || 2,
+                fillOpacity: shape.fillOpacity || 0.5,
+                strokeOpacity: shape.strokeOpacity || 1
+              }
+            }
+          } else if ('getPosition' in currentOverlay) {
+            // Handle custom overlays (text, images, etc.)
+            const position = currentOverlay.getPosition()
+            if (position) {
+              updatedPosition = {
+                lat: position.lat(),
+                lng: position.lng()
+              }
+            }
           }
-        } catch (error) {
-          console.error(`[MAP SAVE] Thumbnail generation attempt ${retryCount + 1} failed:`, error)
-          retryCount++
-          if (retryCount === maxRetries) {
-            console.warn('[MAP SAVE] Failed to generate thumbnail after multiple attempts')
-            break
+          
+          return {
+            ...overlay,
+            position: updatedPosition,
+            properties: updatedProperties
           }
-          await new Promise(resolve => setTimeout(resolve, 1000))
         }
+        
+        return overlay
+      })
+
+      console.log('[MapEditor] After updating overlay positions:', {
+        overlays: updatedOverlays,
+        overlayCount: updatedOverlays.length
+      })
+
+      // Generate thumbnail before saving
+      const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
+
+      // Simplify the map style object
+      const simplifiedMapStyle = {
+        type: mapType as MapStyleName | 'satellite' | 'terrain',
+        customStyles: styles ? styles.map((style: any) => ({
+          featureType: style.featureType,
+          elementType: style.elementType,
+          stylers: style.stylers
+        })) : []
       }
 
-      // Proceed with save
-      const mapUpdateData = {
+      // Prepare complete map data with simplified structure
+      const mapUpdate = {
         user_id: user.id,
         title: mapData.title,
-        center_lat: googleMapRef.current?.getCenter()?.lat() || mapData.center_lat,
-        center_lng: googleMapRef.current?.getCenter()?.lng() || mapData.center_lng,
-        zoom_level: googleMapRef.current?.getZoom() || mapData.zoom_level,
-        overlays: mapData.overlays,
+        center_lat: center?.lat() || 0,
+        center_lng: center?.lng() || 0,
+        zoom_level: zoom || 12,
+        overlays: updatedOverlays,
         subject_property: mapData.subject_property,
-        thumbnail: thumbnail || null,
-        map_style: mapData.mapStyle
+        thumbnail,
+        map_style: simplifiedMapStyle
       }
 
-      console.log('[MAP SAVE] Preparing to save map data:', {
-        title: mapUpdateData.title,
-        overlayCount: mapUpdateData.overlays.length,
-        hasThumbnail: !!thumbnail,
-        center: { lat: mapUpdateData.center_lat, lng: mapUpdateData.center_lng },
-        zoom: mapUpdateData.zoom_level
+      console.log('[MapEditor] Final map data being saved:', {
+        overlays: mapUpdate.overlays,
+        overlayCount: mapUpdate.overlays.length
       })
 
       if (id) {
         const { error } = await supabase
           .from('maps')
-          .update(mapUpdateData)
+          .update(mapUpdate)
           .eq('id', id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('maps')
-          .insert([mapUpdateData])
+          .insert([mapUpdate])
 
         if (error) throw error
       }
 
       navigate('/')
     } catch (error) {
-      console.error('[MAP SAVE] Error saving map:', error)
-      // You might want to show an error message to the user here
+      console.error('Error saving map:', error)
     } finally {
       setSaving(false)
     }
   }
 
   const handleDeleteMap = async () => {
-    if (!id || !user || !mapToDelete) return
+    if (!id || !user) return
 
     try {
       const { error } = await supabase
@@ -915,37 +853,12 @@ export default function MapEditor() {
         .eq('user_id', user.id)
 
       if (error) throw error
-      setMapToDelete(false)
-      setShowDeleteModal(false)
+
       navigate('/maps')
     } catch (error) {
       console.error('Error deleting map:', error)
     }
   }
-
-  const handleFormat = (command: string) => {
-    if (!editorRef.current) return;
-
-    // Focus editor first
-    editorRef.current.focus();
-    setIsEditorFocused(true);
-
-    // Get selection after focus
-    const selection = window.getSelection();
-    
-    // If no selection or selection is collapsed, select all text
-    if (!selection || selection.isCollapsed) {
-      const range = document.createRange();
-      range.selectNodeContents(editorRef.current);
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    }
-
-    // Apply format
-    document.execCommand(command, false);
-    const newContent = editorRef.current.innerHTML;
-    setText(newContent);
-  };
 
   if (loading) {
     return (
@@ -1015,10 +928,7 @@ export default function MapEditor() {
             onMapStyleChange={handleMapStyleChange}
             onSubjectPropertyEdit={handleSubjectPropertyEdit}
             onCenterSubjectProperty={handleCenterSubjectProperty}
-            onDeleteMap={() => {
-              setShowDeleteModal(true)
-              setMapToDelete(true)
-            }}
+            onDeleteMap={handleDeleteMap}
             subjectProperty={mapData.subject_property ? {
               name: mapData.subject_property.name || 'Subject Property',
               image: mapData.subject_property.image || null,
@@ -1093,19 +1003,6 @@ export default function MapEditor() {
         }}
         mapRef={mapRef}
         mapData={mapData}
-      />
-
-      <DeleteMapModal
-        open={showDeleteModal}
-        onCancel={() => {
-          setShowDeleteModal(false)
-          setMapToDelete(false)
-        }}
-        onConfirm={async () => {
-          if (mapToDelete) {
-            await handleDeleteMap()
-          }
-        }}
       />
     </div>
   )
