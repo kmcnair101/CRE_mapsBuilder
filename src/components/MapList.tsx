@@ -416,6 +416,16 @@ export function MapList() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredMaps.map((map) => {
+              console.log('[MapList] Preview map data:', {
+                id: map.id,
+                title: map.title,
+                center_lat: map.center_lat,
+                center_lng: map.center_lng,
+                zoom_level: map.zoom_level,
+                overlays: map.overlays,
+                map_style: map.map_style,
+              })
+
               const subjectProperty = map.subject_property as any;
               return (
                 <div
