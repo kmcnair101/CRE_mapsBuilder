@@ -19,12 +19,16 @@ function MapPreview({
   center_lng, 
   zoom_level,
   mapStyle,
+  overlays = [],
+  subject_property,
   className 
 }: { 
   center_lat: number
   center_lng: number
   zoom_level: number
   mapStyle?: any
+  overlays?: any[]
+  subject_property?: any
   className?: string
 }) {
   const mapRef = useRef<HTMLDivElement>(null)
@@ -41,8 +45,62 @@ function MapPreview({
         gestureHandling: 'none',
         draggable: false
       })
+
+      // Add overlays
+      overlays.forEach(overlay => {
+        if (overlay.type === 'circle') {
+          new google.maps.Circle({
+            map,
+            center: overlay.center,
+            radius: overlay.radius,
+            fillColor: overlay.fillColor,
+            fillOpacity: overlay.fillOpacity,
+            strokeColor: overlay.strokeColor,
+            strokeOpacity: overlay.strokeOpacity,
+            strokeWeight: overlay.strokeWeight
+          })
+        } else if (overlay.type === 'polygon') {
+          new google.maps.Polygon({
+            map,
+            paths: overlay.paths,
+            fillColor: overlay.fillColor,
+            fillOpacity: overlay.fillOpacity,
+            strokeColor: overlay.strokeColor,
+            strokeOpacity: overlay.strokeOpacity,
+            strokeWeight: overlay.strokeWeight
+          })
+        } else if (overlay.type === 'text') {
+          // Create a basic marker for text overlays
+          new google.maps.Marker({
+            map,
+            position: overlay.position,
+            label: {
+              text: overlay.text,
+              color: overlay.style?.color || '#000000',
+              fontSize: `${overlay.style?.fontSize || 14}px`,
+              fontFamily: overlay.style?.fontFamily || 'Arial'
+            }
+          })
+        }
+      })
+
+      // Add subject property marker if exists
+      if (subject_property?.lat && subject_property?.lng) {
+        new google.maps.Marker({
+          map,
+          position: { lat: subject_property.lat, lng: subject_property.lng },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#FF0000',
+            fillOpacity: 1,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 2
+          }
+        })
+      }
     })
-  }, [center_lat, center_lng, zoom_level, mapStyle])
+  }, [center_lat, center_lng, zoom_level, mapStyle, overlays, subject_property])
 
   return (
     <div ref={mapRef} className={className} />
@@ -347,6 +405,8 @@ export function MapList() {
                             center_lng={map.center_lng}
                             zoom_level={map.zoom_level}
                             mapStyle={map.map_style}
+                            overlays={map.overlays}
+                            subject_property={map.subject_property}
                             className="w-full h-full"
                           />
                         )}
