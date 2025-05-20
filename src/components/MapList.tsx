@@ -46,6 +46,7 @@ function MapPreview({
       return
     }
 
+    
     loader.load().then(() => {
       console.log('[MAP PREVIEW] Google Maps loaded')
       
