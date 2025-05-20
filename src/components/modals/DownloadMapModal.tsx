@@ -78,15 +78,22 @@ export function DownloadMapModal({
   const [previewZoom, setPreviewZoom] = useState<number | null>(null)
 
   useEffect(() => {
-    if (!googleMapRef.current) return
+    if (!googleMapRef.current) {
+      console.warn('[DownloadMapModal] googleMapRef.current is not ready')
+      return
+    }
     const map = googleMapRef.current
 
     const update = () => {
       const center = map.getCenter()
+      const zoom = map.getZoom()
+      console.log('[DownloadMapModal] update called', {
+        center: center ? { lat: center.lat(), lng: center.lng() } : null,
+        zoom
+      })
       if (center) {
         setPreviewCenter({ lat: center.lat(), lng: center.lng() })
       }
-      const zoom = map.getZoom()
       if (zoom !== undefined) {
         setPreviewZoom(zoom)
       }
