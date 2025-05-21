@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client'
 interface PricingPlanProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (e: React.FormEvent) => Promise<void>
+  onSave?: (e: React.FormEvent) => Promise<void>
 }
 
 export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
@@ -22,7 +22,9 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
 
     try {
       // Call handleSave before proceeding with subscription
-      await onSave(new Event('submit') as React.FormEvent)
+      if (onSave) {
+        await onSave(new Event('submit') as React.FormEvent)
+      }
 
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',

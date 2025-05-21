@@ -965,8 +965,8 @@ export default function MapEditor() {
         mapData={mapData}
       />
 
-      <PricingPlans 
-        isOpen={showPricingPlans} 
+      <PricingPlans
+        isOpen={showPricingPlans}
         onClose={() => setShowPricingPlans(false)}
         onSave={handleSave}
       />
