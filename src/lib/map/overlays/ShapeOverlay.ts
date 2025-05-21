@@ -252,10 +252,12 @@ export function createShapeOverlay(
     }
 
     onAdd() {
+      const currentMap = this.getMap()
       console.log('[ShapeOverlay] onAdd called:', {
         overlayId: overlay.id,
-        position: this.position.toJSON(),
-        properties: this.properties
+        overlayInstance: this,
+        map: currentMap,
+        mapId: currentMap ? (currentMap as any).__copilotDebugId || currentMap.getDiv()?.id || 'no-id' : null
       })
       // Create controls
       this.controlsDiv = this.createControls()
@@ -430,10 +432,12 @@ export function createShapeOverlay(
     }
 
     onRemove() {
+      const currentMap = this.getMap()
       console.log('[ShapeOverlay] onRemove called:', {
         overlayId: overlay.id,
-        position: this.position.toJSON(),
-        properties: this.properties
+        overlayInstance: this,
+        map: currentMap,
+        mapId: currentMap ? (currentMap as any).__copilotDebugId || currentMap.getDiv()?.id || 'no-id' : null
       })
       this.cleanupFunctions.forEach(cleanup => cleanup())
       this.cleanupFunctions = []
