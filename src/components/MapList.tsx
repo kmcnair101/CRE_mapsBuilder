@@ -35,18 +35,8 @@ function MapPreview({
 
   useEffect(() => {
     if (!mapRef.current) {
-      console.log('[MapPreview] Map container not ready')
       return
     }
-
-    console.log('[MapPreview] Initializing map with:', {
-      center: { lat: center_lat, lng: center_lng },
-      zoom: zoom_level,
-      containerSize: {
-        width: mapRef.current.offsetWidth,
-        height: mapRef.current.offsetHeight
-      }
-    })
 
     loader.load().then(() => {
       const map = new google.maps.Map(mapRef.current!, {
@@ -62,57 +52,21 @@ function MapPreview({
         clickableIcons: false
       })
 
-      // Log map initialization
-      console.log('[MapPreview] Map instance created:', {
-        center: map.getCenter()?.toJSON(),
-        zoom: map.getZoom(),
-        bounds: map.getBounds()?.toJSON()
-      })
+      // Create a bounds object to fit all elements
+      const bounds = new google.maps.LatLngBounds()
 
-      // Add overlays
-      console.log('[MapPreview] Adding overlays:', overlays)
-      overlays.forEach((overlay, index) => {
-        console.log(`[MapPreview] Adding overlay ${index}:`, overlay)
-        if (overlay.type === 'circle') {
-          const circle = new google.maps.Circle({
-            map,
-            center: overlay.center,
-            radius: overlay.radius,
-            fillColor: overlay.fillColor || '#3B82F6',
-            fillOpacity: overlay.fillOpacity ?? 0.2,
-            strokeColor: overlay.strokeColor || '#2563EB',
-            strokeOpacity: overlay.strokeOpacity ?? 1,
-            strokeWeight: overlay.strokeWeight ?? 2
-          })
-          console.log(`[MapPreview] Circle overlay ${index} created:`, {
-            center: circle.getCenter()?.toJSON(),
-            radius: circle.getRadius(),
-            bounds: circle.getBounds()?.toJSON()
-          })
-        } else if (overlay.type === 'polygon') {
-          const polygon = new google.maps.Polygon({
-            map,
-            paths: overlay.paths,
-            fillColor: overlay.fillColor || '#3B82F6',
-            fillOpacity: overlay.fillOpacity ?? 0.2,
-            strokeColor: overlay.strokeColor || '#2563EB',
-            strokeOpacity: overlay.strokeOpacity ?? 1,
-            strokeWeight: overlay.strokeWeight ?? 2
-          })
-          console.log(`[MapPreview] Polygon overlay ${index} created:`, {
-            paths: polygon.getPath()?.getArray().map(p => p.toJSON()),
-            bounds: polygon.getBounds()?.toJSON()
-          })
-        }
-      })
-
-      // Add subject property marker
+      // Add subject property to bounds if it exists
       if (subject_property?.lat && subject_property?.lng) {
-        console.log('[MapPreview] Adding subject property:', subject_property)
+        const subjectLatLng = new google.maps.LatLng(
+          subject_property.lat,
+          subject_property.lng
+        )
+        bounds.extend(subjectLatLng)
+
         const style = subject_property.style || {}
-        const marker = new google.maps.Marker({
+        new google.maps.Marker({
           map,
-          position: { lat: subject_property.lat, lng: subject_property.lng },
+          position: subjectLatLng,
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: 8,
@@ -128,21 +82,68 @@ function MapPreview({
             fontFamily: style.fontFamily || 'Arial'
           } : undefined
         })
-        console.log('[MapPreview] Subject property marker created:', {
-          position: marker.getPosition()?.toJSON(),
-          bounds: map.getBounds()?.toJSON()
+      }
+
+      // Add overlays and extend bounds
+      overlays.forEach(overlay => {
+        if (overlay.type === 'text' && overlay.position) {
+          const latLng = new google.maps.LatLng(
+            overlay.position.lat,
+            overlay.position.lng
+          )
+          bounds.extend(latLng)
+
+          const textDiv = document.createElement('div')
+          textDiv.className = 'map-text-overlay'
+          textDiv.style.color = overlay.properties.color || '#000000'
+          textDiv.style.fontSize = `${overlay.properties.fontSize || 14}px`
+          textDiv.style.padding = `${overlay.properties.padding || 8}px`
+          textDiv.innerHTML = overlay.properties.content
+
+          const textOverlay = new google.maps.OverlayView()
+          textOverlay.onAdd = function() {
+            const panes = this.getPanes()!
+            panes.overlayLayer.appendChild(textDiv)
+          }
+
+          textOverlay.draw = function() {
+            const overlayProjection = this.getProjection()
+            const position = overlayProjection.fromLatLngToDivPixel(latLng)!
+            textDiv.style.position = 'absolute'
+            textDiv.style.left = `${position.x}px`
+            textDiv.style.top = `${position.y}px`
+            textDiv.style.transform = 'translate(-50%, -50%)'
+          }
+
+          textOverlay.setMap(map)
+        }
+      })
+
+      // Fit map to bounds with padding
+      if (!bounds.isEmpty()) {
+        const padding = 50 // pixels
+        map.fitBounds(bounds, {
+          padding: {
+            top: padding,
+            right: padding,
+            bottom: padding,
+            left: padding
+          }
         })
       }
 
-      // Add map state change listener
+      // Log final state
       google.maps.event.addListenerOnce(map, 'idle', () => {
-        console.log('[MapPreview] Map idle state:', {
+        console.log('[MapPreview] Final map state:', {
           center: map.getCenter()?.toJSON(),
           zoom: map.getZoom(),
-          bounds: map.getBounds()?.toJSON()
+          bounds: map.getBounds()?.toJSON(),
+          containerSize: {
+            width: mapRef.current?.offsetWidth,
+            height: mapRef.current?.offsetHeight
+          }
         })
       })
-
     }).catch(error => {
       console.error('[MapPreview] Error loading map:', error)
     })
