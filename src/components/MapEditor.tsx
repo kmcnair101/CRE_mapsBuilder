@@ -669,7 +669,11 @@ export default function MapEditor() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!googleMapRef.current || !user) return
+    console.log('[MapEditor] handleSave called')
+    if (!googleMapRef.current || !user) {
+      console.log('[MapEditor] googleMapRef.current or user missing')
+      return
+    }
 
     setSaving(true)
 
@@ -824,6 +828,7 @@ export default function MapEditor() {
     )
   }
 
+  console.log('[MapEditor] Rendering PricingPlans with onSave')
   return (
     <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
       <div className="w-56 bg-gray-900 flex flex-col">
