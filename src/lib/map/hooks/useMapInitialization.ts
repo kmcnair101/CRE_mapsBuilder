@@ -19,6 +19,7 @@ export function useMapInitialization(
   const subjectPropertyOverlayRef = useRef<google.maps.OverlayView | null>(null)
   const isInitializedRef = useRef(false)
   const { handleMapStyleChange } = useMapStyle()
+  const isUnmountingRef = useRef(false)
  
   const cleanupSubjectProperty = useCallback(() => {
     console.log('[useMapInitialization] cleanupSubjectProperty called:', {
@@ -271,6 +272,26 @@ export function useMapInitialization(
       handleMapStyleChange(googleMapRef.current, mapData.mapStyle)
     }
   }, [mapData.mapStyle])
+
+  useEffect(() => {
+    return () => {
+      isUnmountingRef.current = true
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      // Only clean up when the component is actually unmounting
+      if (isUnmountingRef.current) {
+        console.log('[MapEditor] Component unmounting, cleaning up overlays')
+        if (googleMapRef.current) {
+          googleMapRef.current.overlayMapTypes.clear()
+        }
+      } else {
+        console.log('[MapEditor] Skipping overlay cleanup - component still mounted')
+      }
+    }
+  }, [])
 
   return { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition }
 }
