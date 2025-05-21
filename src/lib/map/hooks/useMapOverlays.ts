@@ -13,27 +13,30 @@ export function useMapOverlays(
   handleContainerEdit?: (id: string, style: any) => void,
   handleShapeEdit?: (id: string, style: any) => void,
   handlePositionUpdate?: (id: string, position: { lat: number, lng: number }) => void,
-  isPreview?: boolean // Add this parameter
+  isPreview?: boolean
 ) {
+  // Only main overlays are tracked here
   const overlaysRef = useRef<{
     [key: string]: google.maps.Marker | google.maps.OverlayView
   }>({})
 
   const removeOverlay = (id: string) => {
-    const overlay = overlaysRef.current[id]
-    if (overlay) {
-      if ('setMap' in overlay) {
-        overlay.setMap(null)
+    // Only remove from overlaysRef if not preview
+    if (!isPreview) {
+      const overlay = overlaysRef.current[id]
+      if (overlay) {
+        if ('setMap' in overlay) {
+          overlay.setMap(null)
+        }
+        delete overlaysRef.current[id]
+        handleDeleteLayer(id)
       }
-      delete overlaysRef.current[id]
-      handleDeleteLayer(id)
     }
   }
 
-  
   const addOverlayToMap = (overlay: MapOverlay, map: google.maps.Map) => {
     if (isPreview) {
-      // For preview, create overlays with no-op callbacks
+      // For preview, create overlays with no-op callbacks and DO NOT touch overlaysRef
       switch (overlay.type) {
         case 'image': {
           createCustomImageOverlay(
@@ -121,7 +124,7 @@ export function useMapOverlays(
     }
 
     try {
-      // Remove existing overlay if it exists
+      // Remove existing overlay if it exists (main overlays only)
       if (overlaysRef.current[overlay.id]) {
         removeOverlay(overlay.id)
       }
@@ -153,8 +156,6 @@ export function useMapOverlays(
           break
         }
         case 'business': {
-          console.log('Initial position:', overlay.position);
-
           const businessOverlay = createBusinessLogoOverlay(
             {
               position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
@@ -163,7 +164,6 @@ export function useMapOverlays(
               width: overlay.properties.width || 200,
               style: {
                 ...overlay.properties.containerStyle,
-                // Add position absolute to ensure proper positioning
                 position: 'absolute',
                 transform: 'translate(-50%, -50%)'
               }
@@ -173,7 +173,6 @@ export function useMapOverlays(
             createDeleteButton,
             createEditButton,
             (style: any) => {
-              // Add position handling similar to text overlay
               if (style?.position) {
                 handlePositionUpdate?.(overlay.id, style.position)
               }
@@ -181,30 +180,6 @@ export function useMapOverlays(
             },
             createResizeHandle
           )
-
-          // Add position change listener
-          google.maps.event.addListenerOnce(map, 'idle', () => {
-            if (businessOverlay && 'getPosition' in businessOverlay) {
-              handlePositionUpdate?.(overlay.id, {
-                lat: businessOverlay.getPosition().lat(),
-                lng: businessOverlay.getPosition().lng()
-              })
-            }
-          })
-
-          // Add multiple listeners to track position
-          google.maps.event.addListener(map, 'bounds_changed', () => {
-            if (businessOverlay && 'getPosition' in businessOverlay) {
-              console.log('bounds_changed position:', businessOverlay.getPosition()?.toJSON());
-            }
-          });
-
-          google.maps.event.addListener(map, 'zoom_changed', () => {
-            if (businessOverlay && 'getPosition' in businessOverlay) {
-              console.log('zoom_changed position:', businessOverlay.getPosition()?.toJSON());
-            }
-          });
-
           overlaysRef.current[overlay.id] = businessOverlay
           break
         }
@@ -217,10 +192,8 @@ export function useMapOverlays(
             createEditButton,
             (text: string, style: any) => {
               if (style?.position) {
-                // Handle position updates
                 handlePositionUpdate?.(overlay.id, style.position)
               } else {
-                // Handle text/style updates
                 handleTextEdit?.(overlay.id, text, style)
               }
             },
@@ -259,5 +232,6 @@ export function useMapOverlays(
       console.error('Error adding overlay to map:', error)
     }
   }
+
   return { overlaysRef, addOverlayToMap, removeOverlay }
 }
