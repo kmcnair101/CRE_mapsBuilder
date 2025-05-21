@@ -60,7 +60,8 @@ export default function MapEditor() {
         localStorage.removeItem('pendingMapId')
         localStorage.removeItem('pendingMapEdits')
         
-        setMapData({
+        setMapData(prev => ({
+          ...prev,
           title: state?.subject_property?.name || 
                  state?.subject_property?.address || 
                  'New Map',
@@ -70,7 +71,7 @@ export default function MapEditor() {
           overlays: state?.overlays || [],
           subject_property: state?.subject_property || null,
           mapStyle: state?.mapStyle
-        })
+        }))
       }
     }
 
@@ -115,7 +116,8 @@ export default function MapEditor() {
             center_lng: data.center_lng,
             zoom_level: data.zoom_level
           })
-          setMapData({
+          setMapData(prev => ({
+            ...prev,
             title: data.title,
             center_lat: data.center_lat,
             center_lng: data.center_lng,
@@ -123,7 +125,7 @@ export default function MapEditor() {
             overlays: data.overlays as MapOverlay[],
             subject_property: data.subject_property as any,
             mapStyle: data.map_style
-          })
+          }))
         }
       } catch (error) {
         console.error('Error loading map:', error)
