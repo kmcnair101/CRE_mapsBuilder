@@ -787,6 +787,111 @@ export default function MapEditor() {
     }
   }
 
+  const handleSaveOnly = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!googleMapRef.current || !user) return
+
+    setSaving(true)
+    try {
+      const center = googleMapRef.current.getCenter()
+      const zoom = googleMapRef.current.getZoom()
+      const mapType = googleMapRef.current.getMapTypeId()
+      const styles = googleMapRef.current.get('styles')
+
+      const updatedOverlays = mapData.overlays.map(overlay => {
+        const currentOverlay = overlaysRef.current[overlay.id]
+        if (currentOverlay) {
+          let updatedPosition = overlay.position
+          let updatedProperties = { ...overlay.properties }
+          if (overlay.type === 'shape' && 'shape' in currentOverlay) {
+            const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
+            let position: google.maps.LatLng | null = null
+            if ('getCenter' in shape) {
+              position = shape.getCenter()
+            } else if ('getBounds' in shape) {
+              position = shape.getBounds()?.getCenter() || null
+            } else if ('getPath' in shape) {
+              const bounds = new google.maps.LatLngBounds()
+              shape.getPath().forEach((point: google.maps.LatLng) => bounds.extend(point))
+              position = bounds.getCenter()
+            }
+            if (position) {
+              updatedPosition = {
+                lat: position.lat(),
+                lng: position.lng()
+              }
+            }
+            updatedProperties = {
+              ...updatedProperties,
+              style: {
+                fillColor: shape.fillColor || '#FFFFFF',
+                strokeColor: shape.strokeColor || '#000000',
+                strokeWeight: shape.strokeWeight || 2,
+                fillOpacity: shape.fillOpacity || 0.5,
+                strokeOpacity: shape.strokeOpacity || 1
+              }
+            }
+          } else if ('getPosition' in currentOverlay) {
+            const position = currentOverlay.getPosition()
+            if (position) {
+              updatedPosition = {
+                lat: position.lat(),
+                lng: position.lng()
+              }
+            }
+          }
+          return {
+            ...overlay,
+            position: updatedPosition,
+            properties: updatedProperties
+          }
+        }
+        return overlay
+      })
+
+      const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
+
+      const simplifiedMapStyle = {
+        type: mapType as MapStyleName | 'satellite' | 'terrain',
+        customStyles: styles ? styles.map((style: any) => ({
+          featureType: style.featureType,
+          elementType: style.elementType,
+          stylers: style.stylers
+        })) : []
+      }
+
+      const mapUpdate = {
+        user_id: user.id,
+        title: mapData.title,
+        center_lat: center?.lat() || 0,
+        center_lng: center?.lng() || 0,
+        zoom_level: zoom || 12,
+        overlays: updatedOverlays,
+        subject_property: mapData.subject_property,
+        thumbnail,
+        map_style: simplifiedMapStyle
+      }
+
+      if (id) {
+        const { error } = await supabase
+          .from('maps')
+          .update(mapUpdate)
+          .eq('id', id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('maps')
+          .insert([mapUpdate])
+        if (error) throw error
+      }
+      // No navigation here!
+    } catch (error) {
+      console.error('Error saving map:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleDeleteMap = async () => {
     if (!id || !user) return
 
@@ -973,7 +1078,7 @@ export default function MapEditor() {
       <PricingPlans
         isOpen={showPricingPlans}
         onClose={() => setShowPricingPlans(false)}
-        onSave={handleSave}
+        onSave={handleSaveOnly}
       />
     </div>
   )
