@@ -378,6 +378,7 @@ export default function MapEditor() {
 
     const { width, height } = calculateInitialSize(logo.width, logo.height)
 
+    
     const overlay: MapOverlay = {
       id: crypto.randomUUID(),
       type: 'image',
