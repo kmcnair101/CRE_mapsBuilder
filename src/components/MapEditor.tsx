@@ -787,25 +787,26 @@ export default function MapEditor() {
     }
   }
 
-  const handleSaveOnly = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSaveOnly = async () => {
     if (!googleMapRef.current || !user) return
-
+  
     setSaving(true)
     try {
       const center = googleMapRef.current.getCenter()
       const zoom = googleMapRef.current.getZoom()
       const mapType = googleMapRef.current.getMapTypeId()
       const styles = googleMapRef.current.get('styles')
-
+  
       const updatedOverlays = mapData.overlays.map(overlay => {
         const currentOverlay = overlaysRef.current[overlay.id]
         if (currentOverlay) {
           let updatedPosition = overlay.position
           let updatedProperties = { ...overlay.properties }
+  
           if (overlay.type === 'shape' && 'shape' in currentOverlay) {
             const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
             let position: google.maps.LatLng | null = null
+  
             if ('getCenter' in shape) {
               position = shape.getCenter()
             } else if ('getBounds' in shape) {
@@ -815,12 +816,14 @@ export default function MapEditor() {
               shape.getPath().forEach((point: google.maps.LatLng) => bounds.extend(point))
               position = bounds.getCenter()
             }
+  
             if (position) {
               updatedPosition = {
                 lat: position.lat(),
                 lng: position.lng()
               }
             }
+  
             updatedProperties = {
               ...updatedProperties,
               style: {
@@ -840,6 +843,7 @@ export default function MapEditor() {
               }
             }
           }
+  
           return {
             ...overlay,
             position: updatedPosition,
@@ -848,6 +852,16 @@ export default function MapEditor() {
         }
         return overlay
       })
+  
+      // Save logic here (example):
+      // await saveMap({ center, zoom, mapType, styles, overlays: updatedOverlays })
+    } catch (err) {
+      console.error('Error saving map state:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
 
       const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
 

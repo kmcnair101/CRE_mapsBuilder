@@ -2,12 +2,11 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { useLocation } from 'react-router-dom'
-import { supabase } from '@/lib/supabase/client'
 
 interface PricingPlanProps {
   isOpen: boolean
   onClose: () => void
-  onSave?: (e: React.FormEvent) => Promise<void>
+  onSave?: () => Promise<void>
 }
 
 export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
@@ -22,9 +21,10 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
 
     try {
       console.log('[PricingPlans] handleSubscribe called for plan:', plan)
+
       if (onSave) {
         console.log('[PricingPlans] Calling onSave before Stripe redirect')
-        await onSave(new Event('submit') as React.FormEvent)
+        await onSave()
         console.log('[PricingPlans] onSave completed')
       } else {
         console.log('[PricingPlans] No onSave prop provided')
@@ -33,8 +33,8 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user?.id, 
+        body: JSON.stringify({
+          userId: user?.id,
           plan,
           returnUrl: '/'
         })
@@ -73,22 +73,23 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
 
         <div className="p-6 flex-1 overflow-y-auto">
           {error && (
-            <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">{error}</div>
+            <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">
+              {error}
+            </div>
           )}
 
           <div className="text-center space-y-6">
-            <p className="mb-4 text-gray-700">Choose a plan to unlock map downloads</p>
+            <p className="mb-4 text-gray-700">
+              Choose a plan to unlock map downloads
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Monthly Option */}
+              {/* Monthly Plan */}
               <div className="border rounded-lg p-4 shadow-sm">
                 <h3 className="text-lg font-semibold mb-2">Monthly Plan</h3>
                 <p className="text-gray-600 mb-4">$49 per month</p>
                 <button
-                  onClick={() => {
-                    console.log('[PricingPlans] Subscribe Monthly button clicked')
-                    handleSubscribe('monthly')
-                  }}
+                  onClick={() => handleSubscribe('monthly')}
                   disabled={loading}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
@@ -96,7 +97,7 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
                 </button>
               </div>
 
-              {/* Annual Option */}
+              {/* Annual Plan */}
               <div className="border rounded-lg p-4 shadow-sm">
                 <h3 className="text-lg font-semibold mb-2">Annual Plan</h3>
                 <p className="text-gray-600 mb-4">$449 per year</p>
