@@ -52,7 +52,6 @@ const checkTaintedCanvas = (canvas: HTMLCanvasElement) => {
 }
 
 export function useMapDownload() {
-  const { hasAccess } = useSubscription()
   const { addOverlayToMap } = useMapOverlays(
     () => {}, // no-op function for handleDeleteLayer
     undefined, // handleTextEdit
@@ -68,13 +67,6 @@ export function useMapDownload() {
     googleMapRef?: React.RefObject<google.maps.Map>
   ) => {
     try {
-      const access = hasAccess()
-
-      if (!access) {
-        alert('You need an active subscription to download maps.')
-        return false
-      }
-
       // Wait for map to be idle with increased timeout
       const map = googleMapRef?.current
       if (map) {
@@ -153,7 +145,9 @@ export function useMapDownload() {
 
       // Return the data URL
       return canvas.toDataURL('image/png', 1.0)
-    } finally {
+    } catch (error) {
+      console.error('Error generating map image:', error)
+      throw error
     }
   }, [])
 
