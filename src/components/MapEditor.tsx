@@ -146,20 +146,7 @@ export default function MapEditor() {
   }, [mapData.overlays])
 
   useEffect(() => {
-    if (!id) {
-      const newTitle = mapData.subject_property?.name || 
-                      mapData.subject_property?.address || 
-                      'New Map'
-      
-      setMapData(prev => ({
-        ...prev,
-        title: newTitle
-      }))
-    }
-  }, [mapData.subject_property?.name, mapData.subject_property?.address, id])
-
-  useEffect(() => {
-    console.log('[MapEditor] subject_property:', mapData.subject_property)
+    console.log('[MapEditor] subject_property after state update:', mapData.subject_property)
   }, [mapData.subject_property])
 
   useEffect(() => {
@@ -882,6 +869,15 @@ export default function MapEditor() {
     }
   }, [])
 
+  // Wrap setMapData to add logging
+  const setMapDataWithLog = (updater) => {
+    setMapData(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      console.log('[MapEditor] setMapData called:', { prev, next })
+      return next
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -903,7 +899,7 @@ export default function MapEditor() {
             <input
               type="text"
               value={mapData.title}
-              onChange={(e) => setMapData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => setMapDataWithLog(prev => ({ ...prev, title: e.target.value }))}
               onFocus={() => setIsEditingTitle(true)}
               className={cn(
                 "text-lg font-medium text-gray-100 bg-transparent border-0 border-b-2 focus:outline-none focus:ring-0 px-1 py-0.5 w-full",

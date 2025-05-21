@@ -25,14 +25,17 @@ export function useMapInitialization(
     console.log('[useMapInitialization] cleanupSubjectProperty called:', {
       hasOverlay: !!subjectPropertyOverlayRef.current,
       hasMap: !!googleMapRef.current,
-      hasSubjectProperty: !!mapData.subject_property
+      hasSubjectProperty: !!mapData.subject_property,
+      subjectProperty: mapData.subject_property
     })
     if (subjectPropertyOverlayRef.current) {
       subjectPropertyOverlayRef.current.setMap(null)
       subjectPropertyOverlayRef.current = null
       console.log('[useMapInitialization] Subject property overlay cleaned up')
+    } else {
+      console.log('[useMapInitialization] No subject property overlay to clean up')
     }
-  }, [])
+  }, [mapData.subject_property])
 
   const updateSubjectProperty = useCallback(async () => {
     console.log('[useMapInitialization] updateSubjectProperty called:', {
