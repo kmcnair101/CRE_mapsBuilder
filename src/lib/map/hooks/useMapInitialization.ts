@@ -243,6 +243,11 @@ export function useMapInitialization(
     initializeMap()
 
     return () => {
+      if (isUnmountingRef.current) {
+        console.log('[useMapInitialization] Cleanup due to unmounting')
+      } else {
+        console.log('[useMapInitialization] Cleanup due to dependency change')
+      }
       cleanupSubjectProperty()
     }
   }, [mapRef, mapData.center_lat, mapData.center_lng, mapData.zoom_level, addOverlayToMap, updateSubjectProperty, cleanupSubjectProperty])
@@ -276,6 +281,7 @@ export function useMapInitialization(
   useEffect(() => {
     return () => {
       isUnmountingRef.current = true
+      console.log('[useMapInitialization] isUnmountingRef set to true')
     }
   }, [])
 

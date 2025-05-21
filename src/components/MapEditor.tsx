@@ -873,10 +873,11 @@ export default function MapEditor() {
 
   useEffect(() => {
     return () => {
-      // Clean up overlays when modal closes
       if (googleMapRef.current) {
-        // Remove all overlays
+        console.log('[MapEditor] Cleanup: clearing overlayMapTypes on unmount or dependency change')
         googleMapRef.current.overlayMapTypes.clear()
+      } else {
+        console.log('[MapEditor] Cleanup: googleMapRef.current is null')
       }
     }
   }, [])
