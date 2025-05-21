@@ -21,14 +21,28 @@ export function useMapInitialization(
   const { handleMapStyleChange } = useMapStyle()
 
   const cleanupSubjectProperty = useCallback(() => {
+    console.log('[useMapInitialization] cleanupSubjectProperty called:', {
+      hasOverlay: !!subjectPropertyOverlayRef.current,
+      hasMap: !!googleMapRef.current,
+      hasSubjectProperty: !!mapData.subject_property
+    })
     if (subjectPropertyOverlayRef.current) {
       subjectPropertyOverlayRef.current.setMap(null)
       subjectPropertyOverlayRef.current = null
+      console.log('[useMapInitialization] Subject property overlay cleaned up')
     }
   }, [])
 
   const updateSubjectProperty = useCallback(async () => {
+    console.log('[useMapInitialization] updateSubjectProperty called:', {
+      hasMap: !!googleMapRef.current,
+      hasSubjectProperty: !!mapData.subject_property,
+      hasExistingOverlay: !!subjectPropertyOverlayRef.current,
+      subjectPropertyData: mapData.subject_property
+    })
+
     if (!googleMapRef.current || !mapData.subject_property) {
+      console.log('[useMapInitialization] Cleaning up - no map or subject property')
       cleanupSubjectProperty()
       return
     }
@@ -40,6 +54,7 @@ export function useMapInitialization(
         const overlay = await createSubjectPropertyOverlay(
           mapData,
           (updates) => {
+            console.log('[useMapInitialization] Subject property updates received:', updates)
             setMapData(prev => ({
               ...prev,
               subject_property: prev.subject_property ? {
@@ -50,13 +65,15 @@ export function useMapInitialization(
           }
         )
 
+        console.log('[useMapInitialization] Setting overlay on map')
         overlay.setMap(googleMapRef.current)
         subjectPropertyOverlayRef.current = overlay
+        console.log('[useMapInitialization] Subject property overlay created and set')
       } else {
-        console.log('[useMapInitialization] Subject property overlay already exists')
+        console.log('[useMapInitialization] Subject property overlay already exists, skipping creation')
       }
     } catch (error) {
-      console.error('Error creating subject property overlay:', error)
+      console.error('[useMapInitialization] Error creating subject property overlay:', error)
     }
   }, [mapData, setMapData, cleanupSubjectProperty])
 

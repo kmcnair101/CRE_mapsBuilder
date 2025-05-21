@@ -80,27 +80,47 @@ export function DownloadMapModal({
     console.log('[DownloadMapModal] Initialization effect triggered:', {
       open,
       isInitialized: isInitializedRef.current,
-      hasSubjectProperty: !!mapData.subject_property
+      hasSubjectProperty: !!mapData.subject_property,
+      subjectPropertyData: mapData.subject_property,
+      hasMap: !!googleMapRef.current,
+      mapCenter: googleMapRef.current?.getCenter()?.toJSON(),
+      mapZoom: googleMapRef.current?.getZoom()
     })
 
-    if (!open || isInitializedRef.current) return
+    if (!open || isInitializedRef.current) {
+      console.log('[DownloadMapModal] Skipping initialization:', {
+        open,
+        isInitialized: isInitializedRef.current
+      })
+      return
+    }
 
     console.log('[DownloadMapModal] Setting preview data:', {
       currentSubjectProperty: previewMapData.subject_property,
-      newSubjectProperty: mapData.subject_property
+      newSubjectProperty: mapData.subject_property,
+      currentMapData: previewMapData,
+      newMapData: mapData
     })
 
     // Set preview data only once when modal opens
-    setPreviewMapData((prev: typeof mapData) => ({
-      ...prev,
-      subject_property: mapData.subject_property
-    }))
+    setPreviewMapData((prev: typeof mapData) => {
+      const newData = {
+        ...prev,
+        subject_property: mapData.subject_property
+      }
+      console.log('[DownloadMapModal] New preview data:', newData)
+      return newData
+    })
 
     isInitializedRef.current = true
     console.log('[DownloadMapModal] Initialization complete')
 
     return () => {
-      console.log('[DownloadMapModal] Cleanup running')
+      console.log('[DownloadMapModal] Cleanup running:', {
+        hasSubjectProperty: !!mapData.subject_property,
+        subjectPropertyData: mapData.subject_property,
+        hasMap: !!googleMapRef.current
+      })
       isInitializedRef.current = false
     }
   }, [open]) // Remove mapData.subject_property from dependencies
@@ -111,7 +131,9 @@ export function DownloadMapModal({
       hasMap: !!googleMapRef.current,
       hasSubjectProperty: !!previewMapData.subject_property,
       mapCenter: googleMapRef.current?.getCenter()?.toJSON(),
-      mapZoom: googleMapRef.current?.getZoom()
+      mapZoom: googleMapRef.current?.getZoom(),
+      isInitialized: isInitializedRef.current,
+      subjectPropertyData: previewMapData.subject_property
     })
   }, [googleMapRef.current, previewMapData.subject_property])
 
@@ -120,7 +142,10 @@ export function DownloadMapModal({
     console.log('[DownloadMapModal] Subject property changed:', {
       inMapData: mapData.subject_property,
       inPreviewData: previewMapData.subject_property,
-      isInitialized: isInitializedRef.current
+      isInitialized: isInitializedRef.current,
+      hasMap: !!googleMapRef.current,
+      mapCenter: googleMapRef.current?.getCenter()?.toJSON(),
+      mapZoom: googleMapRef.current?.getZoom()
     })
   }, [mapData.subject_property, previewMapData.subject_property])
 
