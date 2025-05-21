@@ -22,6 +22,10 @@ export function useMapInitialization(
   const isUnmountingRef = useRef(false)
  
   const cleanupSubjectProperty = useCallback(() => {
+    if (!isUnmountingRef.current) {
+      console.log('[useMapInitialization] Skipping cleanupSubjectProperty - not unmounting');
+      return;
+    }
     console.log('[useMapInitialization] cleanupSubjectProperty called:', {
       hasOverlay: !!subjectPropertyOverlayRef.current,
       hasMap: !!googleMapRef.current,
@@ -248,10 +252,10 @@ export function useMapInitialization(
     return () => {
       if (isUnmountingRef.current) {
         console.log('[useMapInitialization] Cleanup due to unmounting')
+        cleanupSubjectProperty()
       } else {
-        console.log('[useMapInitialization] Cleanup due to dependency change')
+        console.log('[useMapInitialization] Skipping cleanup - not unmounting')
       }
-      cleanupSubjectProperty()
     }
   }, [mapRef, mapData.center_lat, mapData.center_lng, mapData.zoom_level, addOverlayToMap, updateSubjectProperty, cleanupSubjectProperty])
 
