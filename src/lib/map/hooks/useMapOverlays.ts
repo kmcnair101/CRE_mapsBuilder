@@ -32,8 +32,90 @@ export function useMapOverlays(
 
   const addOverlayToMap = (overlay: MapOverlay, map: google.maps.Map) => {
     if (isPreview) {
-      // For preview, create new overlay instances without callbacks
-      // This ensures preview overlays are independent of main map overlays
+      // For preview, create overlays with no-op callbacks
+      switch (overlay.type) {
+        case 'image': {
+          createCustomImageOverlay(
+            {
+              position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
+              url: overlay.properties.url || '',
+              width: overlay.properties.width || 200,
+              style: {
+                backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
+                borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
+                borderWidth: overlay.properties.containerStyle?.borderWidth || 1,
+                padding: overlay.properties.containerStyle?.padding || 8,
+                backgroundOpacity: overlay.properties.containerStyle?.backgroundOpacity || 1,
+                borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
+              }
+            },
+            map,
+            () => {},
+            createDeleteButton,
+            createEditButton,
+            () => {},
+            createResizeHandle
+          )
+          break
+        }
+        case 'business': {
+          createBusinessLogoOverlay(
+            {
+              position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
+              logo: overlay.properties.logo || '',
+              businessName: overlay.properties.businessName || '',
+              width: overlay.properties.width || 200,
+              style: {
+                ...overlay.properties.containerStyle,
+                position: 'absolute',
+                transform: 'translate(-50%, -50%)'
+              }
+            },
+            map,
+            () => {},
+            createDeleteButton,
+            createEditButton,
+            () => {},
+            createResizeHandle
+          )
+          break
+        }
+        case 'text': {
+          createCustomTextOverlay(
+            overlay,
+            map,
+            () => {},
+            createDeleteButton,
+            createEditButton,
+            () => {},
+            createResizeHandle
+          )
+          break
+        }
+        case 'group': {
+          createGroupOverlay(
+            overlay,
+            map,
+            () => {},
+            createDeleteButton,
+            createEditButton,
+            () => {},
+            createResizeHandle
+          )
+          break
+        }
+        case 'shape': {
+          createShapeOverlay(
+            overlay,
+            map,
+            () => {},
+            createDeleteButton,
+            createEditButton,
+            () => {}
+          )
+          break
+        }
+      }
       return
     }
 
