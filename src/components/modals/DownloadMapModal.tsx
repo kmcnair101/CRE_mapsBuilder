@@ -37,7 +37,9 @@ export function DownloadMapModal({
     () => {}, // no-op for handleDeleteLayer
     undefined, // handleTextEdit
     undefined, // handleContainerEdit
-    undefined  // handleShapeEdit
+    undefined, // handleShapeEdit,
+    undefined, // handlePositionUpdate
+    true // Add this parameter to indicate preview mode
   )
 
   const { googleMapRef } = useMapInitialization(

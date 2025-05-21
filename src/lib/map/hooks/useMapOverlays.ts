@@ -12,7 +12,8 @@ export function useMapOverlays(
   handleTextEdit?: (id: string, text: string, style: any) => void,
   handleContainerEdit?: (id: string, style: any) => void,
   handleShapeEdit?: (id: string, style: any) => void,
-  handlePositionUpdate?: (id: string, position: { lat: number, lng: number }) => void
+  handlePositionUpdate?: (id: string, position: { lat: number, lng: number }) => void,
+  isPreview?: boolean // Add this parameter
 ) {
   const overlaysRef = useRef<{
     [key: string]: google.maps.Marker | google.maps.OverlayView
@@ -30,6 +31,12 @@ export function useMapOverlays(
   }
 
   const addOverlayToMap = (overlay: MapOverlay, map: google.maps.Map) => {
+    if (isPreview) {
+      // For preview, create new overlay instances without callbacks
+      // This ensures preview overlays are independent of main map overlays
+      return
+    }
+
     try {
       // Remove existing overlay if it exists
       if (overlaysRef.current[overlay.id]) {
