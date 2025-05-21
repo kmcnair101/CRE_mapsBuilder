@@ -60,7 +60,7 @@ export default function MapEditor() {
         localStorage.removeItem('pendingMapId')
         localStorage.removeItem('pendingMapEdits')
         
-        setMapData(prev => ({
+        setMapDataWithLog((prev: MapData) => ({
           ...prev,
           title: state?.subject_property?.name || 
                  state?.subject_property?.address || 
@@ -71,7 +71,7 @@ export default function MapEditor() {
           overlays: state?.overlays || [],
           subject_property: state?.subject_property || null,
           mapStyle: state?.mapStyle
-        }))
+        }), 'restore saved state')
       }
     }
 
@@ -116,7 +116,7 @@ export default function MapEditor() {
             center_lng: data.center_lng,
             zoom_level: data.zoom_level
           })
-          setMapData(prev => ({
+          setMapDataWithLog((prev: MapData) => ({
             ...prev,
             title: data.title,
             center_lat: data.center_lat,
@@ -125,7 +125,7 @@ export default function MapEditor() {
             overlays: data.overlays as MapOverlay[],
             subject_property: data.subject_property as any,
             mapStyle: data.map_style
-          }))
+          }), 'load map data')
         }
       } catch (error) {
         console.error('Error loading map:', error)
@@ -160,17 +160,17 @@ export default function MapEditor() {
   }, [mapData.overlays])
 
   const handleDeleteLayer = (id: string) => {
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
-      overlays: prev.overlays.filter(o => o.id !== id)
-    }))
+      overlays: prev.overlays.filter((o: MapOverlay) => o.id !== id)
+    }), 'delete layer')
     setSelectedLayer(null)
   }
 
   const handleTextEdit = (id: string, text: string, style: any) => {
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
-      overlays: prev.overlays.map(o =>
+      overlays: prev.overlays.map((o: MapOverlay) =>
         o.id === id ? {
           ...o,
           properties: {
@@ -195,7 +195,7 @@ export default function MapEditor() {
           }
         } : o
       )
-    }))
+    }), 'edit text')
   }
 
   const handleContainerEdit = (id: string, style: any) => {
@@ -203,9 +203,9 @@ export default function MapEditor() {
       overlays: mapData.overlays,
       overlayCount: mapData.overlays.length
     })
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
-      overlays: prev.overlays.map(o => 
+      overlays: prev.overlays.map((o: MapOverlay) => 
         o.id === id ? {
           ...o,
           properties: {
@@ -215,7 +215,7 @@ export default function MapEditor() {
           }
         } : o
       )
-    }))
+    }), 'edit container')
   }
 
   const handleShapeEdit = (id: string, style: {
@@ -229,9 +229,9 @@ export default function MapEditor() {
       overlays: mapData.overlays,
       overlayCount: mapData.overlays.length
     })
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
-      overlays: prev.overlays.map(o => 
+      overlays: prev.overlays.map((o: MapOverlay) => 
         o.id === id ? {
           ...o,
           properties: {
@@ -246,7 +246,7 @@ export default function MapEditor() {
           }
         } : o
       )
-    }))
+    }), 'edit shape')
   }
 
   const { overlaysRef, addOverlayToMap, removeOverlay } = useMapOverlays(
@@ -287,10 +287,10 @@ export default function MapEditor() {
     applyMapStyle(googleMapRef.current, style)
 
     // Update map data with new style
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
       mapStyle: style
-    }))
+    }), 'change map style')
   }
 
   const handleCenterSubjectProperty = () => {
@@ -352,10 +352,10 @@ export default function MapEditor() {
         }
 
         addOverlayToMap(overlay, googleMapRef.current!)
-        setMapData(prev => ({
+        setMapDataWithLog((prev: MapData) => ({
           ...prev,
           overlays: [...prev.overlays, overlay]
-        }))
+        }), 'add image')
       }
       img.src = e.target.result as string
     }
@@ -397,10 +397,10 @@ export default function MapEditor() {
     }
 
     addOverlayToMap(overlay, googleMapRef.current)
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
       overlays: [...prev.overlays, overlay]
-    }))
+    }), 'add logo')
   }
 
   const handleTextAdd = (text: string, style: { 
@@ -432,10 +432,10 @@ export default function MapEditor() {
     }
 
     addOverlayToMap(overlay, googleMapRef.current)
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
       overlays: [...prev.overlays, overlay]
-    }))
+    }), 'add text')
   }
 
   const handleBusinessAdd = (business: {
@@ -470,10 +470,10 @@ export default function MapEditor() {
     }
 
     addOverlayToMap(overlay, googleMapRef.current)
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
       overlays: [...prev.overlays, overlay]
-    }))
+    }), 'add business')
   }
 
   const handleGroupAdd = (group: {
@@ -520,10 +520,10 @@ export default function MapEditor() {
     }
 
     addOverlayToMap(overlay, googleMapRef.current)
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
       overlays: [...prev.overlays, overlay]
-    }))
+    }), 'add group')
   }
 
   const handleShapeAdd = (shape: {
@@ -646,10 +646,10 @@ export default function MapEditor() {
       e.overlay.setMap(null)
 
       addOverlayToMap(overlay, googleMapRef.current!)
-      setMapData(prev => ({
+      setMapDataWithLog((prev: MapData) => ({
         ...prev,
         overlays: [...prev.overlays, overlay]
-      }))
+      }), 'add shape')
     })
 
     drawingManager.setMap(googleMapRef.current)
@@ -672,7 +672,7 @@ export default function MapEditor() {
   }) => {
     if (!mapData.subject_property) return
 
-    setMapData(prev => ({
+    setMapDataWithLog((prev: MapData) => ({
       ...prev,
       subject_property: prev.subject_property ? {
         ...prev.subject_property,
@@ -691,7 +691,7 @@ export default function MapEditor() {
           ...style
         }
       } : null
-    }))
+    }), 'edit subject property')
   }
 
   const handleMapDownload = async () => {
