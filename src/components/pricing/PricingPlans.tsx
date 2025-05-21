@@ -42,7 +42,7 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
         body: JSON.stringify({ 
           userId: user?.id, 
           plan,
-          returnUrl: isInMapEditor ? window.location.href : '/'
+          returnUrl: '/' // Always redirect to home page
         })
       })
 
