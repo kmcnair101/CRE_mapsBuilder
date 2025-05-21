@@ -65,7 +65,7 @@ export function useMapInitialization(
     if (drawingManagerRef.current) {
       drawingManagerRef.current.setDrawingMode(mode)
     }
-  }, [])
+  }, []) 
 
   const getSafePosition = useCallback((map: google.maps.Map): google.maps.LatLng => {
     const center = map.getCenter()
