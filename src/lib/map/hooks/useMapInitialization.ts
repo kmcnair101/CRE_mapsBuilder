@@ -34,23 +34,27 @@ export function useMapInitialization(
     }
 
     try {
-      cleanupSubjectProperty()
+      // Only create a new overlay if one doesn't exist
+      if (!subjectPropertyOverlayRef.current) {
+        console.log('[useMapInitialization] Creating new subject property overlay')
+        const overlay = await createSubjectPropertyOverlay(
+          mapData,
+          (updates) => {
+            setMapData(prev => ({
+              ...prev,
+              subject_property: prev.subject_property ? {
+                ...prev.subject_property,
+                ...updates
+              } : null
+            }))
+          }
+        )
 
-      const overlay = await createSubjectPropertyOverlay(
-        mapData,
-        (updates) => {
-          setMapData(prev => ({
-            ...prev,
-            subject_property: prev.subject_property ? {
-              ...prev.subject_property,
-              ...updates
-            } : null
-          }))
-        }
-      )
-
-      overlay.setMap(googleMapRef.current)
-      subjectPropertyOverlayRef.current = overlay
+        overlay.setMap(googleMapRef.current)
+        subjectPropertyOverlayRef.current = overlay
+      } else {
+        console.log('[useMapInitialization] Subject property overlay already exists')
+      }
     } catch (error) {
       console.error('Error creating subject property overlay:', error)
     }
