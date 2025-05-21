@@ -54,7 +54,7 @@ export function useMapInitialization(
       cleanupSubjectProperty()
       return
     }
-
+ 
     try {
       // Only create a new overlay if one doesn't exist
       if (!subjectPropertyOverlayRef.current) {
