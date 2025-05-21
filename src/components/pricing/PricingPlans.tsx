@@ -7,9 +7,10 @@ import { supabase } from '@/lib/supabase/client'
 interface PricingPlanProps {
   isOpen: boolean
   onClose: () => void
+  onSave: (e: React.FormEvent) => Promise<void>
 }
 
-export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
+export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -20,36 +21,8 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
     setError('')
 
     try {
-      // Determine if we're in the map editor
-      const isInMapEditor = location.pathname.startsWith('/maps/')
-      
-      // If in map editor, save the current state
-      if (isInMapEditor) {
-        // Get the map ID from the URL
-        const mapId = location.pathname.split('/').pop()
-        if (mapId) {
-          // Get the current map data from localStorage
-          const pendingMapEdits = localStorage.getItem('pendingMapEdits')
-          if (pendingMapEdits) {
-            try {
-              // Save the map to the database
-              const { error: saveError } = await supabase
-                .from('maps')
-                .update(JSON.parse(pendingMapEdits))
-                .eq('id', mapId)
-
-              if (saveError) {
-                console.error('Error saving map before subscription:', saveError)
-              }
-
-              // Clear the pending edits from localStorage
-              localStorage.removeItem('pendingMapEdits')
-            } catch (err) {
-              console.error('Error processing map data:', err)
-            }
-          }
-        }
-      }
+      // Call handleSave before proceeding with subscription
+      await onSave(new Event('submit') as React.FormEvent)
 
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -57,7 +30,7 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
         body: JSON.stringify({ 
           userId: user?.id, 
           plan,
-          returnUrl: '/' // Always redirect to home page
+          returnUrl: '/'
         })
       })
 
@@ -67,7 +40,7 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
       } else {
         throw new Error('Failed to redirect to checkout.')
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Subscription error:', err)
       setError('Something went wrong. Please try again.')
     } finally {

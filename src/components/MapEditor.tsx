@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import type { MapData, MapOverlay, MapStyleName } from '@/lib/types'
 import { useMapStyle } from '@/lib/map/hooks/useMapStyle'
 import { DownloadMapModal } from './modals/DownloadMapModal'
+import { PricingPlans } from './pricing/PricingPlans'
 
 export default function MapEditor() {
   const { id } = useParams()
@@ -31,6 +32,7 @@ export default function MapEditor() {
   const [downloadModalOpen, setDownloadModalOpen] = useState(false)
   const [downloadWidth, setDownloadWidth] = useState(1280)
   const [downloadHeight, setDownloadHeight] = useState(720)
+  const [showPricingPlans, setShowPricingPlans] = useState(false)
 
   const [mapData, setMapData] = useState<MapData>(() => {
     const initialTitle = location.state?.subject_property?.name || 
@@ -961,6 +963,12 @@ export default function MapEditor() {
         }}
         mapRef={mapRef}
         mapData={mapData}
+      />
+
+      <PricingPlans 
+        isOpen={showPricingPlans} 
+        onClose={() => setShowPricingPlans(false)}
+        onSave={handleSave}
       />
     </div>
   )
