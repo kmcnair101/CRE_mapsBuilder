@@ -10,6 +10,8 @@ interface PricingPlanProps {
 }
 
 export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
+  console.log('[PricingPlans] Received onSave prop:', typeof onSave, onSave)
+  
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -21,6 +23,7 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
 
     try {
       console.log('[PricingPlans] handleSubscribe called for plan:', plan)
+      console.log('[PricingPlans] onSave in handleSubscribe:', typeof onSave, onSave)
 
       if (onSave) {
         console.log('[PricingPlans] Calling onSave before Stripe redirect')

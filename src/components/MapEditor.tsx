@@ -937,7 +937,7 @@ export default function MapEditor() {
     )
   }
 
-  console.log('[MapEditor] Rendering PricingPlans with onSave')
+  console.log('[MapEditor] Rendering PricingPlans with onSave:', typeof handleSaveOnly, handleSaveOnly)
   return (
     <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
       <div className="w-56 bg-gray-900 flex flex-col">
