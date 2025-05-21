@@ -19,7 +19,7 @@ export function useMapInitialization(
   const subjectPropertyOverlayRef = useRef<google.maps.OverlayView | null>(null)
   const isInitializedRef = useRef(false)
   const { handleMapStyleChange } = useMapStyle()
-
+ 
   const cleanupSubjectProperty = useCallback(() => {
     console.log('[useMapInitialization] cleanupSubjectProperty called:', {
       hasOverlay: !!subjectPropertyOverlayRef.current,
