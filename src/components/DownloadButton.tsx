@@ -14,13 +14,20 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
 
-
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+    
+    console.log('[DownloadButton] Button clicked')
+    console.log('[DownloadButton] hasAccess() result:', hasAccess())
+    
     if (!hasAccess()) {
+      console.log('[DownloadButton] User does not have access, showing pricing plans')
       setShowPricingPlans(true)
       return
     }
+    
+    console.log('[DownloadButton] User has access, calling onDownload')
     onDownload()
   }
 
@@ -55,7 +62,10 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
 
       <PricingPlans 
         isOpen={showPricingPlans} 
-        onClose={() => setShowPricingPlans(false)} 
+        onClose={() => {
+          console.log('[DownloadButton] Pricing plans modal closed')
+          setShowPricingPlans(false)
+        }} 
       />
     </>
   )
