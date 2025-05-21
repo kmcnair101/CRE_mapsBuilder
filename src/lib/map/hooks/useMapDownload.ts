@@ -143,13 +143,16 @@ export function useMapDownload() {
         }
       })
 
-      // Trigger download
-      const link = document.createElement('a')
-      link.download = `${forThumbnail ? 'thumbnail' : 'map'}.png`
-      link.href = canvas.toDataURL('image/png', 1.0)
-      link.click()
-      
-      return true
+      // Only trigger download if not generating thumbnail
+      if (!forThumbnail) {
+        const link = document.createElement('a')
+        link.download = 'map.png'
+        link.href = canvas.toDataURL('image/png', 1.0)
+        link.click()
+      }
+
+      // Return the data URL
+      return canvas.toDataURL('image/png', 1.0)
     } finally {
     }
   }, [])
