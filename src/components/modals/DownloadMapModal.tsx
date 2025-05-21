@@ -260,6 +260,32 @@ export function DownloadMapModal({
     }
   }
 
+  useEffect(() => {
+    console.log('[DownloadMapModal] Modal state changed:', {
+      open,
+      hasSubjectProperty: !!mapData.subject_property,
+      subjectPropertyData: mapData.subject_property
+    })
+  }, [open, mapData.subject_property])
+
+  useEffect(() => {
+    return () => {
+      console.log('[DownloadMapModal] Modal cleanup:', {
+        hasSubjectProperty: !!mapData.subject_property,
+        subjectPropertyData: mapData.subject_property
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (googleMapRef.current) {
+      console.log('[DownloadMapModal] Map ready:', {
+        hasSubjectProperty: !!previewMapData.subject_property,
+        subjectPropertyData: previewMapData.subject_property
+      })
+    }
+  }, [googleMapRef.current])
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full h-[800px]">
