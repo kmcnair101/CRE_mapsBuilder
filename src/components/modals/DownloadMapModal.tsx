@@ -91,10 +91,14 @@ export function DownloadMapModal({
     })
 
     // Set preview data only once when modal opens
-    setPreviewMapData((prev: typeof mapData) => ({
-      ...prev,
-      subject_property: { ...mapData.subject_property } // Create a new object to force update
-    }))
+    setPreviewMapData((prev: typeof mapData) => {
+      // Create a new object to force update, but preserve the subject property reference
+      const newData = { ...prev }
+      if (mapData.subject_property) {
+        newData.subject_property = mapData.subject_property
+      }
+      return newData
+    })
 
     isInitializedRef.current = true
     console.log('[DownloadMapModal] Initialization complete')
@@ -103,7 +107,7 @@ export function DownloadMapModal({
       console.log('[DownloadMapModal] Cleanup running')
       isInitializedRef.current = false
     }
-  }, [open, mapData.subject_property])
+  }, [open]) // Remove mapData.subject_property from dependencies
 
   // Add logging for map initialization
   useEffect(() => {
