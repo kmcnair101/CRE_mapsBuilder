@@ -984,6 +984,7 @@ export default function MapEditor() {
               }}
               loading={downloading}
               className="flex-1 flex items-center justify-center px-2 py-1.5 rounded-md text-sm font-medium bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
+              handleSaveOnly={handleSaveOnly}
             />
           </div>
         </div>

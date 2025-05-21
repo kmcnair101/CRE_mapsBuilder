@@ -10,9 +10,10 @@ interface DownloadButtonProps {
   onDownload: () => void
   className?: string
   loading?: boolean
+  handleSaveOnly?: () => Promise<void> // <-- add this
 }
 
-export function DownloadButton({ onDownload, className, loading = false }: DownloadButtonProps) {
+export function DownloadButton({ onDownload, className, loading = false, handleSaveOnly }: DownloadButtonProps) {
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
   // Get handleSaveOnly from context or props, or pass it down from parent
@@ -71,7 +72,7 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
           console.log('[DownloadButton] Pricing plans modal closed')
           setShowPricingPlans(false)
         }} 
-        onSave={handleSaveOnly} // <-- pass this prop!
+        onSave={handleSaveOnly} // <-- now this is defined!
       />
     </>
   )
