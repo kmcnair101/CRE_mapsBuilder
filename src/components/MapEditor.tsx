@@ -143,10 +143,16 @@ export default function MapEditor() {
       overlays: mapData.overlays,
       overlayCount: mapData.overlays.length
     })
+    if (mapData.overlays.length === 0) {
+      console.warn('[MapEditor] overlays array is empty after state update!')
+    }
   }, [mapData.overlays])
 
   useEffect(() => {
     console.log('[MapEditor] subject_property after state update:', mapData.subject_property)
+    if (!mapData.subject_property) {
+      console.warn('[MapEditor] subject_property is null after state update!')
+    }
   }, [mapData.subject_property])
 
   useEffect(() => {
@@ -870,10 +876,16 @@ export default function MapEditor() {
   }, [])
 
   // Wrap setMapData to add logging
-  const setMapDataWithLog = (updater) => {
+  const setMapDataWithLog = (updater, reason = '') => {
     setMapData(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      console.log('[MapEditor] setMapData called:', { prev, next })
+      console.log('[MapEditor] setMapData called:', { prev, next, reason })
+      if (next.overlays?.length === 0) {
+        console.warn('[MapEditor] overlays will be empty after setMapData!', { reason })
+      }
+      if (!next.subject_property) {
+        console.warn('[MapEditor] subject_property will be null after setMapData!', { reason })
+      }
       return next
     })
   }
