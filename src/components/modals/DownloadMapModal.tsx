@@ -75,22 +75,54 @@ export function DownloadMapModal({
   // Add a ref to track if we've already initialized
   const isInitializedRef = useRef(false)
 
-  // Modify the useEffect that handles map initialization
+  // Add more detailed logging for initialization
   useEffect(() => {
+    console.log('[DownloadMapModal] Initialization effect triggered:', {
+      open,
+      isInitialized: isInitializedRef.current,
+      hasSubjectProperty: !!mapData.subject_property
+    })
+
     if (!open || isInitializedRef.current) return
 
+    console.log('[DownloadMapModal] Setting preview data:', {
+      currentSubjectProperty: previewMapData.subject_property,
+      newSubjectProperty: mapData.subject_property
+    })
+
     // Set preview data only once when modal opens
-    setPreviewMapData(prev => ({
+    setPreviewMapData((prev: typeof mapData) => ({
       ...prev,
       subject_property: { ...mapData.subject_property } // Create a new object to force update
     }))
 
     isInitializedRef.current = true
+    console.log('[DownloadMapModal] Initialization complete')
 
     return () => {
+      console.log('[DownloadMapModal] Cleanup running')
       isInitializedRef.current = false
     }
   }, [open, mapData.subject_property])
+
+  // Add logging for map initialization
+  useEffect(() => {
+    console.log('[DownloadMapModal] Map initialization effect:', {
+      hasMap: !!googleMapRef.current,
+      hasSubjectProperty: !!previewMapData.subject_property,
+      mapCenter: googleMapRef.current?.getCenter()?.toJSON(),
+      mapZoom: googleMapRef.current?.getZoom()
+    })
+  }, [googleMapRef.current, previewMapData.subject_property])
+
+  // Add logging for subject property changes
+  useEffect(() => {
+    console.log('[DownloadMapModal] Subject property changed:', {
+      inMapData: mapData.subject_property,
+      inPreviewData: previewMapData.subject_property,
+      isInitialized: isInitializedRef.current
+    })
+  }, [mapData.subject_property, previewMapData.subject_property])
 
   // Sync preview map with main map data
   useEffect(() => {
