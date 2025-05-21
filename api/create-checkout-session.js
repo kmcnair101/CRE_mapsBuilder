@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     if (!priceId || !process.env.NEXT_PUBLIC_SITE_URL) {
       return res.status(500).json({ error: 'Stripe price ID or site URL missing' });
     }
-
+ 
     // Use the provided returnUrl or default to home page
     const finalReturnUrl = returnUrl || '/';
 
