@@ -82,7 +82,7 @@ export function DownloadMapModal({
     // Set preview data only once when modal opens
     setPreviewMapData(prev => ({
       ...prev,
-      subject_property: mapData.subject_property
+      subject_property: { ...mapData.subject_property } // Create a new object to force update
     }))
 
     isInitializedRef.current = true
