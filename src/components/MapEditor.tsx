@@ -455,7 +455,7 @@ export default function MapEditor() {
     }
   }) => {
     if (!googleMapRef.current) return
-
+ 
     const safePosition = getSafePosition(googleMapRef.current)
 
     const overlay: MapOverlay = {
