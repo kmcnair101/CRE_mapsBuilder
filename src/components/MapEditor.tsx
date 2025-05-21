@@ -33,7 +33,6 @@ export default function MapEditor() {
   const [downloadHeight, setDownloadHeight] = useState(720)
 
   const [mapData, setMapData] = useState<MapData>(() => {
-    // Default initialization
     const initialTitle = location.state?.subject_property?.name || 
                         location.state?.subject_property?.address || 
                         'New Map'
@@ -49,7 +48,6 @@ export default function MapEditor() {
     }
   })
 
-  // Add useEffect to check for saved state on mount and when browser back button is used
   useEffect(() => {
     const checkForSavedState = () => {
       const pendingMapId = localStorage.getItem('pendingMapId')
@@ -75,20 +73,15 @@ export default function MapEditor() {
       }
     }
 
-    // Check on mount
     checkForSavedState()
 
-    // Listen for browser navigation and bfcache restore
     window.addEventListener('popstate', checkForSavedState)
     window.addEventListener('pageshow', (event) => {
-      // @ts-ignore
       if (event.persisted) checkForSavedState()
     })
 
     return () => {
       window.removeEventListener('popstate', checkForSavedState)
-      // Note: We can't remove the pageshow listener because it's an anonymous function
-      // This is fine since the component is rarely unmounted/remounted
     }
   }, [id])
 
@@ -109,13 +102,6 @@ export default function MapEditor() {
         if (error) throw error
 
         if (data) {
-          console.log('[MapEditor] Loading map data - Before setting state:', {
-            overlays: data.overlays,
-            overlayCount: data.overlays?.length || 0,
-            center_lat: data.center_lat,
-            center_lng: data.center_lng,
-            zoom_level: data.zoom_level
-          })
           setMapDataWithLog((prev: MapData) => ({
             ...prev,
             title: data.title,
@@ -137,27 +123,11 @@ export default function MapEditor() {
     loadMapData()
   }, [id, user])
 
-  // Add effect to log overlays after state update
-  useEffect(() => {
-    console.log('[MapEditor] Map data after state update:', {
-      overlays: mapData.overlays,
-      overlayCount: mapData.overlays.length
-    })
-    if (mapData.overlays.length === 0) {
-      console.warn('[MapEditor] overlays array is empty after state update!')
-    }
-  }, [mapData.overlays])
+  useEffect(() => {}, [mapData.overlays])
 
-  useEffect(() => {
-    console.log('[MapEditor] subject_property after state update:', mapData.subject_property)
-    if (!mapData.subject_property) {
-      console.warn('[MapEditor] subject_property is null after state update!')
-    }
-  }, [mapData.subject_property])
+  useEffect(() => {}, [mapData.subject_property])
 
-  useEffect(() => {
-    console.log('[MapEditor] overlays:', mapData.overlays)
-  }, [mapData.overlays])
+  useEffect(() => {}, [mapData.overlays])
 
   const handleDeleteLayer = (id: string) => {
     setMapDataWithLog((prev: MapData) => ({
@@ -199,10 +169,6 @@ export default function MapEditor() {
   }
 
   const handleContainerEdit = (id: string, style: any) => {
-    console.log('[MapEditor] Before container edit:', {
-      overlays: mapData.overlays,
-      overlayCount: mapData.overlays.length
-    })
     setMapDataWithLog((prev: MapData) => ({
       ...prev,
       overlays: prev.overlays.map((o: MapOverlay) => 
@@ -225,10 +191,6 @@ export default function MapEditor() {
     fillOpacity: number
     strokeOpacity: number
   }) => {
-    console.log('[MapEditor] Before shape edit:', {
-      overlays: mapData.overlays,
-      overlayCount: mapData.overlays.length
-    })
     setMapDataWithLog((prev: MapData) => ({
       ...prev,
       overlays: prev.overlays.map((o: MapOverlay) => 
@@ -283,10 +245,8 @@ export default function MapEditor() {
   }) => {
     if (!googleMapRef.current) return
 
-    // Apply style to the map using the useMapStyle hook
     applyMapStyle(googleMapRef.current, style)
 
-    // Update map data with new style
     setMapDataWithLog((prev: MapData) => ({
       ...prev,
       mapStyle: style
@@ -717,15 +677,6 @@ export default function MapEditor() {
       const mapType = googleMapRef.current.getMapTypeId()
       const styles = googleMapRef.current.get('styles')
 
-      console.log('[MapEditor] Before saving - Current overlays:', {
-        overlays: mapData.overlays,
-        overlayCount: mapData.overlays.length,
-        center_lat: mapData.center_lat,
-        center_lng: mapData.center_lng,
-        zoom_level: mapData.zoom_level
-      })
-
-      // Capture current positions and properties of all overlays
       const updatedOverlays = mapData.overlays.map(overlay => {
         const currentOverlay = overlaysRef.current[overlay.id]
         
@@ -733,7 +684,6 @@ export default function MapEditor() {
           let updatedPosition = overlay.position
           let updatedProperties = { ...overlay.properties }
           
-          // Get current position based on overlay type
           if (overlay.type === 'shape' && 'shape' in currentOverlay) {
             const shape = currentOverlay.shape as google.maps.Rectangle | google.maps.Circle | google.maps.Polygon
             let position: google.maps.LatLng | null = null
@@ -755,7 +705,6 @@ export default function MapEditor() {
               }
             }
             
-            // Update shape properties
             updatedProperties = {
               ...updatedProperties,
               style: {
@@ -767,7 +716,6 @@ export default function MapEditor() {
               }
             }
           } else if ('getPosition' in currentOverlay) {
-            // Handle custom overlays (text, images, etc.)
             const position = currentOverlay.getPosition()
             if (position) {
               updatedPosition = {
@@ -787,15 +735,8 @@ export default function MapEditor() {
         return overlay
       })
 
-      console.log('[MapEditor] After updating overlay positions:', {
-        overlays: updatedOverlays,
-        overlayCount: updatedOverlays.length
-      })
-
-      // Generate thumbnail before saving
       const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
 
-      // Simplify the map style object
       const simplifiedMapStyle = {
         type: mapType as MapStyleName | 'satellite' | 'terrain',
         customStyles: styles ? styles.map((style: any) => ({
@@ -805,7 +746,6 @@ export default function MapEditor() {
         })) : []
       }
 
-      // Prepare complete map data with simplified structure
       const mapUpdate = {
         user_id: user.id,
         title: mapData.title,
@@ -817,11 +757,6 @@ export default function MapEditor() {
         thumbnail,
         map_style: simplifiedMapStyle
       }
-
-      console.log('[MapEditor] Final map data being saved:', {
-        overlays: mapUpdate.overlays,
-        overlayCount: mapUpdate.overlays.length
-      })
 
       if (id) {
         const { error } = await supabase
@@ -867,25 +802,14 @@ export default function MapEditor() {
   useEffect(() => {
     return () => {
       if (googleMapRef.current) {
-        console.log('[MapEditor] Cleanup: clearing overlayMapTypes on unmount or dependency change')
         googleMapRef.current.overlayMapTypes.clear()
-      } else {
-        console.log('[MapEditor] Cleanup: googleMapRef.current is null')
       }
     }
   }, [])
 
-  // Wrap setMapData to add logging
   const setMapDataWithLog = (updater, reason = '') => {
     setMapData(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      console.log('[MapEditor] setMapData called:', { prev, next, reason })
-      if (next.overlays?.length === 0) {
-        console.warn('[MapEditor] overlays will be empty after setMapData!', { reason })
-      }
-      if (!next.subject_property) {
-        console.warn('[MapEditor] subject_property will be null after setMapData!', { reason })
-      }
       return next
     })
   }
@@ -900,9 +824,7 @@ export default function MapEditor() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
-      {/* Left Menu */}
       <div className="w-56 bg-gray-900 flex flex-col">
-        {/* Title and Actions Section */}
         <div className="flex-shrink-0 p-2 border-b border-gray-700">
           <div 
             className="relative group mb-2"
@@ -940,7 +862,6 @@ export default function MapEditor() {
             </button>
             <DownloadButton
               onDownload={() => {
-                console.log('[MapEditor] Download button clicked')
                 setDownloadModalOpen(true)
               }}
               loading={downloading}
@@ -949,7 +870,6 @@ export default function MapEditor() {
           </div>
         </div>
 
-        {/* Map Controls */}
         <div className="flex-1 overflow-y-auto">
           <MapControls
             onBusinessAdd={handleBusinessAdd}
@@ -983,7 +903,6 @@ export default function MapEditor() {
         </div>
       </div>
 
-      {/* Map Container */}
       <div className="flex-1 relative">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-full h-full max-h-full flex items-center justify-center">
@@ -1006,19 +925,15 @@ export default function MapEditor() {
         width={downloadWidth}
         height={downloadHeight}
         onWidthChange={(w) => {
-          console.log('[MapEditor] Download modal width changed:', w)
           setDownloadWidth(w)
         }}
         onHeightChange={(h) => {
-          console.log('[MapEditor] Download modal height changed:', h)
           setDownloadHeight(h)
         }}
         onClose={() => {
-          console.log('[MapEditor] Download modal closed')
           setDownloadModalOpen(false)
         }}
         onDownload={async (center, zoom) => {
-          console.log('[MapEditor] Download modal onDownload called', { center, zoom })
           setDownloading(true)
           try {
             const map = googleMapRef.current
@@ -1036,7 +951,6 @@ export default function MapEditor() {
               map.setCenter(originalCenter)
               map.setZoom(originalZoom)
             }
-            console.log('[MapEditor] Download completed')
           } catch (error) {
             console.error('[MapEditor] Error during download:', error)
           } finally {

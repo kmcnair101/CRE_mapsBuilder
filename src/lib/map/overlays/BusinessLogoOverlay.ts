@@ -32,10 +32,6 @@ export function createBusinessLogoOverlay(
     constructor() {
       super();
       this.position = options.position;
-      console.log('[BUSINESS_OVERLAY] Initial position:', {
-        lat: this.position.lat(),
-        lng: this.position.lng()
-      });
       this.setMap(map);
     }
 
@@ -48,27 +44,13 @@ export function createBusinessLogoOverlay(
 
       const projection = this.getProjection();
       if (!projection) {
-        console.log('[BUSINESS_OVERLAY] No projection available');
         return;
       }
 
       const point = projection.fromLatLngToDivPixel(this.position);
       if (!point) {
-        console.log('[BUSINESS_OVERLAY] Could not convert position to pixels');
         return;
       }
-
-      // Log both LatLng and pixel coordinates
-      console.log('[BUSINESS_OVERLAY] Drawing at:', {
-        latLng: {
-          lat: this.position.lat(),
-          lng: this.position.lng()
-        },
-        pixels: {
-          x: point.x,
-          y: point.y
-        }
-      });
 
       this.div.style.left = `${point.x}px`;
       this.div.style.top = `${point.y}px`;
@@ -81,17 +63,6 @@ export function createBusinessLogoOverlay(
     }
 
     setPosition(position: google.maps.LatLng) {
-      console.log('[BUSINESS_OVERLAY] Position update:', {
-        from: {
-          lat: this.position.lat(),
-          lng: this.position.lng()
-        },
-        to: {
-          lat: position.lat(),
-          lng: position.lng()
-        }
-      });
-      
       this.position = position;
       this.draw();
     }
@@ -100,22 +71,9 @@ export function createBusinessLogoOverlay(
   }
 
   // Add map event listeners to track when drawing might occur
-  map.addListener('bounds_changed', () => {
-    console.log('[BUSINESS_OVERLAY] Map bounds changed, current position:', {
-      lat: options.position.lat(),
-      lng: options.position.lng()
-    });
-  });
+  map.addListener('bounds_changed', () => {});
 
-  map.addListener('zoom_changed', () => {
-    console.log('[BUSINESS_OVERLAY] Map zoom changed:', {
-      zoom: map.getZoom(),
-      position: {
-        lat: options.position.lat(),
-        lng: options.position.lng()
-      }
-    });
-  });
+  map.addListener('zoom_changed', () => {});
 
   return new BusinessLogoOverlay();
 }

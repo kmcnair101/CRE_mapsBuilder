@@ -56,17 +56,9 @@ export function createShapeOverlay(
       super()
       this.position = position
       this.properties = properties
-      console.log('[ShapeOverlay] Constructor:', {
-        position: position.toJSON(),
-        properties
-      })
     }
 
     setMap(map: google.maps.Map | null) {
-      console.log('[ShapeOverlay] setMap called:', {
-        map: !!map,
-        overlayId: overlay.id
-      })
       super.setMap(map)
     }
 
@@ -252,13 +244,6 @@ export function createShapeOverlay(
     }
 
     onAdd() {
-      const currentMap = this.getMap()
-      console.log('[ShapeOverlay] onAdd called:', {
-        overlayId: overlay.id,
-        overlayInstance: this,
-        map: currentMap,
-        mapId: currentMap ? (currentMap as any).__copilotDebugId || currentMap.getDiv()?.id || 'no-id' : null
-      })
       // Create controls
       this.controlsDiv = this.createControls()
       const panes = this.getPanes()
@@ -413,18 +398,8 @@ export function createShapeOverlay(
       const overlayProjection = this.getProjection()
       const point = overlayProjection.fromLatLngToDivPixel(this.position)
       if (point) {
-        // Use the content div's dimensions instead of the container div
         const width = this.contentDiv.offsetWidth
         const height = this.contentDiv.offsetHeight
-        
-        console.log('[ShapeOverlay] Position calculation:', {
-          originalPoint: point.toJSON(),
-          dimensions: { width, height },
-          calculatedPosition: {
-            left: point.x - width / 2,
-            top: point.y - height / 2
-          }
-        })
         
         this.div.style.left = `${point.x - width / 2}px`
         this.div.style.top = `${point.y - height / 2}px`
@@ -433,12 +408,6 @@ export function createShapeOverlay(
 
     onRemove() {
       const currentMap = this.getMap()
-      console.log('[ShapeOverlay] onRemove called:', {
-        overlayId: overlay.id,
-        overlayInstance: this,
-        map: currentMap,
-        mapId: currentMap ? (currentMap as any).__copilotDebugId || currentMap.getDiv()?.id || 'no-id' : null
-      })
       this.cleanupFunctions.forEach(cleanup => cleanup())
       this.cleanupFunctions = []
       
@@ -473,11 +442,6 @@ export function createShapeOverlay(
       e.stopPropagation()
       this.isDragging = true
       this.startPos = { x: e.clientX, y: e.clientY }
-      console.log('[ShapeOverlay] Drag start:', {
-        startPos: this.startPos,
-        currentPosition: this.position.toJSON(),
-        shapeType: this.properties.shapeType
-      })
       document.body.style.cursor = 'move'
     }
 
@@ -488,23 +452,10 @@ export function createShapeOverlay(
       const dy = e.clientY - this.startPos.y
       const proj = this.getProjection()
       const point = proj.fromLatLngToDivPixel(this.position)
-      
-      console.log('[ShapeOverlay] Drag move:', {
-        dx,
-        dy,
-        currentPoint: point?.toJSON(),
-        currentPosition: this.position.toJSON()
-      })
-      
       if (point) {
         const newPoint = new google.maps.Point(point.x + dx, point.y + dy)
         const newPosition = proj.fromDivPixelToLatLng(newPoint)
         if (newPosition) {
-          console.log('[ShapeOverlay] New position calculated:', {
-            newPosition: newPosition.toJSON(),
-            shapeType: this.properties.shapeType
-          })
-          
           this.position = newPosition
           
           // Update the underlying shape based on its type
@@ -517,12 +468,6 @@ export function createShapeOverlay(
               const sw = bounds.getSouthWest()
               const width = google.maps.geometry.spherical.computeDistanceBetween(ne, new google.maps.LatLng(ne.lat(), sw.lng()))
               const height = google.maps.geometry.spherical.computeDistanceBetween(ne, new google.maps.LatLng(sw.lat(), ne.lng()))
-              
-              console.log('[ShapeOverlay] Rectangle dimensions:', {
-                width,
-                height,
-                currentBounds: bounds.toJSON()
-              })
               
               const newBounds = new google.maps.LatLngBounds(
                 google.maps.geometry.spherical.computeOffset(newPosition, -height/2, 180),
@@ -540,7 +485,6 @@ export function createShapeOverlay(
               return google.maps.geometry.spherical.computeOffset(newPosition, offset, heading)
             })
             this.shape.setPath(newPoints)
-            console.log('[ShapeOverlay] New polygon points:', newPoints.map(p => p.toJSON()))
           }
           
           this.draw()
@@ -551,10 +495,6 @@ export function createShapeOverlay(
 
     private handleDragEnd = () => {
       if (this.isDragging) {
-        console.log('[ShapeOverlay] Drag end:', {
-          finalPosition: this.position.toJSON(),
-          shapeType: this.properties.shapeType
-        })
         this.isDragging = false
         document.body.style.cursor = 'default'
       }
@@ -567,19 +507,6 @@ export function createShapeOverlay(
   )
 
   shapeOverlay.setMap(map)
-
-  console.log('[ShapeOverlay] Overlay instance created and set on map:', {
-    overlayId: overlay.id,
-    map: !!map
-  })
-
-  console.log('Saving position:', {
-    original: overlay.position,
-    serialized: {
-      lat: typeof overlay.position.lat === 'function' ? overlay.position.lat() : overlay.position.lat,
-      lng: typeof overlay.position.lng === 'function' ? overlay.position.lng() : overlay.position.lng,
-    }
-  })
 
   return shapeOverlay
 }

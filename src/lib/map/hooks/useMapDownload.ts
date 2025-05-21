@@ -69,11 +69,8 @@ export function useMapDownload() {
   ) => {
     try {
       const access = hasAccess()
-      console.log('[useMapDownload] handleDownload called', { width, height, forThumbnail })
-      console.log('[useMapDownload] Subscription status:', access ? 'active' : 'inactive')
 
       if (!access) {
-        console.warn('[useMapDownload] Download blocked: No active subscription')
         alert('You need an active subscription to download maps.')
         return false
       }
@@ -108,10 +105,8 @@ export function useMapDownload() {
 
       // Wait a bit to ensure all tiles and overlays are rendered
       await new Promise(resolve => setTimeout(resolve, 4000))
-      console.log('[useMapDownload] Waited for tiles and overlays to render')
 
       // Generate image
-      console.log('[useMapDownload] Calling html2canvas...')
       const canvas = await html2canvas(mapRef.current!, {
         useCORS: true,
         allowTaint: true,
@@ -147,18 +142,15 @@ export function useMapDownload() {
           }))
         }
       })
-      console.log('[useMapDownload] html2canvas finished, got canvas:', !!canvas)
 
       // Trigger download
       const link = document.createElement('a')
       link.download = `${forThumbnail ? 'thumbnail' : 'map'}.png`
       link.href = canvas.toDataURL('image/png', 1.0)
       link.click()
-      console.log('[useMapDownload] Download triggered for', link.download)
       
       return true
     } finally {
-      console.log('[useMapDownload] handleDownload cleanup complete')
     }
   }, [])
 
@@ -313,9 +305,7 @@ export function useMapDownload() {
               }))
             }
           })
-          console.log('[useMapDownload] html2canvas finished, got canvas:', !!canvas)
         } catch (err) {
-          console.error('[useMapDownload] html2canvas threw an error:', err)
           throw err
         }
 

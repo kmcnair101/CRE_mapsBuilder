@@ -49,58 +49,13 @@ export function DownloadMapModal({
     { setMapData: setPreviewMapData }
   )
 
-  // --- LOG: Check incoming mapData ---
-  useEffect(() => {
-    console.log('[DownloadMapModal] Incoming mapData:', JSON.stringify(mapData, null, 2))
-  }, [mapData])
-
-  // --- LOG: Track setPreviewMapData ---
-  useEffect(() => {
-    console.log('[DownloadMapModal] setPreviewMapData called:', previewMapData)
-  }, [previewMapData])
-
-  // --- LOG: Verify googleMapRef is ready ---
-  useEffect(() => {
-    console.log('[DownloadMapModal] googleMapRef.current:', googleMapRef.current)
-  }, [googleMapRef.current])
-
-  useEffect(() => {
-    console.log('[DownloadMapModal] mapData.subject_property:', mapData.subject_property)
-  }, [mapData.subject_property])
-
-  useEffect(() => {
-    console.log('[DownloadMapModal] previewMapData.subject_property:', previewMapData.subject_property)
-  }, [previewMapData.subject_property])
-
   // Add a ref to track if we've already initialized
   const isInitializedRef = useRef(false)
 
-  // Add more detailed logging for initialization
   useEffect(() => {
-    console.log('[DownloadMapModal] Initialization effect triggered:', {
-      open,
-      isInitialized: isInitializedRef.current,
-      hasSubjectProperty: !!mapData.subject_property,
-      subjectPropertyData: mapData.subject_property,
-      hasMap: !!googleMapRef.current,
-      mapCenter: googleMapRef.current?.getCenter()?.toJSON(),
-      mapZoom: googleMapRef.current?.getZoom()
-    })
-
     if (!open || isInitializedRef.current) {
-      console.log('[DownloadMapModal] Skipping initialization:', {
-        open,
-        isInitialized: isInitializedRef.current
-      })
       return
     }
-
-    console.log('[DownloadMapModal] Setting preview data:', {
-      currentSubjectProperty: previewMapData.subject_property,
-      newSubjectProperty: mapData.subject_property,
-      currentMapData: previewMapData,
-      newMapData: mapData
-    })
 
     // Set preview data only once when modal opens
     setPreviewMapData((prev: typeof mapData) => {
@@ -108,46 +63,15 @@ export function DownloadMapModal({
         ...prev,
         subject_property: mapData.subject_property
       }
-      console.log('[DownloadMapModal] New preview data:', newData)
       return newData
     })
 
     isInitializedRef.current = true
-    console.log('[DownloadMapModal] Initialization complete')
 
     return () => {
-      console.log('[DownloadMapModal] Cleanup running:', {
-        hasSubjectProperty: !!mapData.subject_property,
-        subjectPropertyData: mapData.subject_property,
-        hasMap: !!googleMapRef.current
-      })
       isInitializedRef.current = false
     }
   }, [open]) // Remove mapData.subject_property from dependencies
-
-  // Add logging for map initialization
-  useEffect(() => {
-    console.log('[DownloadMapModal] Map initialization effect:', {
-      hasMap: !!googleMapRef.current,
-      hasSubjectProperty: !!previewMapData.subject_property,
-      mapCenter: googleMapRef.current?.getCenter()?.toJSON(),
-      mapZoom: googleMapRef.current?.getZoom(),
-      isInitialized: isInitializedRef.current,
-      subjectPropertyData: previewMapData.subject_property
-    })
-  }, [googleMapRef.current, previewMapData.subject_property])
-
-  // Add logging for subject property changes
-  useEffect(() => {
-    console.log('[DownloadMapModal] Subject property changed:', {
-      inMapData: mapData.subject_property,
-      inPreviewData: previewMapData.subject_property,
-      isInitialized: isInitializedRef.current,
-      hasMap: !!googleMapRef.current,
-      mapCenter: googleMapRef.current?.getCenter()?.toJSON(),
-      mapZoom: googleMapRef.current?.getZoom()
-    })
-  }, [mapData.subject_property, previewMapData.subject_property])
 
   // Sync preview map with main map data
   useEffect(() => {
@@ -172,10 +96,6 @@ export function DownloadMapModal({
           map.setOptions({ styles: mapData.mapStyle.customStyles })
         }
       }
-
-      // --- LOG: Map center and zoom after sync ---
-      console.log('[DownloadMapModal] After sync, map center:', map.getCenter()?.toJSON())
-      console.log('[DownloadMapModal] After sync, map zoom:', map.getZoom())
     }
   }, [open, mapData, googleMapRef.current])
   
@@ -187,13 +107,11 @@ export function DownloadMapModal({
       const center = { lat: mapData.center_lat, lng: mapData.center_lng }
       setPreviewCenter(center)
       setPreviewZoom(mapData.zoom_level)
-      console.log('[DownloadMapModal] setPreviewCenter and setPreviewZoom from mapData:', center, mapData.zoom_level)
     }
   }, [mapData])
 
   useEffect(() => {
     if (!googleMapRef.current) {
-      console.warn('[DownloadMapModal] googleMapRef.current is not ready')
       return
     }
     const map = googleMapRef.current
@@ -201,26 +119,17 @@ export function DownloadMapModal({
     const update = () => {
       const center = map.getCenter()
       const zoom = map.getZoom()
-      console.log('[DownloadMapModal] update called', {
-        center: center ? { lat: center.lat(), lng: center.lng() } : null,
-        zoom
-      })
       if (center) {
         setPreviewCenter(prev => {
           const newVal = { lat: center.lat(), lng: center.lng() }
-          console.log('[DownloadMapModal] setPreviewCenter from map:', newVal)
           return newVal
         })
       }
       if (zoom !== undefined) {
         setPreviewZoom(prev => {
-          console.log('[DownloadMapModal] setPreviewZoom from map:', zoom)
           return zoom
         })
       }
-      // --- LOG: previewCenter and previewZoom after update ---
-      console.log('[DownloadMapModal] previewCenter:', center ? { lat: center.lat(), lng: center.lng() } : null)
-      console.log('[DownloadMapModal] previewZoom:', zoom)
     }
 
     map.addListener('center_changed', update)
@@ -234,31 +143,16 @@ export function DownloadMapModal({
   }, [googleMapRef.current])
 
   const handlePreviewDownload = async () => {
-    console.log('[DownloadMapModal] Download button clicked')
-    console.log('[DownloadMapModal] googleMapRef.current:', googleMapRef.current)
-    console.log('[DownloadMapModal] previewCenter:', previewCenter)
-    console.log('[DownloadMapModal] previewZoom:', previewZoom)
     if (!previewCenter || previewZoom === null) {
-      console.warn('[DownloadMapModal] Missing previewCenter or previewZoom', { previewCenter, previewZoom })
       return
     }
     setDownloading(true)
     try {
-      console.log('[DownloadMapModal] Calling handleDownload', {
-        previewCenter,
-        previewZoom,
-        width,
-        height
-      })
       const result = await handleDownload(previewMapRef, false, width, height, googleMapRef)
-      console.log('[DownloadMapModal] handleDownload result:', result)
-      console.log('[DownloadMapModal] handleDownload finished, calling onClose')
       onClose()
     } catch (error) {
-      console.error('[DownloadMapModal] Error downloading map:', error)
     } finally {
       setDownloading(false)
-      console.log('[DownloadMapModal] Downloading state set to false')
     }
   }
 
@@ -280,32 +174,6 @@ export function DownloadMapModal({
       previewWidth = Math.max(width, maxPreviewHeight * aspectRatio)
     }
   }
-
-  useEffect(() => {
-    console.log('[DownloadMapModal] Modal state changed:', {
-      open,
-      hasSubjectProperty: !!mapData.subject_property,
-      subjectPropertyData: mapData.subject_property
-    })
-  }, [open, mapData.subject_property])
-
-  useEffect(() => {
-    return () => {
-      console.log('[DownloadMapModal] Modal cleanup:', {
-        hasSubjectProperty: !!mapData.subject_property,
-        subjectPropertyData: mapData.subject_property
-      })
-    }
-  }, [])
-
-  useEffect(() => {
-    if (googleMapRef.current) {
-      console.log('[DownloadMapModal] Map ready:', {
-        hasSubjectProperty: !!previewMapData.subject_property,
-        subjectPropertyData: previewMapData.subject_property
-      })
-    }
-  }, [googleMapRef.current])
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

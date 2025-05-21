@@ -23,34 +23,16 @@ export function useMapInitialization(
  
   const cleanupSubjectProperty = useCallback(() => {
     if (!isUnmountingRef.current) {
-      console.log('[useMapInitialization] Skipping cleanupSubjectProperty - not unmounting');
       return;
     }
-    console.log('[useMapInitialization] cleanupSubjectProperty called:', {
-      hasOverlay: !!subjectPropertyOverlayRef.current,
-      hasMap: !!googleMapRef.current,
-      hasSubjectProperty: !!mapData.subject_property,
-      subjectProperty: mapData.subject_property
-    })
     if (subjectPropertyOverlayRef.current) {
       subjectPropertyOverlayRef.current.setMap(null)
       subjectPropertyOverlayRef.current = null
-      console.log('[useMapInitialization] Subject property overlay cleaned up')
-    } else {
-      console.log('[useMapInitialization] No subject property overlay to clean up')
     }
   }, [mapData.subject_property])
 
   const updateSubjectProperty = useCallback(async () => {
-    console.log('[useMapInitialization] updateSubjectProperty called:', {
-      hasMap: !!googleMapRef.current,
-      hasSubjectProperty: !!mapData.subject_property,
-      hasExistingOverlay: !!subjectPropertyOverlayRef.current,
-      subjectPropertyData: mapData.subject_property
-    })
-
     if (!googleMapRef.current || !mapData.subject_property) {
-      console.log('[useMapInitialization] Cleaning up - no map or subject property')
       cleanupSubjectProperty()
       return
     }
@@ -58,11 +40,9 @@ export function useMapInitialization(
     try {
       // Only create a new overlay if one doesn't exist
       if (!subjectPropertyOverlayRef.current) {
-        console.log('[useMapInitialization] Creating new subject property overlay')
         const overlay = await createSubjectPropertyOverlay(
           mapData,
           (updates) => {
-            console.log('[useMapInitialization] Subject property updates received:', updates)
             setMapData(prev => ({
               ...prev,
               subject_property: prev.subject_property ? {
@@ -73,12 +53,8 @@ export function useMapInitialization(
           }
         )
 
-        console.log('[useMapInitialization] Setting overlay on map')
         overlay.setMap(googleMapRef.current)
         subjectPropertyOverlayRef.current = overlay
-        console.log('[useMapInitialization] Subject property overlay created and set')
-      } else {
-        console.log('[useMapInitialization] Subject property overlay already exists, skipping creation')
       }
     } catch (error) {
       console.error('[useMapInitialization] Error creating subject property overlay:', error)
@@ -251,10 +227,7 @@ export function useMapInitialization(
 
     return () => {
       if (isUnmountingRef.current) {
-        console.log('[useMapInitialization] Cleanup due to unmounting')
         cleanupSubjectProperty()
-      } else {
-        console.log('[useMapInitialization] Skipping cleanup - not unmounting')
       }
     }
   }, [mapRef, mapData.center_lat, mapData.center_lng, mapData.zoom_level, addOverlayToMap, updateSubjectProperty, cleanupSubjectProperty])
@@ -288,7 +261,6 @@ export function useMapInitialization(
   useEffect(() => {
     return () => {
       isUnmountingRef.current = true
-      console.log('[useMapInitialization] isUnmountingRef set to true')
     }
   }, [])
 
@@ -296,12 +268,9 @@ export function useMapInitialization(
     return () => {
       // Only clean up when the component is actually unmounting
       if (isUnmountingRef.current) {
-        console.log('[MapEditor] Component unmounting, cleaning up overlays')
         if (googleMapRef.current) {
           googleMapRef.current.overlayMapTypes.clear()
         }
-      } else {
-        console.log('[MapEditor] Skipping overlay cleanup - component still mounted')
       }
     }
   }, [])
