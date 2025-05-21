@@ -79,6 +79,27 @@ export function DownloadMapModal({
     }
   }, [open, mapData])
 
+  // Add cleanup effect when modal closes
+  useEffect(() => {
+    return () => {
+      // Clean up overlays when modal closes
+      if (googleMapRef.current) {
+        // Remove all overlays
+        googleMapRef.current.overlayMapTypes.clear()
+      }
+    }
+  }, [])
+
+  // Add effect to ensure subject property is properly synced
+  useEffect(() => {
+    if (open && mapData.subject_property) {
+      setPreviewMapData((prev: typeof mapData) => ({
+        ...prev,
+        subject_property: mapData.subject_property
+      }))
+    }
+  }, [open, mapData.subject_property])
+
   // Sync preview map with main map data
   useEffect(() => {
     if (open && googleMapRef.current) {

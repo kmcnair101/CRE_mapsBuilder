@@ -869,6 +869,16 @@ export default function MapEditor() {
     }
   }
 
+  useEffect(() => {
+    return () => {
+      // Clean up overlays when modal closes
+      if (googleMapRef.current) {
+        // Remove all overlays
+        googleMapRef.current.overlayMapTypes.clear()
+      }
+    }
+  }, [])
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
