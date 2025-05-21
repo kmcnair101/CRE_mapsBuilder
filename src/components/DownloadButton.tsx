@@ -1,8 +1,10 @@
 import { Download, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSubscription } from '@/hooks/useSubscription'
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { PricingPlans } from './pricing/PricingPlans'
+// import or define MapEditorContext if not already done
+// import { MapEditorContext } from '@/context/MapEditorContext'
 
 interface DownloadButtonProps {
   onDownload: () => void
@@ -13,6 +15,9 @@ interface DownloadButtonProps {
 export function DownloadButton({ onDownload, className, loading = false }: DownloadButtonProps) {
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
+  // Get handleSaveOnly from context or props, or pass it down from parent
+  // For example, if you use context:
+  // const { handleSaveOnly } = useContext(MapEditorContext)
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -66,7 +71,7 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
           console.log('[DownloadButton] Pricing plans modal closed')
           setShowPricingPlans(false)
         }} 
-        onSave={handleSaveOnly}
+        onSave={handleSaveOnly} // <-- pass this prop!
       />
     </>
   )
