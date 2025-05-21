@@ -24,7 +24,7 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
       console.log('[PricingPlans] handleSubscribe called for plan:', plan)
       if (onSave) {
         console.log('[PricingPlans] Calling onSave before Stripe redirect')
-        await onSave(new Event('submit') as React.FormEvent)
+        await onSave(new Event('submit') as unknown as React.FormEvent)
         console.log('[PricingPlans] onSave completed')
       } else {
         console.log('[PricingPlans] No onSave prop provided')
@@ -56,6 +56,21 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
 
   if (!isOpen) return null
 
+  // Helper to handle subscribe and save in sequence
+  const handleSaveAndSubscribe = async (plan: 'monthly' | 'annual') => {
+    if (onSave) {
+      try {
+        setLoading(true)
+        await onSave(new Event('submit') as unknown as React.FormEvent)
+      } catch (e) {
+        setError('Failed to save map before subscribing.')
+        setLoading(false)
+        return
+      }
+    }
+    await handleSubscribe(plan)
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
@@ -85,10 +100,7 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
                 <h3 className="text-lg font-semibold mb-2">Monthly Plan</h3>
                 <p className="text-gray-600 mb-4">$49 per month</p>
                 <button
-                  onClick={() => {
-                    console.log('[PricingPlans] Subscribe Monthly button clicked')
-                    handleSubscribe('monthly')
-                  }}
+                  onClick={() => handleSaveAndSubscribe('monthly')}
                   disabled={loading}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
@@ -101,7 +113,7 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
                 <h3 className="text-lg font-semibold mb-2">Annual Plan</h3>
                 <p className="text-gray-600 mb-4">$449 per year</p>
                 <button
-                  onClick={() => handleSubscribe('annual')}
+                  onClick={() => handleSaveAndSubscribe('annual')}
                   disabled={loading}
                   className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                 >
