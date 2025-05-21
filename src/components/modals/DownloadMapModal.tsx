@@ -72,32 +72,23 @@ export function DownloadMapModal({
     console.log('[DownloadMapModal] previewMapData.subject_property:', previewMapData.subject_property)
   }, [previewMapData.subject_property])
 
-  // Deep clone mapData when modal opens or mapData changes
-  useEffect(() => {
-    if (open) {
-      setPreviewMapData(JSON.parse(JSON.stringify(mapData)))
-    }
-  }, [open, mapData])
+  // Add a ref to track if we've already initialized
+  const isInitializedRef = useRef(false)
 
-  // Add cleanup effect when modal closes
+  // Modify the useEffect that handles map initialization
   useEffect(() => {
+    if (!open || isInitializedRef.current) return
+
+    // Set preview data only once when modal opens
+    setPreviewMapData(prev => ({
+      ...prev,
+      subject_property: mapData.subject_property
+    }))
+
+    isInitializedRef.current = true
+
     return () => {
-      // Clean up overlays when modal closes
-      if (googleMapRef.current) {
-        // Remove all overlays
-        googleMapRef.current.overlayMapTypes.clear()
-      }
-    }
-  }, [])
-
-  // Add effect to ensure subject property is properly synced
-  useEffect(() => {
-    if (open && mapData.subject_property) {
-      // Force recreation by setting the same data
-      setPreviewMapData(prev => ({
-        ...prev,
-        subject_property: { ...mapData.subject_property }
-      }))
+      isInitializedRef.current = false
     }
   }, [open, mapData.subject_property])
 
