@@ -93,9 +93,10 @@ export function DownloadMapModal({
   // Add effect to ensure subject property is properly synced
   useEffect(() => {
     if (open && mapData.subject_property) {
-      setPreviewMapData((prev: typeof mapData) => ({
+      // Force recreation by setting the same data
+      setPreviewMapData(prev => ({
         ...prev,
-        subject_property: mapData.subject_property
+        subject_property: { ...mapData.subject_property }
       }))
     }
   }, [open, mapData.subject_property])
@@ -231,14 +232,6 @@ export function DownloadMapModal({
       previewWidth = Math.max(width, maxPreviewHeight * aspectRatio)
     }
   }
-
-  // Ensure subject property overlay is rerendered when modal opens or closes
-  useEffect(() => {
-    setPreviewMapData((prev: typeof mapData) => ({
-      ...prev,
-      subject_property: mapData.subject_property
-    }))
-  }, [open, mapData.subject_property])
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
