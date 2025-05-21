@@ -232,6 +232,14 @@ export function DownloadMapModal({
     }
   }
 
+  // Ensure subject property overlay is rerendered when modal opens or closes
+  useEffect(() => {
+    setPreviewMapData((prev: typeof mapData) => ({
+      ...prev,
+      subject_property: mapData.subject_property
+    }))
+  }, [open, mapData.subject_property])
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full h-[800px]">
