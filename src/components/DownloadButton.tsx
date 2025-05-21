@@ -66,6 +66,7 @@ export function DownloadButton({ onDownload, className, loading = false }: Downl
           console.log('[DownloadButton] Pricing plans modal closed')
           setShowPricingPlans(false)
         }} 
+        onSave={handleSaveOnly}
       />
     </>
   )
