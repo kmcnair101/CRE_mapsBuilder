@@ -10,8 +10,7 @@ export default async function handler(req, res) {
   }
 
   try {
-
-    const { userId, plan } = req.body;
+    const { userId, plan, returnUrl } = req.body;
 
     if (!userId || !plan) {
       return res.status(400).json({ error: 'Missing userId or plan' });
@@ -25,6 +24,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Stripe price ID or site URL missing' });
     }
 
+    // Use the provided returnUrl or default to home page
+    const finalReturnUrl = returnUrl || '/';
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -34,8 +36,8 @@ export default async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}${finalReturnUrl}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}${finalReturnUrl}`,
       metadata: {
         userId,
         priceId,
