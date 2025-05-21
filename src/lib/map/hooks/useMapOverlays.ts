@@ -30,6 +30,7 @@ export function useMapOverlays(
     }
   }
 
+  
   const addOverlayToMap = (overlay: MapOverlay, map: google.maps.Map) => {
     if (isPreview) {
       // For preview, create overlays with no-op callbacks
