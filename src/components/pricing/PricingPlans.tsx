@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { useLocation } from 'react-router-dom'
+import { supabase } from '@/lib/supabase/client'
 
 interface PricingPlanProps {
   isOpen: boolean
@@ -27,12 +28,26 @@ export function PricingPlans({ isOpen, onClose }: PricingPlanProps) {
         // Get the map ID from the URL
         const mapId = location.pathname.split('/').pop()
         if (mapId) {
-          // Save the current state to localStorage
-          const mapState = {
-            pendingMapId: mapId,
-            pendingMapEdits: localStorage.getItem('pendingMapEdits')
+          // Get the current map data from localStorage
+          const pendingMapEdits = localStorage.getItem('pendingMapEdits')
+          if (pendingMapEdits) {
+            try {
+              // Save the map to the database
+              const { error: saveError } = await supabase
+                .from('maps')
+                .update(JSON.parse(pendingMapEdits))
+                .eq('id', mapId)
+
+              if (saveError) {
+                console.error('Error saving map before subscription:', saveError)
+              }
+
+              // Clear the pending edits from localStorage
+              localStorage.removeItem('pendingMapEdits')
+            } catch (err) {
+              console.error('Error processing map data:', err)
+            }
           }
-          localStorage.setItem('pendingMapState', JSON.stringify(mapState))
         }
       }
 
