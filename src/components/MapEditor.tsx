@@ -357,14 +357,25 @@ export default function MapEditor() {
 
     // Preload the image
     const img = new Image();
-    img.src = logo.url.startsWith('data:') ? logo.url : `/api/proxy-image?url=${encodeURIComponent(logo.url)}`;
+    
+    // Check if the URL is already proxied
+    const isAlreadyProxied = logo.url.startsWith('/api/proxy-image');
+    const imageUrl = isAlreadyProxied 
+      ? logo.url 
+      : logo.url.startsWith('data:') 
+        ? logo.url 
+        : `/api/proxy-image?url=${encodeURIComponent(logo.url)}`;
     
     console.log('[MapEditor] Preloading image:', {
-      url: logo.url.substring(0, 100) + '...',
+      originalUrl: logo.url.substring(0, 100) + '...',
+      finalUrl: imageUrl.substring(0, 100) + '...',
       isDataUrl: logo.url.startsWith('data:'),
+      isAlreadyProxied,
       timestamp: new Date().toISOString()
     });
 
+    img.src = imageUrl;
+    
     img.onload = () => {
       console.log('[MapEditor] Image loaded successfully:', {
         naturalWidth: img.naturalWidth,
@@ -384,7 +395,7 @@ export default function MapEditor() {
         type: 'image',
         position: safePosition.toJSON(),
         properties: {
-          url: logo.url,
+          url: imageUrl, // Use the final URL that worked
           width: dimensions.width,
           height: dimensions.height
         }
@@ -413,7 +424,10 @@ export default function MapEditor() {
     img.onerror = (error) => {
       console.error('[MapEditor] Error loading image:', {
         error,
-        url: logo.url.substring(0, 100) + '...',
+        originalUrl: logo.url.substring(0, 100) + '...',
+        finalUrl: imageUrl.substring(0, 100) + '...',
+        isDataUrl: logo.url.startsWith('data:'),
+        isAlreadyProxied,
         timestamp: new Date().toISOString()
       });
     };
