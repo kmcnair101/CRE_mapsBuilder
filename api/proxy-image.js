@@ -41,6 +41,15 @@ export async function handler(req, res) {
       url = new URL(decodedUrl);
       // Log after successful URL creation
       console.log('[ProxyImage] URL object created:', url.toString());
+
+      // After creating the URL object
+      if (url.toString().includes('token=') || url.toString().includes('c=')) {
+        console.log('[ProxyImage] API key detected in URL:', {
+          hasLogoDevToken: url.toString().includes('token='),
+          hasBrandfetchToken: url.toString().includes('c='),
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (error) {
       console.error('[ProxyImage] Invalid URL:', {
         url: decodedUrl,
@@ -87,6 +96,15 @@ export async function handler(req, res) {
 
     // Stream the response
     response.body?.pipe(res);
+
+    // After the fetch call
+    console.log('[ProxyImage] Response details:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      url: url.toString(),
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('[ProxyImage] Error in proxy-image handler:', {
       error: error.message,
