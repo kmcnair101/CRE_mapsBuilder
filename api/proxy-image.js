@@ -105,12 +105,35 @@ export async function handler(req, res) {
       url: url.toString(),
       timestamp: new Date().toISOString()
     });
+
+    // Add this after the fetch call
+    try {
+      const responseText = await response.text();
+      console.log('[ProxyImage] Response text:', {
+        text: responseText,
+        status: response.status,
+        statusText: response.statusText,
+        url: url.toString(),
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[ProxyImage] Error reading response:', {
+        error: error.message,
+        url: url.toString(),
+        timestamp: new Date().toISOString()
+      });
+    }
   } catch (error) {
     console.error('[ProxyImage] Error in proxy-image handler:', {
       error: error.message,
       stack: error.stack,
+      url: url?.toString(),
       timestamp: new Date().toISOString()
     });
-    res.status(500).json({ error: 'Error processing image request' });
+    res.status(500).json({ 
+      error: 'Error processing image request',
+      details: error.message,
+      url: url?.toString()
+    });
   }
 }
