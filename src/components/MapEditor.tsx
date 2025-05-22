@@ -847,7 +847,12 @@ export default function MapEditor() {
           return {
             ...overlay,
             position: updatedPosition,
-            properties: updatedProperties
+            properties: {
+              ...overlay.properties,
+              ...updatedProperties,
+              width: overlay.properties?.width ?? 200,   // fallback to 200 if missing
+              height: overlay.properties?.height ?? 200, // fallback to 200 if missing
+            }
           }
         }
         
@@ -960,7 +965,12 @@ export default function MapEditor() {
           return {
             ...overlay,
             position: updatedPosition,
-            properties: updatedProperties
+            properties: {
+              ...overlay.properties,
+              ...updatedProperties,
+              width: overlay.properties?.width ?? 200,   // fallback to 200 if missing
+              height: overlay.properties?.height ?? 200, // fallback to 200 if missing
+            }
           }
         }
         return overlay
