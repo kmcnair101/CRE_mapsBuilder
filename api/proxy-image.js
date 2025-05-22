@@ -64,6 +64,15 @@ export async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
 
+    // Before the fetch call
+    console.log('[ProxyImage] Sending request with headers:', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      url: url.toString(),
+      timestamp: new Date().toISOString()
+    });
+
     const response = await fetch(url.toString(), {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -94,8 +103,23 @@ export async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, max-age=31536000');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
+    // Before streaming
+    console.log('[ProxyImage] Response body check:', {
+      hasBody: !!response.body,
+      bodyType: response.body ? typeof response.body : 'none',
+      isReadable: response.body ? response.body.readable : false,
+      url: url.toString(),
+      timestamp: new Date().toISOString()
+    });
+
     // Stream the response
     response.body?.pipe(res);
+
+    // After streaming
+    console.log('[ProxyImage] Response streamed:', {
+      url: url.toString(),
+      timestamp: new Date().toISOString()
+    });
 
     // After the fetch call
     console.log('[ProxyImage] Response details:', {
@@ -123,6 +147,15 @@ export async function handler(req, res) {
         timestamp: new Date().toISOString()
       });
     }
+
+    // After setting up the stream
+    response.body?.on('error', (error) => {
+      console.error('[ProxyImage] Stream error:', {
+        error: error.message,
+        url: url.toString(),
+        timestamp: new Date().toISOString()
+      });
+    });
   } catch (error) {
     console.error('[ProxyImage] Error in proxy-image handler:', {
       error: error.message,
