@@ -1183,6 +1183,33 @@ export default function MapEditor() {
                 </div>
               )}
               <div ref={mapRef} className="w-full h-full" />
+              {mapData.overlays.map((overlay, i) => {
+                console.log('[MapEditor] Rendering overlay:', {
+                  overlayId: overlay.id,
+                  type: overlay.type,
+                  properties: overlay.properties,
+                  hasWidth: overlay.properties && typeof overlay.properties.width !== 'undefined',
+                  hasHeight: overlay.properties && typeof overlay.properties.height !== 'undefined',
+                });
+
+                if (!overlay.properties) {
+                  console.error('[MapEditor] Overlay missing properties:', overlay);
+                } else {
+                  if (typeof overlay.properties.width === 'undefined') {
+                    console.error('[MapEditor] Overlay missing width:', overlay);
+                  }
+                  if (typeof overlay.properties.height === 'undefined') {
+                    console.error('[MapEditor] Overlay missing height:', overlay);
+                  }
+                }
+
+                // Defensive fallback to prevent crash:
+                const width = overlay.properties?.width ?? 200;
+                const height = overlay.properties?.height ?? 200;
+
+                // ...rest of your rendering logic, e.g.:
+                // return <OverlayComponent key={overlay.id} overlay={overlay} width={width} height={height} />;
+              })}
             </div>
           </div>
         </div>
