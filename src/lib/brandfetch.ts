@@ -29,12 +29,25 @@ async function fetchLogoFromBrandfetch(domain: string): Promise<string | null> {
       return null;
     }
     const data = await response.json();
-    // Find a PNG logo (adjust as needed for your use case)
-    const logo = data?.logos?.[0]?.formats?.find((format: any) => format.format === 'png');
-    if (logo) {
-      return logo.src;
+
+    // Search all logos and all formats for a PNG
+    const pngLogo = data?.logos
+      ?.flatMap((logo: any) => logo.formats || [])
+      ?.find((format: any) => format.format === 'png');
+
+    if (pngLogo) {
+      return pngLogo.src;
     }
-    console.warn('[Brandfetch] No PNG logo found:', { domain });
+
+    // Optionally, fallback to SVG if PNG not found
+    const svgLogo = data?.logos
+      ?.flatMap((logo: any) => logo.formats || [])
+      ?.find((format: any) => format.format === 'svg');
+    if (svgLogo) {
+      return svgLogo.src;
+    }
+
+    console.warn('[Brandfetch] No PNG or SVG logo found:', { domain });
     return null;
   } catch (error) {
     console.warn('[Brandfetch] Error fetching logo:', { error, url });
