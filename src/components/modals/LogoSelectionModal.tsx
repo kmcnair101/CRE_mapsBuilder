@@ -29,11 +29,14 @@ export function LogoSelectionModal({
 
   const getProxiedImageUrl = (url: string): string => {
     if (url.startsWith('data:') || url.startsWith('/api/proxy-image')) {
-      console.log('[Logo Render] Using already proxied URL:', url)
+      console.log('[LogoSelection] Using already proxied URL:', url)
       return url
     }
     const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`
-    console.log('[Logo Render] Proxying URL:', url, 'to:', proxiedUrl)
+    console.log('[LogoSelection] Proxying URL:', {
+      original: url,
+      proxied: proxiedUrl
+    })
     return proxiedUrl
   }
 
@@ -157,11 +160,18 @@ export function LogoSelectionModal({
                             className="max-w-full max-h-full object-contain"
                             crossOrigin="anonymous"
                             onError={(e) => {
-                              console.error('[Logo Render] Image load error:', e.currentTarget.src, e)
+                              console.error('[LogoSelection] Image load error:', {
+                                src: e.currentTarget.src,
+                                error: e
+                              })
                               e.currentTarget.parentElement?.parentElement?.remove()
                             }}
                             onLoad={(e) => {
-                              console.log('[Logo Render] Image loaded successfully:', e.currentTarget.src)
+                              console.log('[LogoSelection] Image loaded successfully:', {
+                                src: e.currentTarget.src,
+                                naturalWidth: e.currentTarget.naturalWidth,
+                                naturalHeight: e.currentTarget.naturalHeight
+                              })
                             }}
                             loading="lazy"
                           />

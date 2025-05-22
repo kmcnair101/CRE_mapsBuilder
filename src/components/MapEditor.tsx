@@ -329,13 +329,18 @@ export default function MapEditor() {
     width: number
     height: number
   }) => {
-    if (!googleMapRef.current) return
+    console.log('[MapEditor] handleLogoAdd called with:', logo)
+    if (!googleMapRef.current) {
+      console.warn('[MapEditor] googleMapRef.current is null')
+      return
+    }
 
     const safePosition = getSafePosition(googleMapRef.current)
+    console.log('[MapEditor] Safe position for logo:', safePosition)
 
     const { width, height } = calculateInitialSize(logo.width, logo.height)
+    console.log('[MapEditor] Calculated logo dimensions:', { width, height })
 
-    
     const overlay: MapOverlay = {
       id: crypto.randomUUID(),
       type: 'image',
@@ -357,12 +362,16 @@ export default function MapEditor() {
         }
       }
     }
+    console.log('[MapEditor] Created overlay:', overlay)
 
     addOverlayToMap(overlay, googleMapRef.current)
+    console.log('[MapEditor] Added overlay to map')
+    
     setMapDataWithLog((prev: MapData) => ({
       ...prev,
       overlays: [...prev.overlays, overlay]
     }), 'add logo')
+    console.log('[MapEditor] Updated map data with new overlay')
   }
 
   const handleTextAdd = (text: string, style: { 
