@@ -15,6 +15,51 @@ import { useMapStyle } from '@/lib/map/hooks/useMapStyle'
 import { DownloadMapModal } from './modals/DownloadMapModal'
 import { PricingPlans } from './pricing/PricingPlans'
 
+const calculateLogoDimensions = (naturalWidth: number, naturalHeight: number) => {
+  console.log('[MapEditor] Calculating logo dimensions:', {
+    naturalWidth,
+    naturalHeight,
+    timestamp: new Date().toISOString()
+  });
+
+  // Define maximum dimensions
+  const MAX_WIDTH = 200;
+  const MAX_HEIGHT = 200;
+
+  // Calculate aspect ratio
+  const aspectRatio = naturalWidth / naturalHeight;
+  console.log('[MapEditor] Aspect ratio:', {
+    aspectRatio,
+    timestamp: new Date().toISOString()
+  });
+
+  let width = naturalWidth;
+  let height = naturalHeight;
+
+  // If width is greater than max width, scale down
+  if (width > MAX_WIDTH) {
+    width = MAX_WIDTH;
+    height = width / aspectRatio;
+  }
+
+  // If height is still greater than max height, scale down again
+  if (height > MAX_HEIGHT) {
+    height = MAX_HEIGHT;
+    width = height * aspectRatio;
+  }
+
+  console.log('[MapEditor] Calculated dimensions:', {
+    original: { width: naturalWidth, height: naturalHeight },
+    calculated: { width, height },
+    timestamp: new Date().toISOString()
+  });
+
+  return {
+    width: Math.round(width),
+    height: Math.round(height)
+  };
+};
+
 export default function MapEditor() {
   const { id } = useParams()
   const location = useLocation()
@@ -395,7 +440,7 @@ export default function MapEditor() {
         type: 'image',
         position: safePosition.toJSON(),
         properties: {
-          url: imageUrl, // Use the final URL that worked
+          url: imageUrl,
           width: dimensions.width,
           height: dimensions.height
         }
