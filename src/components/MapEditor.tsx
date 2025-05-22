@@ -1108,10 +1108,11 @@ export default function MapEditor() {
           overlays: next.overlays.map(overlay => ({
             id: overlay.id,
             type: overlay.type,
-            properties: {
+            hasProperties: 'properties' in overlay,
+            properties: overlay.properties ? {
               ...overlay.properties,
               url: overlay.properties.url?.substring(0, 100) + '...'
-            }
+            } : null
           })),
           timestamp: new Date().toISOString()
         }
