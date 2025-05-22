@@ -1,12 +1,21 @@
 export default async function handler(req, res) {
-  console.log('[ProxyImage] Received request:', {
-    url: req.query.url,
+  console.log('[ProxyImage] ===== START OF REQUEST =====');
+  console.log('[ProxyImage] Request details:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
     headers: req.headers,
     timestamp: new Date().toISOString()
   });
 
   try {
     const imageUrl = req.query.url;
+
+    console.log('[ProxyImage] Raw imageUrl:', {
+      imageUrl,
+      type: typeof imageUrl,
+      timestamp: new Date().toISOString()
+    });
 
     if (!imageUrl) {
       console.error('[ProxyImage] No URL provided');
@@ -108,4 +117,12 @@ export default async function handler(req, res) {
       error: error.message,
       stack: error.stack,
       url: req.query.url,
-      timestamp: new Date().toISOString(
+      timestamp: new Date().toISOString()
+    });
+    res.status(500).json({ 
+      error: 'Error processing image request',
+      details: error.message,
+      url: req.query.url
+    });
+  }
+}
