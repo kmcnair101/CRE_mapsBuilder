@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { getBusinessDomain } from './utils/domain'
 
 const BRANDFETCH_API_KEY = '1id07tPwKlmKE0Dbd-w'
-const LOGODEV_API_KEY = 'sk_JkxtsBv9QDCSqWVyxiRyrw'
+const LOGODEV_API_KEY = 'pk_IUW5ADLFTyaB0B8WF5lwtA'
 
 const logoResponseSchema = z.array(z.object({
   url: z.string().url(),
