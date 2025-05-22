@@ -329,17 +329,58 @@ export default function MapEditor() {
     width: number
     height: number
   }) => {
-    console.log('[MapEditor] handleLogoAdd called with:', logo)
+    console.log('[MapEditor] handleLogoAdd called with:', {
+      url: logo.url,
+      width: logo.width,
+      height: logo.height,
+      isDataUrl: logo.url.startsWith('data:'),
+      isProxied: logo.url.startsWith('/api/proxy-image')
+    })
+
     if (!googleMapRef.current) {
       console.warn('[MapEditor] googleMapRef.current is null')
       return
     }
 
     const safePosition = getSafePosition(googleMapRef.current)
-    console.log('[MapEditor] Safe position for logo:', safePosition)
+    console.log('[MapEditor] Safe position for logo:', {
+      lat: safePosition.lat(),
+      lng: safePosition.lng()
+    })
 
     const { width, height } = calculateInitialSize(logo.width, logo.height)
-    console.log('[MapEditor] Calculated logo dimensions:', { width, height })
+    console.log('[MapEditor] Calculated logo dimensions:', { 
+      original: { width: logo.width, height: logo.height },
+      calculated: { width, height }
+    })
+
+    // Preload the image to ensure it's valid
+    try {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          console.log('[MapEditor] Logo image preloaded successfully:', {
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            src: img.src
+          })
+          resolve(true)
+        }
+        img.onerror = (error) => {
+          console.error('[MapEditor] Failed to preload logo image:', {
+            error,
+            src: img.src
+          })
+          reject(error)
+        }
+        img.src = logo.url
+      })
+    } catch (error) {
+      console.error('[MapEditor] Error preloading logo:', error)
+      return
+    }
 
     const overlay: MapOverlay = {
       id: crypto.randomUUID(),
@@ -362,7 +403,15 @@ export default function MapEditor() {
         }
       }
     }
-    console.log('[MapEditor] Created overlay:', overlay)
+    console.log('[MapEditor] Created overlay:', {
+      id: overlay.id,
+      type: overlay.type,
+      position: overlay.position,
+      properties: {
+        ...overlay.properties,
+        url: overlay.properties.url.substring(0, 100) + '...' // Truncate long URLs in logs
+      }
+    })
 
     addOverlayToMap(overlay, googleMapRef.current)
     console.log('[MapEditor] Added overlay to map')

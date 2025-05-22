@@ -29,12 +29,15 @@ export function LogoSelectionModal({
 
   const getProxiedImageUrl = (url: string): string => {
     if (url.startsWith('data:') || url.startsWith('/api/proxy-image')) {
-      console.log('[LogoSelection] Using already proxied URL:', url)
+      console.log('[LogoSelection] Using already proxied URL:', {
+        url: url.substring(0, 100) + '...',
+        type: url.startsWith('data:') ? 'data-url' : 'proxy-url'
+      })
       return url
     }
     const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`
     console.log('[LogoSelection] Proxying URL:', {
-      original: url,
+      original: url.substring(0, 100) + '...',
       proxied: proxiedUrl
     })
     return proxiedUrl
@@ -162,15 +165,39 @@ export function LogoSelectionModal({
                             onError={(e) => {
                               console.error('[LogoSelection] Image load error:', {
                                 src: e.currentTarget.src,
-                                error: e
+                                error: e,
+                                naturalWidth: e.currentTarget.naturalWidth,
+                                naturalHeight: e.currentTarget.naturalHeight,
+                                complete: e.currentTarget.complete,
+                                currentSrc: e.currentTarget.currentSrc
                               })
-                              e.currentTarget.parentElement?.parentElement?.remove()
+                              // Try to reload with a different proxy URL if the first attempt fails
+                              if (!e.currentTarget.src.includes('retry=true')) {
+                                const retryUrl = `${e.currentTarget.src}&retry=true`
+                                console.log('[LogoSelection] Retrying image load with:', retryUrl)
+                                e.currentTarget.src = retryUrl
+                              } else {
+                                e.currentTarget.parentElement?.parentElement?.remove()
+                              }
                             }}
                             onLoad={(e) => {
                               console.log('[LogoSelection] Image loaded successfully:', {
                                 src: e.currentTarget.src,
                                 naturalWidth: e.currentTarget.naturalWidth,
-                                naturalHeight: e.currentTarget.naturalHeight
+                                naturalHeight: e.currentTarget.naturalHeight,
+                                complete: e.currentTarget.complete,
+                                currentSrc: e.currentTarget.currentSrc
+                              })
+                            }}
+                            onLoadStart={(e) => {
+                              console.log('[LogoSelection] Image load started:', {
+                                src: e.currentTarget.src
+                              })
+                            }}
+                            onLoadEnd={(e) => {
+                              console.log('[LogoSelection] Image load ended:', {
+                                src: e.currentTarget.src,
+                                complete: e.currentTarget.complete
                               })
                             }}
                             loading="lazy"
