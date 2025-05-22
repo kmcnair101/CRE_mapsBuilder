@@ -13,6 +13,12 @@ export async function handler(req, res) {
       return res.status(400).json({ error: 'No URL provided' });
     }
 
+    // Prevent proxying already-proxied URLs
+    if (imageUrl.startsWith('/api/proxy-image')) {
+      console.error('[ProxyImage] Refusing to proxy a proxied URL:', imageUrl);
+      return res.status(400).json({ error: 'Cannot proxy a proxied URL' });
+    }
+
     // Decode the URL if it's encoded
     const decodedUrl = decodeURIComponent(imageUrl);
     console.log('[ProxyImage] Decoded URL:', {
