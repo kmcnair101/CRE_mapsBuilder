@@ -13,7 +13,7 @@ const logoResponseSchema = z.array(z.object({
 })).default([])
 
 async function fetchLogoFromBrandfetch(domain: string, path: string): Promise<string | null> {
-  const originalUrl = `https://cdn.brandfetch.io/${encodeURIComponent(domain)}/fallback/404${path}?c=${BRANDFETCH_API_KEY}&format=png`
+  const originalUrl = `https://cdn.brandfetch.io/${encodeURIComponent(domain)}/fallback/404${path}?c=${encodeURIComponent(BRANDFETCH_API_KEY)}&format=png`
   const url = `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`
   console.log('[Brandfetch] Attempting to fetch logo:', {
     domain,
