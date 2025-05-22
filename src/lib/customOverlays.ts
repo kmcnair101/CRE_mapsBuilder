@@ -15,15 +15,34 @@ export const createCustomImageOverlay = (overlay: MapOverlay, map: google.maps.M
   instance.onAdd = function() {
     console.log('[CustomOverlay] onAdd called:', {
       overlayId: overlay.id,
+      properties: overlay.properties,
       timestamp: new Date().toISOString()
     });
+
+    if (!overlay.properties) {
+      console.error('[CustomOverlay] onAdd: Missing properties for overlay:', overlay);
+    } else {
+      if (typeof overlay.properties.width === 'undefined') {
+        console.error('[CustomOverlay] onAdd: Missing width for overlay:', overlay);
+      }
+      if (typeof overlay.properties.height === 'undefined') {
+        console.error('[CustomOverlay] onAdd: Missing height for overlay:', overlay);
+      }
+    }
 
     element = document.createElement('div');
     element.style.position = 'absolute';
     element.style.cursor = 'move';
-    element.style.width = `${overlay.properties.width}px`;
-    element.style.height = `${overlay.properties.height}px`;
-    
+    element.style.width = `${overlay.properties?.width ?? 200}px`;
+    element.style.height = `${overlay.properties?.height ?? 200}px`;
+
+    console.log('[CustomOverlay] onAdd element created:', {
+      overlayId: overlay.id,
+      width: element.style.width,
+      height: element.style.height,
+      timestamp: new Date().toISOString()
+    });
+
     // ... rest of onAdd implementation
   };
 
@@ -32,31 +51,69 @@ export const createCustomImageOverlay = (overlay: MapOverlay, map: google.maps.M
       overlayId: overlay.id,
       timestamp: new Date().toISOString()
     });
-    
+
     if (element) {
       element.remove();
       element = null;
+      console.log('[CustomOverlay] onRemove: element removed:', {
+        overlayId: overlay.id,
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
   instance.draw = function() {
+    if (!overlay.properties) {
+      console.error('[CustomOverlay] draw: Missing properties for overlay:', overlay);
+    } else {
+      if (typeof overlay.properties.width === 'undefined') {
+        console.error('[CustomOverlay] draw: Missing width for overlay:', overlay);
+      }
+      if (typeof overlay.properties.height === 'undefined') {
+        console.error('[CustomOverlay] draw: Missing height for overlay:', overlay);
+      }
+    }
+    // Defensive fallback
+    const width = overlay.properties?.width ?? 200;
+    const height = overlay.properties?.height ?? 200;
+
     console.log('[CustomOverlay] draw called:', {
       overlayId: overlay.id,
       hasElement: Boolean(element),
       hasPosition: Boolean(position),
+      width,
+      height,
       timestamp: new Date().toISOString()
     });
 
-    if (!element || !position) return;
+    if (!element || !position) {
+      console.warn('[CustomOverlay] draw: Missing element or position', { overlayId: overlay.id, element, position });
+      return;
+    }
 
     const projection = this.getProjection();
-    if (!projection) return;
+    if (!projection) {
+      console.warn('[CustomOverlay] draw: Missing projection', { overlayId: overlay.id });
+      return;
+    }
 
     const point = projection.fromLatLngToDivPixel(position);
-    if (!point) return;
+    if (!point) {
+      console.warn('[CustomOverlay] draw: Missing point from projection', { overlayId: overlay.id });
+      return;
+    }
 
-    element.style.left = `${point.x - overlay.properties.width / 2}px`;
-    element.style.top = `${point.y - overlay.properties.height / 2}px`;
+    element.style.left = `${point.x - width / 2}px`;
+    element.style.top = `${point.y - height / 2}px`;
+
+    console.log('[CustomOverlay] draw: element positioned:', {
+      overlayId: overlay.id,
+      left: element.style.left,
+      top: element.style.top,
+      width,
+      height,
+      timestamp: new Date().toISOString()
+    });
   };
 
   // Add logging to drag handlers
@@ -98,4 +155,4 @@ export const createCustomImageOverlay = (overlay: MapOverlay, map: google.maps.M
   };
 
   // ... rest of implementation
-}; 
+};
