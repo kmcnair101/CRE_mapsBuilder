@@ -13,12 +13,17 @@ export async function handler(req, res) {
       return res.status(400).json({ error: 'No URL provided' });
     }
 
+    // Log the received imageUrl before proxy check
+    console.log('[ProxyImage] imageUrl received:', imageUrl);
+
     // Prevent proxying already-proxied URLs
     if (imageUrl.startsWith('/api/proxy-image')) {
       console.error('[ProxyImage] Refusing to proxy a proxied URL:', imageUrl);
       return res.status(400).json({ error: 'Cannot proxy a proxied URL' });
     }
 
+    // Log before decoding
+    console.log('[ProxyImage] Decoding imageUrl:', imageUrl);
     // Decode the URL if it's encoded
     const decodedUrl = decodeURIComponent(imageUrl);
     console.log('[ProxyImage] Decoded URL:', {
@@ -27,11 +32,15 @@ export async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
 
+    // Log before URL validation
+    console.log('[ProxyImage] Validating decodedUrl:', decodedUrl);
     // Validate the URL
     let url;
     try {
       // Create URL from the decoded query parameter
       url = new URL(decodedUrl);
+      // Log after successful URL creation
+      console.log('[ProxyImage] URL object created:', url.toString());
     } catch (error) {
       console.error('[ProxyImage] Invalid URL:', {
         url: decodedUrl,
