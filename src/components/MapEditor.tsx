@@ -342,25 +342,30 @@ export default function MapEditor() {
       return
     }
 
+    // Validate logo properties
+    if (!logo.url || typeof logo.width !== 'number' || typeof logo.height !== 'number') {
+      console.error('[MapEditor] Invalid logo properties:', logo)
+      return
+    }
+
     const safePosition = getSafePosition(googleMapRef.current)
     console.log('[MapEditor] Safe position for logo:', {
       lat: safePosition.lat(),
       lng: safePosition.lng()
     })
 
-    const { width, height } = calculateInitialSize(logo.width, logo.height)
-    console.log('[MapEditor] Calculated logo dimensions:', { 
-      original: { width: logo.width, height: logo.height },
-      calculated: { width, height }
-    })
-
-    // Preload the image to ensure it's valid
+    // Preload the image with better error handling
     try {
       const img = new Image()
       img.crossOrigin = 'anonymous'
       
       await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Image load timeout'))
+        }, 10000) // 10 second timeout
+
         img.onload = () => {
+          clearTimeout(timeout)
           console.log('[MapEditor] Logo image preloaded successfully:', {
             naturalWidth: img.naturalWidth,
             naturalHeight: img.naturalHeight,
@@ -368,59 +373,83 @@ export default function MapEditor() {
           })
           resolve(true)
         }
+        
         img.onerror = (error) => {
+          clearTimeout(timeout)
           console.error('[MapEditor] Failed to preload logo image:', {
             error,
-            src: img.src
+            src: img.src,
+            width: logo.width,
+            height: logo.height
           })
           reject(error)
         }
-        img.src = logo.url
-      })
-    } catch (error) {
-      console.error('[MapEditor] Error preloading logo:', error)
-      return
-    }
 
-    const overlay: MapOverlay = {
-      id: crypto.randomUUID(),
-      type: 'image',
-      position: {
-        lat: safePosition.lat(),
-        lng: safePosition.lng()
-      },
-      properties: {
-        url: logo.url,
-        width,
-        height,
-        containerStyle: {
-          backgroundColor: '#FFFFFF',
-          borderColor: '#000000',
-          borderWidth: 1,
-          padding: 8,
-          backgroundOpacity: 1,
-          borderOpacity: 1
+        // Ensure the URL is properly formatted
+        const imageUrl = logo.url.startsWith('data:') || logo.url.startsWith('/api/proxy-image')
+          ? logo.url
+          : `/api/proxy-image?url=${encodeURIComponent(logo.url)}`
+        
+        img.src = imageUrl
+      })
+
+      // Use the actual image dimensions if available
+      const { width, height } = calculateInitialSize(
+        img.naturalWidth || logo.width,
+        img.naturalHeight || logo.height
+      )
+      console.log('[MapEditor] Calculated logo dimensions:', { 
+        original: { width: logo.width, height: logo.height },
+        natural: { width: img.naturalWidth, height: img.naturalHeight },
+        calculated: { width, height }
+      })
+
+      const overlay: MapOverlay = {
+        id: crypto.randomUUID(),
+        type: 'image',
+        position: {
+          lat: safePosition.lat(),
+          lng: safePosition.lng()
+        },
+        properties: {
+          url: logo.url,
+          width,
+          height,
+          containerStyle: {
+            backgroundColor: '#FFFFFF',
+            borderColor: '#000000',
+            borderWidth: 1,
+            padding: 8,
+            backgroundOpacity: 1,
+            borderOpacity: 1
+          }
         }
       }
-    }
-    console.log('[MapEditor] Created overlay:', {
-      id: overlay.id,
-      type: overlay.type,
-      position: overlay.position,
-      properties: {
-        ...overlay.properties,
-        url: overlay.properties.url.substring(0, 100) + '...' // Truncate long URLs in logs
-      }
-    })
+      console.log('[MapEditor] Created overlay:', {
+        id: overlay.id,
+        type: overlay.type,
+        position: overlay.position,
+        properties: {
+          ...overlay.properties,
+          url: overlay.properties.url.substring(0, 100) + '...' // Truncate long URLs in logs
+        }
+      })
 
-    addOverlayToMap(overlay, googleMapRef.current)
-    console.log('[MapEditor] Added overlay to map')
-    
-    setMapDataWithLog((prev: MapData) => ({
-      ...prev,
-      overlays: [...prev.overlays, overlay]
-    }), 'add logo')
-    console.log('[MapEditor] Updated map data with new overlay')
+      addOverlayToMap(overlay, googleMapRef.current)
+      console.log('[MapEditor] Added overlay to map')
+      
+      setMapDataWithLog((prev: MapData) => ({
+        ...prev,
+        overlays: [...prev.overlays, overlay]
+      }), 'add logo')
+      console.log('[MapEditor] Updated map data with new overlay')
+    } catch (error) {
+      console.error('[MapEditor] Error handling logo:', {
+        error,
+        logo
+      })
+      // You might want to show a user-friendly error message here
+    }
   }
 
   const handleTextAdd = (text: string, style: { 

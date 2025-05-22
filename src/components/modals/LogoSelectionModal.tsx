@@ -44,7 +44,11 @@ export function LogoSelectionModal({
   }
 
   const handleLogoSelect = (logo: string) => {
-    console.log('[Logo Select] Selected logo URL:', logo)
+    console.log('[LogoSelection] Selected logo URL:', logo)
+    if (!logo) {
+      console.error('[LogoSelection] Invalid logo URL')
+      return
+    }
     setSelectedLogo(logo)
   }
 
@@ -187,17 +191,6 @@ export function LogoSelectionModal({
                                 naturalHeight: e.currentTarget.naturalHeight,
                                 complete: e.currentTarget.complete,
                                 currentSrc: e.currentTarget.currentSrc
-                              })
-                            }}
-                            onLoadStart={(e) => {
-                              console.log('[LogoSelection] Image load started:', {
-                                src: e.currentTarget.src
-                              })
-                            }}
-                            onLoadEnd={(e) => {
-                              console.log('[LogoSelection] Image load ended:', {
-                                src: e.currentTarget.src,
-                                complete: e.currentTarget.complete
                               })
                             }}
                             loading="lazy"
