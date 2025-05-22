@@ -12,34 +12,33 @@ const logoResponseSchema = z.array(z.object({
   size: z.number().optional()
 })).default([])
 
-async function fetchLogoFromBrandfetch(domain: string, path: string): Promise<string | null> {
-  const originalUrl = `https://cdn.brandfetch.io/${encodeURIComponent(domain)}/fallback/404${path}?c=${encodeURIComponent(BRANDFETCH_API_KEY)}&format=png`
-  const url = `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`
-  console.log('[Brandfetch] Attempting to fetch logo:', {
-    domain,
-    path,
-    originalUrl,
-    proxiedUrl: url
-  })
+async function fetchLogoFromBrandfetch(domain: string): Promise<string | null> {
+  const url = `https://api.brandfetch.io/v2/brands/${encodeURIComponent(domain)}`;
+  const headers = {
+    'Authorization': `Bearer ${BRANDFETCH_API_KEY}`,
+  };
 
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, { headers });
     if (!response.ok) {
       console.warn('[Brandfetch] Failed to fetch logo:', {
         status: response.status,
         statusText: response.statusText,
         url
-      })
-      return null
+      });
+      return null;
     }
-    console.log('[Brandfetch] Successfully fetched logo from:', url)
-    return url
+    const data = await response.json();
+    // Find a PNG logo (adjust as needed for your use case)
+    const logo = data?.logos?.[0]?.formats?.find((format: any) => format.format === 'png');
+    if (logo) {
+      return logo.src;
+    }
+    console.warn('[Brandfetch] No PNG logo found:', { domain });
+    return null;
   } catch (error) {
-    console.warn('[Brandfetch] Error fetching logo:', {
-      error,
-      url
-    })
-    return null
+    console.warn('[Brandfetch] Error fetching logo:', { error, url });
+    return null;
   }
 }
 
@@ -121,21 +120,18 @@ export async function fetchLogos(businessName: string, location?: google.maps.La
         })
       ]),
       Promise.all([
-        { path: '/logo/w/300', width: 300, height: 150 },
-        { path: '/w/300', width: 300, height: 150 },
-        { path: '/logo/icon/w/100', width: 100, height: 100 }
-      ].map(async variation => {
-        const logoUrl = await fetchLogoFromBrandfetch(domain, variation.path)
-        if (logoUrl) {
-          return {
-            url: logoUrl,
-            width: variation.width,
-            height: variation.height,
-            source: 'brandfetch'
+        fetchLogoFromBrandfetch(domain).then(logoUrl => {
+          if (logoUrl) {
+            return {
+              url: logoUrl,
+              width: 300,
+              height: 150,
+              source: 'brandfetch'
+            }
           }
-        }
-        return null
-      }))
+          return null
+        })
+      ])
     ])
 
     const allLogos = [...logoDevLogos, ...brandfetchLogos]
