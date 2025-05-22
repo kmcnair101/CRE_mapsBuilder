@@ -35,12 +35,24 @@ export default function MapEditor() {
   const [showPricingPlans, setShowPricingPlans] = useState(false)
 
   const [mapData, setMapData] = useState<MapData>(() => {
-    const initialTitle = location.state?.subject_property?.name || 
-                        location.state?.subject_property?.address || 
-                        'New Map'
-    
+    console.log('[MapEditor] Initializing map data:', {
+      initialData: {
+        title: location.state?.subject_property?.name || 
+                location.state?.subject_property?.address || 
+                'New Map',
+        center_lat: location.state?.center_lat || 40.7128,
+        center_lng: location.state?.center_lng || -74.0060,
+        zoom_level: location.state?.zoom_level || 12,
+        overlays: location.state?.overlays || [],
+        subject_property: location.state?.subject_property || null,
+        mapStyle: location.state?.mapStyle
+      },
+      timestamp: new Date().toISOString()
+    })
     return {
-      title: initialTitle,
+      title: location.state?.subject_property?.name || 
+              location.state?.subject_property?.address || 
+              'New Map',
       center_lat: location.state?.center_lat || 40.7128,
       center_lng: location.state?.center_lng || -74.0060,
       zoom_level: location.state?.zoom_level || 12,
@@ -330,12 +342,12 @@ export default function MapEditor() {
     height: number
   }) => {
     console.log('[MapEditor] handleLogoAdd called with:', {
-      url: logo.url,
-      width: logo.width,
-      height: logo.height,
-      isDataUrl: logo.url.startsWith('data:'),
-      isProxied: logo.url.startsWith('/api/proxy-image'),
-      logoObject: JSON.stringify(logo, null, 2)
+      logo,
+      logoType: typeof logo,
+      hasWidth: 'width' in logo,
+      hasHeight: 'height' in logo,
+      hasUrl: 'url' in logo,
+      timestamp: new Date().toISOString()
     })
 
     if (!googleMapRef.current) {
@@ -1075,9 +1087,35 @@ export default function MapEditor() {
     }
   }, [])
 
-  const setMapDataWithLog = (updater, reason = '') => {
+  const setMapDataWithLog = (updater: (prev: MapData) => MapData, action: string) => {
+    console.log('[MapEditor] Updating map data:', {
+      action,
+      previousState: mapData,
+      timestamp: new Date().toISOString()
+    })
+    
     setMapData(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
+      const next = updater(prev)
+      console.log('[MapEditor] Map data updated:', {
+        action,
+        previousState: prev,
+        nextState: next,
+        changes: {
+          overlaysCount: {
+            prev: prev.overlays.length,
+            next: next.overlays.length
+          },
+          overlays: next.overlays.map(overlay => ({
+            id: overlay.id,
+            type: overlay.type,
+            properties: {
+              ...overlay.properties,
+              url: overlay.properties.url?.substring(0, 100) + '...'
+            }
+          })),
+          timestamp: new Date().toISOString()
+        }
+      })
       return next
     })
   }

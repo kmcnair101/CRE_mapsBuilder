@@ -29,6 +29,11 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
   }>>([])
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessResult | null>(null)
 
+  console.log('[LogoLayer] Component mounted:', {
+    hasOnLogoSelect: typeof onAdd === 'function',
+    timestamp: new Date().toISOString()
+  })
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
@@ -77,6 +82,35 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
       setError('Failed to fetch logos. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleLogoSelect = async (logo: string) => {
+    console.log('[LogoLayer] Logo selected:', {
+      logo,
+      logoType: typeof logo,
+      timestamp: new Date().toISOString()
+    })
+
+    try {
+      const logoObject = {
+        url: logo,
+        width: 300, // Default width
+        height: 300 // Default height
+      }
+
+      console.log('[LogoLayer] Passing logo to parent:', {
+        logoObject,
+        timestamp: new Date().toISOString()
+      })
+
+      onAdd(logoObject)
+    } catch (error) {
+      console.error('[LogoLayer] Error handling logo selection:', {
+        error,
+        logo,
+        timestamp: new Date().toISOString()
+      })
     }
   }
 
@@ -182,14 +216,7 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
                 {logos.map((logo, index) => (
                   <button
                     key={`${logo.url}-${index}`}
-                    onClick={() => {
-                      onAdd({
-                        url: logo.url,
-                        width: logo.width,
-                        height: logo.height
-                      })
-                      onClose?.()
-                    }}
+                    onClick={() => handleLogoSelect(logo.url)}
                     className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow p-2"
                   >
                     <MapPreviewBackground>

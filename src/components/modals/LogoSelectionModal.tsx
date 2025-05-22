@@ -58,20 +58,33 @@ export function LogoSelectionModal({
   }
 
   const handleLogoSelect = (logo: string) => {
-    console.log('[LogoSelection] Selected logo:', {
-      url: logo,
-      isDataUrl: logo.startsWith('data:'),
-      isProxied: logo.startsWith('/api/proxy-image'),
+    console.log('[LogoSelection] Selecting logo:', {
+      logo,
+      logoType: typeof logo,
       timestamp: new Date().toISOString()
     })
+    
     if (!logo) {
-      console.error('[LogoSelection] Invalid logo URL:', {
+      console.error('[LogoSelection] Invalid logo selection:', {
         logo,
         timestamp: new Date().toISOString()
       })
       return
     }
-    setSelectedLogo(logo)
+
+    // Log the logo object being passed to onSelect
+    const logoObject = {
+      url: logo,
+      width: 300, // Default width
+      height: 300 // Default height
+    }
+    
+    console.log('[LogoSelection] Passing logo to onSelect:', {
+      logoObject,
+      timestamp: new Date().toISOString()
+    })
+    
+    onSelect(logoObject)
   }
 
   const handleConfirm = () => {
@@ -173,9 +186,10 @@ export function LogoSelectionModal({
                 {logos.map((logo, index) => {
                   console.log('[LogoSelection] Rendering logo:', {
                     index,
-                    url: logo.url,
-                    width: logo.width,
-                    height: logo.height,
+                    logo,
+                    hasUrl: 'url' in logo,
+                    hasWidth: 'width' in logo,
+                    hasHeight: 'height' in logo,
                     timestamp: new Date().toISOString()
                   })
                   
@@ -201,41 +215,18 @@ export function LogoSelectionModal({
                                 console.error('[LogoSelection] Image load error:', {
                                   src: e.currentTarget.src,
                                   error: e,
-                                  naturalWidth: e.currentTarget.naturalWidth,
-                                  naturalHeight: e.currentTarget.naturalHeight,
-                                  complete: e.currentTarget.complete,
-                                  currentSrc: e.currentTarget.currentSrc,
                                   index,
+                                  logo,
                                   timestamp: new Date().toISOString()
                                 })
-                                
-                                // Try to reload with a different proxy URL if the first attempt fails
-                                if (!e.currentTarget.src.includes('retry=true')) {
-                                  const retryUrl = `${e.currentTarget.src}&retry=true`
-                                  console.log('[LogoSelection] Retrying image load:', {
-                                    originalUrl: e.currentTarget.src,
-                                    retryUrl,
-                                    index,
-                                    timestamp: new Date().toISOString()
-                                  })
-                                  e.currentTarget.src = retryUrl
-                                } else {
-                                  console.log('[LogoSelection] Removing failed image:', {
-                                    src: e.currentTarget.src,
-                                    index,
-                                    timestamp: new Date().toISOString()
-                                  })
-                                  e.currentTarget.parentElement?.parentElement?.remove()
-                                }
                               }}
                               onLoad={(e) => {
-                                console.log('[LogoSelection] Image loaded successfully:', {
+                                console.log('[LogoSelection] Image loaded:', {
                                   src: e.currentTarget.src,
                                   naturalWidth: e.currentTarget.naturalWidth,
                                   naturalHeight: e.currentTarget.naturalHeight,
-                                  complete: e.currentTarget.complete,
-                                  currentSrc: e.currentTarget.currentSrc,
                                   index,
+                                  logo,
                                   timestamp: new Date().toISOString()
                                 })
                               }}
