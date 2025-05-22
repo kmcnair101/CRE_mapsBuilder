@@ -34,16 +34,26 @@ export default async function handler(req, res) {
     });
     console.log('[ProxyImage] Fetch response status:', response.status);
 
+    const contentType = response.headers.get('content-type');
+    console.log('[ProxyImage] Response content-type:', contentType);
+
     if (!response.ok) {
       console.error('[ProxyImage] Upstream fetch failed:', response.status, decodedUrl);
       res.status(502).json({ error: 'Upstream fetch failed', status: response.status });
       return;
     }
 
+    // Check if content-type is image
+    if (!contentType || !contentType.startsWith('image/')) {
+      const text = await response.text();
+      console.error('[ProxyImage] Non-image content-type or error page:', { contentType, text: text.slice(0, 200) });
+      res.status(502).json({ error: 'Upstream did not return an image', contentType, preview: text.slice(0, 200) });
+      return;
+    }
+
     // Pipe the image
-    const contentType = response.headers.get('content-type') || 'image/png';
-    console.log('[ProxyImage] Content-Type:', contentType);
     res.setHeader('Content-Type', contentType);
+    res.setHeader('Access-Control-Allow-Origin', '*');
     const buffer = await response.arrayBuffer();
     console.log('[ProxyImage] Image buffer length:', buffer.byteLength);
     res.status(200).send(Buffer.from(buffer));
