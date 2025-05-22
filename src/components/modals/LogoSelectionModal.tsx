@@ -8,6 +8,8 @@ interface LogoSelectionModalProps {
   onClose: () => void
   logos: Array<{
     url: string
+    width: number
+    height: number
   }>
   onSelect: (logo: string) => void
   onUpload: (file: File) => void
@@ -27,6 +29,18 @@ export function LogoSelectionModal({
   const [selectedLogo, setSelectedLogo] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  console.log('[LogoSelection] Modal opened with logos:', {
+    logoCount: logos.length,
+    logos: logos.map(logo => ({
+      url: logo.url,
+      width: logo.width,
+      height: logo.height,
+      isDataUrl: logo.url.startsWith('data:'),
+      isProxied: logo.url.startsWith('/api/proxy-image')
+    })),
+    timestamp: new Date().toISOString()
+  })
+
   const getProxiedImageUrl = (url: string): string => {
     if (url.startsWith('data:') || url.startsWith('/api/proxy-image')) {
       console.log('[LogoSelection] Using already proxied URL:', {
@@ -44,9 +58,17 @@ export function LogoSelectionModal({
   }
 
   const handleLogoSelect = (logo: string) => {
-    console.log('[LogoSelection] Selected logo URL:', logo)
+    console.log('[LogoSelection] Selected logo:', {
+      url: logo,
+      isDataUrl: logo.startsWith('data:'),
+      isProxied: logo.startsWith('/api/proxy-image'),
+      timestamp: new Date().toISOString()
+    })
     if (!logo) {
-      console.error('[LogoSelection] Invalid logo URL')
+      console.error('[LogoSelection] Invalid logo URL:', {
+        logo,
+        timestamp: new Date().toISOString()
+      })
       return
     }
     setSelectedLogo(logo)
@@ -148,58 +170,83 @@ export function LogoSelectionModal({
                 Found Business Logos
               </h3>
               <div className="grid grid-cols-3 gap-3 max-h-[250px] overflow-y-auto pr-2">
-                {logos.map((logo, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleLogoSelect(logo.url)}
-                    className={cn(
-                      'p-3 border-2 rounded-lg transition-colors hover:border-blue-500',
-                      selectedLogo === logo.url ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                    )}
-                  >
-                    <MapPreviewBackground>
-                      <div className="bg-white p-2 rounded-lg aspect-square flex items-center justify-center">
-                        {logo.url && (
-                          <img
-                            key={logo.url}
-                            src={getProxiedImageUrl(logo.url)}
-                            alt={`Logo option ${index + 1}`}
-                            className="max-w-full max-h-full object-contain"
-                            crossOrigin="anonymous"
-                            onError={(e) => {
-                              console.error('[LogoSelection] Image load error:', {
-                                src: e.currentTarget.src,
-                                error: e,
-                                naturalWidth: e.currentTarget.naturalWidth,
-                                naturalHeight: e.currentTarget.naturalHeight,
-                                complete: e.currentTarget.complete,
-                                currentSrc: e.currentTarget.currentSrc
-                              })
-                              // Try to reload with a different proxy URL if the first attempt fails
-                              if (!e.currentTarget.src.includes('retry=true')) {
-                                const retryUrl = `${e.currentTarget.src}&retry=true`
-                                console.log('[LogoSelection] Retrying image load with:', retryUrl)
-                                e.currentTarget.src = retryUrl
-                              } else {
-                                e.currentTarget.parentElement?.parentElement?.remove()
-                              }
-                            }}
-                            onLoad={(e) => {
-                              console.log('[LogoSelection] Image loaded successfully:', {
-                                src: e.currentTarget.src,
-                                naturalWidth: e.currentTarget.naturalWidth,
-                                naturalHeight: e.currentTarget.naturalHeight,
-                                complete: e.currentTarget.complete,
-                                currentSrc: e.currentTarget.currentSrc
-                              })
-                            }}
-                            loading="lazy"
-                          />
-                        )}
-                      </div>
-                    </MapPreviewBackground>
-                  </button>
-                ))}
+                {logos.map((logo, index) => {
+                  console.log('[LogoSelection] Rendering logo:', {
+                    index,
+                    url: logo.url,
+                    width: logo.width,
+                    height: logo.height,
+                    timestamp: new Date().toISOString()
+                  })
+                  
+                  return (
+                    <button
+                      key={logo.url}
+                      onClick={() => handleLogoSelect(logo.url)}
+                      className={cn(
+                        'p-3 border-2 rounded-lg transition-colors hover:border-blue-500',
+                        selectedLogo === logo.url ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                      )}
+                    >
+                      <MapPreviewBackground>
+                        <div className="bg-white p-2 rounded-lg aspect-square flex items-center justify-center">
+                          {logo.url && (
+                            <img
+                              key={logo.url}
+                              src={getProxiedImageUrl(logo.url)}
+                              alt={`Logo option ${index + 1}`}
+                              className="max-w-full max-h-full object-contain"
+                              crossOrigin="anonymous"
+                              onError={(e) => {
+                                console.error('[LogoSelection] Image load error:', {
+                                  src: e.currentTarget.src,
+                                  error: e,
+                                  naturalWidth: e.currentTarget.naturalWidth,
+                                  naturalHeight: e.currentTarget.naturalHeight,
+                                  complete: e.currentTarget.complete,
+                                  currentSrc: e.currentTarget.currentSrc,
+                                  index,
+                                  timestamp: new Date().toISOString()
+                                })
+                                
+                                // Try to reload with a different proxy URL if the first attempt fails
+                                if (!e.currentTarget.src.includes('retry=true')) {
+                                  const retryUrl = `${e.currentTarget.src}&retry=true`
+                                  console.log('[LogoSelection] Retrying image load:', {
+                                    originalUrl: e.currentTarget.src,
+                                    retryUrl,
+                                    index,
+                                    timestamp: new Date().toISOString()
+                                  })
+                                  e.currentTarget.src = retryUrl
+                                } else {
+                                  console.log('[LogoSelection] Removing failed image:', {
+                                    src: e.currentTarget.src,
+                                    index,
+                                    timestamp: new Date().toISOString()
+                                  })
+                                  e.currentTarget.parentElement?.parentElement?.remove()
+                                }
+                              }}
+                              onLoad={(e) => {
+                                console.log('[LogoSelection] Image loaded successfully:', {
+                                  src: e.currentTarget.src,
+                                  naturalWidth: e.currentTarget.naturalWidth,
+                                  naturalHeight: e.currentTarget.naturalHeight,
+                                  complete: e.currentTarget.complete,
+                                  currentSrc: e.currentTarget.currentSrc,
+                                  index,
+                                  timestamp: new Date().toISOString()
+                                })
+                              }}
+                              loading="lazy"
+                            />
+                          )}
+                        </div>
+                      </MapPreviewBackground>
+                    </button>
+                  )
+                })}
               </div>
 
               <div className="flex justify-end mt-4 sticky bottom-0 bg-white pt-2 border-t">

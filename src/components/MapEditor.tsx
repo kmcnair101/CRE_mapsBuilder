@@ -334,7 +334,8 @@ export default function MapEditor() {
       width: logo.width,
       height: logo.height,
       isDataUrl: logo.url.startsWith('data:'),
-      isProxied: logo.url.startsWith('/api/proxy-image')
+      isProxied: logo.url.startsWith('/api/proxy-image'),
+      logoObject: JSON.stringify(logo, null, 2)
     })
 
     if (!googleMapRef.current) {
@@ -342,34 +343,64 @@ export default function MapEditor() {
       return
     }
 
-    // Validate logo properties
-    if (!logo.url || typeof logo.width !== 'number' || typeof logo.height !== 'number') {
-      console.error('[MapEditor] Invalid logo properties:', logo)
+    if (!logo.url) {
+      console.error('[MapEditor] Missing logo URL:', logo)
+      return
+    }
+    if (typeof logo.width !== 'number') {
+      console.error('[MapEditor] Invalid logo width:', { 
+        width: logo.width, 
+        type: typeof logo.width,
+        logo 
+      })
+      return
+    }
+    if (typeof logo.height !== 'number') {
+      console.error('[MapEditor] Invalid logo height:', { 
+        height: logo.height, 
+        type: typeof logo.height,
+        logo 
+      })
       return
     }
 
     const safePosition = getSafePosition(googleMapRef.current)
     console.log('[MapEditor] Safe position for logo:', {
       lat: safePosition.lat(),
-      lng: safePosition.lng()
+      lng: safePosition.lng(),
+      mapCenter: googleMapRef.current.getCenter().toJSON(),
+      mapZoom: googleMapRef.current.getZoom()
     })
 
-    // Preload the image with better error handling
     try {
       const img = new Image()
       img.crossOrigin = 'anonymous'
       
+      console.log('[MapEditor] Starting image preload:', {
+        url: logo.url,
+        crossOrigin: img.crossOrigin,
+        timestamp: new Date().toISOString()
+      })
+      
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
+          console.error('[MapEditor] Image load timeout:', {
+            url: logo.url,
+            duration: '10s',
+            timestamp: new Date().toISOString()
+          })
           reject(new Error('Image load timeout'))
-        }, 10000) // 10 second timeout
+        }, 10000)
 
         img.onload = () => {
           clearTimeout(timeout)
           console.log('[MapEditor] Logo image preloaded successfully:', {
             naturalWidth: img.naturalWidth,
             naturalHeight: img.naturalHeight,
-            src: img.src
+            src: img.src,
+            complete: img.complete,
+            currentSrc: img.currentSrc,
+            timestamp: new Date().toISOString()
           })
           resolve(true)
         }
@@ -380,28 +411,46 @@ export default function MapEditor() {
             error,
             src: img.src,
             width: logo.width,
-            height: logo.height
+            height: logo.height,
+            complete: img.complete,
+            currentSrc: img.currentSrc,
+            timestamp: new Date().toISOString()
           })
           reject(error)
         }
 
-        // Ensure the URL is properly formatted
         const imageUrl = logo.url.startsWith('data:') || logo.url.startsWith('/api/proxy-image')
           ? logo.url
           : `/api/proxy-image?url=${encodeURIComponent(logo.url)}`
         
+        console.log('[MapEditor] Setting image source:', {
+          originalUrl: logo.url,
+          finalUrl: imageUrl,
+          timestamp: new Date().toISOString()
+        })
+        
         img.src = imageUrl
       })
 
-      // Use the actual image dimensions if available
-      const { width, height } = calculateInitialSize(
+      const originalDimensions = {
+        width: logo.width,
+        height: logo.height
+      }
+      const naturalDimensions = {
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      }
+      const calculatedDimensions = calculateInitialSize(
         img.naturalWidth || logo.width,
         img.naturalHeight || logo.height
       )
-      console.log('[MapEditor] Calculated logo dimensions:', { 
-        original: { width: logo.width, height: logo.height },
-        natural: { width: img.naturalWidth, height: img.naturalHeight },
-        calculated: { width, height }
+
+      console.log('[MapEditor] Logo dimensions:', { 
+        original: originalDimensions,
+        natural: naturalDimensions,
+        calculated: calculatedDimensions,
+        usingNatural: Boolean(img.naturalWidth && img.naturalHeight),
+        timestamp: new Date().toISOString()
       })
 
       const overlay: MapOverlay = {
@@ -413,8 +462,8 @@ export default function MapEditor() {
         },
         properties: {
           url: logo.url,
-          width,
-          height,
+          width: calculatedDimensions.width,
+          height: calculatedDimensions.height,
           containerStyle: {
             backgroundColor: '#FFFFFF',
             borderColor: '#000000',
@@ -425,30 +474,47 @@ export default function MapEditor() {
           }
         }
       }
+
       console.log('[MapEditor] Created overlay:', {
         id: overlay.id,
         type: overlay.type,
         position: overlay.position,
         properties: {
           ...overlay.properties,
-          url: overlay.properties.url.substring(0, 100) + '...' // Truncate long URLs in logs
-        }
+          url: overlay.properties.url.substring(0, 100) + '...'
+        },
+        timestamp: new Date().toISOString()
       })
 
       addOverlayToMap(overlay, googleMapRef.current)
-      console.log('[MapEditor] Added overlay to map')
+      console.log('[MapEditor] Added overlay to map:', {
+        overlayId: overlay.id,
+        mapCenter: googleMapRef.current.getCenter().toJSON(),
+        mapZoom: googleMapRef.current.getZoom(),
+        timestamp: new Date().toISOString()
+      })
       
-      setMapDataWithLog((prev: MapData) => ({
-        ...prev,
-        overlays: [...prev.overlays, overlay]
-      }), 'add logo')
-      console.log('[MapEditor] Updated map data with new overlay')
+      setMapDataWithLog((prev: MapData) => {
+        const newOverlays = [...prev.overlays, overlay]
+        console.log('[MapEditor] Updating map data:', {
+          previousOverlayCount: prev.overlays.length,
+          newOverlayCount: newOverlays.length,
+          addedOverlayId: overlay.id,
+          timestamp: new Date().toISOString()
+        })
+        return {
+          ...prev,
+          overlays: newOverlays
+        }
+      }, 'add logo')
     } catch (error) {
       console.error('[MapEditor] Error handling logo:', {
         error,
-        logo
+        logo,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
       })
-      // You might want to show a user-friendly error message here
     }
   }
 
