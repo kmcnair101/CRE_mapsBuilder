@@ -1,4 +1,27 @@
 export default async function handler(req, res) {
+  console.log('[ProxyImage] ===== REQUEST FLOW START =====');
+  console.log('[ProxyImage] Request Flow:', {
+    stage: 'initialization',
+    method: req.method,
+    url: req.url,
+    timestamp: new Date().toISOString()
+  });
+
+  console.log('[ProxyImage] ===== REQUEST RECEIVED =====');
+  console.log('[ProxyImage] Request Debug:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    headers: {
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      host: req.headers.host,
+      'user-agent': req.headers['user-agent']
+    },
+    body: req.body,
+    timestamp: new Date().toISOString()
+  });
+
   console.log('[ProxyImage] ===== PROXY ENDPOINT CHECK =====');
   console.log('[ProxyImage] Proxy Configuration:', {
     endpoint: '/api/proxy-image',
@@ -45,6 +68,15 @@ export default async function handler(req, res) {
     console.log('[ProxyImage] Decoded URL:', {
       original: imageUrl,
       decoded: decodedUrl,
+      timestamp: new Date().toISOString()
+    });
+
+    console.log('[ProxyImage] URL Debug:', {
+      rawUrl: imageUrl,
+      decodedUrl: decodeURIComponent(imageUrl),
+      isEncoded: imageUrl !== decodeURIComponent(imageUrl),
+      containsProxy: imageUrl.includes('/api/proxy-image'),
+      containsDomain: imageUrl.includes('cre-maps-builder.vercel.app'),
       timestamp: new Date().toISOString()
     });
 
@@ -104,11 +136,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid URL' });
     }
 
-    console.log('[ProxyImage] Fetch Configuration:', {
+    console.log('[ProxyImage] Request Flow:', {
+      stage: 'pre_fetch',
       targetUrl: url.toString(),
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
       timestamp: new Date().toISOString()
     });
 
@@ -140,11 +170,24 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, max-age=31536000');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
+    console.log('[ProxyImage] Request Flow:', {
+      stage: 'post_fetch',
+      status: response.status,
+      ok: response.ok,
+      timestamp: new Date().toISOString()
+    });
+
     console.log('[ProxyImage] Response body check:', {
       hasBody: !!response.body,
       bodyType: response.body ? typeof response.body : 'none',
       isReadable: response.body ? response.body.readable : false,
       url: url.toString(),
+      timestamp: new Date().toISOString()
+    });
+
+    console.log('[ProxyImage] Request Flow:', {
+      stage: 'pre_stream',
+      hasBody: !!response.body,
       timestamp: new Date().toISOString()
     });
 
@@ -158,8 +201,8 @@ export default async function handler(req, res) {
       });
     });
 
-    console.log('[ProxyImage] Response streamed:', {
-      url: url.toString(),
+    console.log('[ProxyImage] Request Flow:', {
+      stage: 'post_stream',
       timestamp: new Date().toISOString()
     });
 
@@ -206,6 +249,12 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('[ProxyImage] Request Flow:', {
+      stage: 'error',
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     console.error('[ProxyImage] Proxy Error Details:', {
       error: error.message,
       stack: error.stack,

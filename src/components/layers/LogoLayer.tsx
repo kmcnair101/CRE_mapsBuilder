@@ -38,6 +38,11 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
     e.preventDefault()
     if (!searchTerm.trim()) return
 
+    console.log('[LogoLayer] Starting business search:', {
+      searchTerm,
+      timestamp: new Date().toISOString()
+    });
+
     setLoading(true)
     setError(null)
     setLogos([])
@@ -46,6 +51,12 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
 
     try {
       const results = await searchBusinesses(searchTerm)
+      
+      console.log('[LogoLayer] Business search results:', {
+        searchTerm,
+        resultCount: results.length,
+        timestamp: new Date().toISOString()
+      });
       
       if (results.length === 0) {
         setError('No businesses found with this name')
@@ -65,20 +76,46 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
   }
 
   const handleBusinessSelect = async (business: BusinessResult) => {
+    console.log('[LogoLayer] Business selected:', {
+      name: business.name,
+      website: business.website,
+      timestamp: new Date().toISOString()
+    });
+
     setLoading(true)
     setError(null)
     setLogos([])
     setSelectedBusiness(business)
 
     try {
+      console.log('[LogoLayer] Starting logo fetch for business:', {
+        name: business.name,
+        timestamp: new Date().toISOString()
+      });
+
       const results = await fetchLogos(business.name)
+      
+      console.log('[LogoLayer] Logo fetch results:', {
+        businessName: business.name,
+        logoCount: results.length,
+        timestamp: new Date().toISOString()
+      });
+
       setLogos(results)
       
       if (results.length === 0) {
+        console.warn('[LogoLayer] No logos found for business:', {
+          name: business.name,
+          timestamp: new Date().toISOString()
+        });
         setError('No logos found for this business')
       }
     } catch (error) {
-      console.error('Error fetching logos:', error)
+      console.error('[LogoLayer] Error fetching logos:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        businessName: business.name,
+        timestamp: new Date().toISOString()
+      });
       setError('Failed to fetch logos. Please try again.')
     } finally {
       setLoading(false)

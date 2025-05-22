@@ -85,12 +85,26 @@ export async function fetchLogos(businessName: string, location?: google.maps.La
 
   try {
     const domain = await getBusinessDomain(businessName, location)
-    console.log('[LogoSearch] Found domain:', domain)
+    console.log('[LogoSearch] Domain lookup result:', {
+      businessName,
+      domain,
+      location: location ? {
+        lat: location.lat(),
+        lng: location.lng()
+      } : undefined,
+      timestamp: new Date().toISOString()
+    });
 
     if (!domain) {
       console.warn('[LogoSearch] No domain found for business')
       return []
     }
+
+    console.log('[LogoSearch] Starting parallel logo fetches:', {
+      domain,
+      services: ['LogoDev', 'Brandfetch'],
+      timestamp: new Date().toISOString()
+    });
 
     const [logoDevLogos, brandfetchLogos] = await Promise.all([
       Promise.all([
@@ -145,7 +159,12 @@ export async function fetchLogos(businessName: string, location?: google.maps.La
 
     return allLogos
   } catch (error) {
-    console.error('[LogoSearch] Error fetching logos:', error)
+    console.error('[LogoSearch] Error in logo fetch process:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      businessName,
+      timestamp: new Date().toISOString()
+    });
     return []
   }
 }
