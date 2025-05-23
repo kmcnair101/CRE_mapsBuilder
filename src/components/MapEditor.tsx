@@ -845,19 +845,19 @@ export default function MapEditor() {
             ...overlay,
             position: updatedPosition,
             properties: {
-              ...overlay.properties,
-              ...updatedProperties,
-              width: overlay.properties?.width ?? 200,
-              height: overlay.properties?.height ?? 200,
+              ...(overlay.properties ?? {}),
+              ...(updatedProperties ?? {}),
+              width: (overlay.properties?.width ?? updatedProperties?.width ?? 200),
+              height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
             }
           }
           console.log('[MapEditor] Updated overlay:', {
             overlayId: overlay.id,
             properties: {
-              ...overlay.properties,
-              ...updatedProperties,
-              width: overlay.properties?.width ?? 200,
-              height: overlay.properties?.height ?? 200,
+              ...(overlay.properties ?? {}),
+              ...(updatedProperties ?? {}),
+              width: (overlay.properties?.width ?? updatedProperties?.width ?? 200),
+              height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
             }
           });
           return updatedOverlay
@@ -973,19 +973,19 @@ export default function MapEditor() {
             ...overlay,
             position: updatedPosition,
             properties: {
-              ...overlay.properties,
-              ...updatedProperties,
-              width: overlay.properties?.width ?? 200,
-              height: overlay.properties?.height ?? 200,
+              ...(overlay.properties ?? {}),
+              ...(updatedProperties ?? {}),
+              width: (overlay.properties?.width ?? updatedProperties?.width ?? 200),
+              height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
             }
           }
           console.log('[MapEditor] Updated overlay:', {
             overlayId: overlay.id,
             properties: {
-              ...overlay.properties,
-              ...updatedProperties,
-              width: overlay.properties?.width ?? 200,
-              height: overlay.properties?.height ?? 200,
+              ...(overlay.properties ?? {}),
+              ...(updatedProperties ?? {}),
+              width: (overlay.properties?.width ?? updatedProperties?.width ?? 200),
+              height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
             }
           });
           return updatedOverlay
