@@ -161,6 +161,13 @@ export default function MapEditor() {
         if (error) throw error
 
         if (data) {
+          if (Array.isArray(data.overlays)) {
+            data.overlays.forEach((o, i) => {
+              if (!o.properties) {
+                console.error('[MapEditor] Overlay loaded from DB missing properties:', { index: i, overlay: o });
+              }
+            });
+          }
           setMapDataWithLog((prev: MapData) => ({
             ...prev,
             title: data.title,
@@ -853,13 +860,12 @@ export default function MapEditor() {
           }
           console.log('[MapEditor] Updated overlay:', {
             overlayId: overlay.id,
-            properties: {
-              ...(overlay.properties ?? {}),
-              ...(updatedProperties ?? {}),
-              width: (overlay.properties?.width ?? updatedProperties?.width ?? 200),
-              height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
-            }
+            properties: updatedOverlay.properties,
+            source: 'handleSave/handleSaveOnly'
           });
+          if (!updatedOverlay.properties) {
+            console.error('[MapEditor] Updated overlay missing properties:', updatedOverlay);
+          }
           return updatedOverlay
         }
         
@@ -981,13 +987,12 @@ export default function MapEditor() {
           }
           console.log('[MapEditor] Updated overlay:', {
             overlayId: overlay.id,
-            properties: {
-              ...(overlay.properties ?? {}),
-              ...(updatedProperties ?? {}),
-              width: (overlay.properties?.width ?? updatedProperties?.width ?? 200),
-              height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
-            }
+            properties: updatedOverlay.properties,
+            source: 'handleSave/handleSaveOnly'
           });
+          if (!updatedOverlay.properties) {
+            console.error('[MapEditor] Updated overlay missing properties:', updatedOverlay);
+          }
           return updatedOverlay
         }
         return overlay
@@ -1126,7 +1131,7 @@ export default function MapEditor() {
               type="text"
               value={mapData.title}
               onChange={(e) => setMapDataWithLog(prev => ({ ...prev, title: e.target.value }))}
-              onFocus={() => setIsEditingTitle(true)}
+              onFocus(() => setIsEditingTitle(true)}
               className={cn(
                 "text-lg font-medium text-gray-100 bg-transparent border-0 border-b-2 focus:outline-none focus:ring-0 px-1 py-0.5 w-full",
                 isEditingTitle 
