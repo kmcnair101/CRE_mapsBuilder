@@ -1153,7 +1153,7 @@ export default function MapEditor() {
             onMapStyleChange={handleMapStyleChange}
             onSubjectPropertyEdit={handleSubjectPropertyEdit}
             onCenterSubjectProperty={handleCenterSubjectProperty}
-            onDeleteMap={handleDeleteMap}
+            onDeleteMap={() => setShowDeleteModal(true)}
             subjectProperty={mapData.subject_property ? {
               name: mapData.subject_property.name || 'Subject Property',
               image: mapData.subject_property.image || null,
@@ -1263,6 +1263,15 @@ export default function MapEditor() {
         isOpen={showPricingPlans}
         onClose={() => setShowPricingPlans(false)}
         onSave={handleSaveOnly}
+      />
+
+      <DeleteMapModal
+        open={showDeleteModal}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={() => {
+          handleDeleteMap()
+          setShowDeleteModal(false)
+        }}
       />
     </div>
   )
