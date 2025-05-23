@@ -243,8 +243,8 @@ export default function MapEditor() {
           properties: {
             ...(o.properties ?? {}),
             containerStyle: style,
-            width: o.properties?.width ?? style.width ?? 200,
-            height: o.properties?.height ?? style.height ?? 200,
+            width: typeof style.width === 'number' ? style.width : o.properties?.width ?? 200,
+            height: typeof style.height === 'number' ? style.height : o.properties?.height ?? 200,
           }
         } : o
       )
