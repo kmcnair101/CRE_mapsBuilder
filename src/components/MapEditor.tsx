@@ -390,49 +390,21 @@ export default function MapEditor() {
   }
 
   const handleLogoAdd = (logo: Logo) => {
-    console.log('[MapEditor] handleLogoAdd called with:', {
-      logo,
-      hasWidth: 'width' in logo,
-      hasHeight: 'height' in logo,
-      width: logo.width,
-      height: logo.height,
-      timestamp: new Date().toISOString()
-    });
+    if (!googleMapRef.current) return
 
-    if (!googleMapRef.current) {
-      console.error('[MapEditor] Google map ref is null');
-      return;
-    }
+    const safePosition = getSafePosition(googleMapRef.current)
+    const imageUrl = logo.url
 
-    const safePosition = getSafePosition(googleMapRef.current);
-    
-    // Preload the image
-    const img = new Image();
-    
-    // Check if the URL is already proxied
-    const isAlreadyProxied = logo.url.startsWith('/api/proxy-image');
-    const imageUrl = isAlreadyProxied 
-      ? logo.url 
-      : logo.url.startsWith('data:') 
-        ? logo.url 
-        : `/api/proxy-image?url=${encodeURIComponent(logo.url)}`;
-    
-    console.log('[MapEditor] Preloading image:', {
-      originalUrl: logo.url.substring(0, 100) + '...',
-      finalUrl: imageUrl.substring(0, 100) + '...',
-      isDataUrl: logo.url.startsWith('data:'),
-      isAlreadyProxied,
-      timestamp: new Date().toISOString()
-    });
-
-    img.src = imageUrl;
+    // Preload image to get dimensions
+    const img = new Image()
+    img.src = imageUrl
     
     img.onload = () => {
-      console.log('[MapEditor] Image loaded successfully:', {
-        naturalWidth: img.naturalWidth,
-        naturalHeight: img.naturalHeight,
+      console.log('[MapEditor] Logo being added:', {
         originalWidth: logo.width,
         originalHeight: logo.height,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
         timestamp: new Date().toISOString()
       });
 
@@ -454,8 +426,9 @@ export default function MapEditor() {
         }
       };
 
-      console.log('[MapEditor] Creating overlay:', {
-        overlay,
+      console.log('[MapEditor] Creating overlay with properties:', {
+        overlayId: overlay.id,
+        properties: overlay.properties,
         timestamp: new Date().toISOString()
       });
 
@@ -797,6 +770,13 @@ export default function MapEditor() {
         const currentOverlay = overlaysRef.current[overlay.id]
         
         if (currentOverlay) {
+          console.log('[MapEditor] Processing overlay for save:', {
+            overlayId: overlay.id,
+            type: overlay.type,
+            currentProperties: overlay.properties,
+            timestamp: new Date().toISOString()
+          });
+
           let updatedPosition = overlay.position
           let updatedProperties = { ...overlay.properties }
           
@@ -851,14 +831,13 @@ export default function MapEditor() {
               height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
             }
           }
-          console.log('[MapEditor] Updated overlay:', {
+
+          console.log('[MapEditor] Updated overlay for save:', {
             overlayId: overlay.id,
             properties: updatedOverlay.properties,
-            source: 'handleSave/handleSaveOnly'
+            timestamp: new Date().toISOString()
           });
-          if (!updatedOverlay.properties) {
-            console.error('[MapEditor] Updated overlay missing properties:', updatedOverlay);
-          }
+
           return updatedOverlay
         }
         

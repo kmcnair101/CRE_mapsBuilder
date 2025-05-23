@@ -35,6 +35,13 @@ export function useMapOverlays(
   }
 
   const addOverlayToMap = (overlay: MapOverlay, map: google.maps.Map) => {
+    console.log('[useMapOverlays] Adding overlay to map:', {
+      overlayId: overlay.id,
+      type: overlay.type,
+      properties: overlay.properties,
+      timestamp: new Date().toISOString()
+    });
+
     if (isPreview) {
       // For preview, create overlays with no-op callbacks and DO NOT touch overlaysRef
       switch (overlay.type) {
@@ -131,6 +138,13 @@ export function useMapOverlays(
 
       switch (overlay.type) {
         case 'image': {
+          console.log('[useMapOverlays] Creating image overlay:', {
+            overlayId: overlay.id,
+            width: overlay.properties.width,
+            height: overlay.properties.height,
+            timestamp: new Date().toISOString()
+          });
+
           const imageOverlay = createCustomImageOverlay(
             {
               position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
@@ -153,6 +167,11 @@ export function useMapOverlays(
             createResizeHandle
           )
           overlaysRef.current[overlay.id] = imageOverlay
+          console.log('[useMapOverlays] Image overlay created:', {
+            overlayId: overlay.id,
+            instance: imageOverlay,
+            timestamp: new Date().toISOString()
+          });
           break
         }
         case 'business': {

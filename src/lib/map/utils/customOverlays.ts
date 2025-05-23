@@ -30,6 +30,12 @@ export function createCustomImageOverlay(
   onEdit?: (style: any) => void,
   createResizeHandle: (container: HTMLElement | null, config: ResizeConfig) => (() => void) | null
 ) {
+  console.log('[CustomImageOverlay] Creating overlay with config:', {
+    width: config.width,
+    url: config.url,
+    timestamp: new Date().toISOString()
+  });
+
   class CustomImageOverlay extends google.maps.OverlayView {
     private div: HTMLDivElement | null = null
     container: HTMLDivElement | null = null
@@ -91,6 +97,11 @@ export function createCustomImageOverlay(
     }
 
     onAdd() {
+      console.log('[CustomImageOverlay] onAdd called:', {
+        width: this.width,
+        timestamp: new Date().toISOString()
+      });
+
       const map = this.getMap();
 
       if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
@@ -265,9 +276,15 @@ export function createCustomImageOverlay(
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        return
+        return;
       }
       
+      console.log('[CustomImageOverlay] draw called:', {
+        width: this.width,
+        containerWidth: this.container?.offsetWidth,
+        timestamp: new Date().toISOString()
+      });
+
       // First ensure all styles are applied
       if (this.container) {
         this.applyStyles(this.container)
