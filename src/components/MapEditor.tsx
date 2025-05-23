@@ -1131,7 +1131,7 @@ export default function MapEditor() {
               type="text"
               value={mapData.title}
               onChange={(e) => setMapDataWithLog(prev => ({ ...prev, title: e.target.value }))}
-              onFocus(() => setIsEditingTitle(true)}
+              onFocus={() => setIsEditingTitle(true)}
               className={cn(
                 "text-lg font-medium text-gray-100 bg-transparent border-0 border-b-2 focus:outline-none focus:ring-0 px-1 py-0.5 w-full",
                 isEditingTitle 
