@@ -58,37 +58,31 @@ export function LogoSelectionModal({
   }
 
   const handleLogoSelect = (logo: string) => {
-    console.log('[LogoSelection] Selecting logo:', {
+    console.log('[LogoSelection] handleLogoSelect called with:', {
       logo,
-      logoType: typeof logo,
       timestamp: new Date().toISOString()
-    })
+    });
     
     if (!logo) {
       console.error('[LogoSelection] Invalid logo selection:', {
         logo,
         timestamp: new Date().toISOString()
-      })
-      return
+      });
+      return;
     }
 
-    // Create a new image to get natural dimensions
-    const img = new Image();
-    img.onload = () => {
-      const logoObject = {
-        url: logo,
-        width: img.naturalWidth,
-        height: img.naturalHeight
-      }
-      
-      console.log('[LogoSelection] Passing logo to onSelect:', {
-        logoObject,
-        timestamp: new Date().toISOString()
-      })
-      
-      onSelect(logoObject)
-    }
-    img.src = logo;
+    const logoObject = {
+      url: logo,
+      width: 300, // Default width
+      height: 300 // Default height
+    };
+    
+    console.log('[LogoSelection] Passing logo to onSelect:', {
+      logoObject,
+      timestamp: new Date().toISOString()
+    });
+    
+    onSelect(logoObject);
   }
 
   const handleConfirm = () => {

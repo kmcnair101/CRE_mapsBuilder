@@ -390,10 +390,12 @@ export default function MapEditor() {
   }
 
   const handleLogoAdd = (logo: Logo) => {
-    console.log('[MapEditor] handleLogoAdd called:', {
+    console.log('[MapEditor] handleLogoAdd called with:', {
       logo,
       hasWidth: 'width' in logo,
       hasHeight: 'height' in logo,
+      width: logo.width,
+      height: logo.height,
       timestamp: new Date().toISOString()
     });
 
@@ -403,11 +405,7 @@ export default function MapEditor() {
     }
 
     const safePosition = getSafePosition(googleMapRef.current);
-    console.log('[MapEditor] Safe position calculated:', {
-      position: safePosition.toJSON(),
-      timestamp: new Date().toISOString()
-    });
-
+    
     // Preload the image
     const img = new Image();
     
@@ -433,6 +431,8 @@ export default function MapEditor() {
       console.log('[MapEditor] Image loaded successfully:', {
         naturalWidth: img.naturalWidth,
         naturalHeight: img.naturalHeight,
+        originalWidth: logo.width,
+        originalHeight: logo.height,
         timestamp: new Date().toISOString()
       });
 
@@ -454,7 +454,10 @@ export default function MapEditor() {
         }
       };
 
-      console.log('[MapEditor] Creating overlay:', overlay);
+      console.log('[MapEditor] Creating overlay:', {
+        overlay,
+        timestamp: new Date().toISOString()
+      });
 
       const instance = addOverlayToMap(overlay, googleMapRef.current);
       console.log('[MapEditor] Overlay added to map:', {
@@ -469,17 +472,6 @@ export default function MapEditor() {
         ...prev,
         overlays: [...prev.overlays, overlay]
       }), 'add logo');
-    };
-
-    img.onerror = (error) => {
-      console.error('[MapEditor] Error loading image:', {
-        error,
-        originalUrl: logo.url.substring(0, 100) + '...',
-        finalUrl: imageUrl.substring(0, 100) + '...',
-        isDataUrl: logo.url.startsWith('data:'),
-        isAlreadyProxied,
-        timestamp: new Date().toISOString()
-      });
     };
   };
 
