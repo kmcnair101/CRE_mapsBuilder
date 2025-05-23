@@ -196,6 +196,12 @@ export function createCustomImageOverlay(
         maxWidth: 400,
         maintainAspectRatio: true,
         onResize: (width: number) => {
+          console.log('[CustomImageOverlay] Resize handler:', {
+            oldWidth: this.width,
+            newWidth: width,
+            timestamp: new Date().toISOString()
+          });
+          
           this.width = width
           container.style.width = `${width}px`
           this.draw()
@@ -279,7 +285,7 @@ export function createCustomImageOverlay(
         return;
       }
       
-      console.log('[CustomImageOverlay] draw method details:', {
+      console.log('[CustomImageOverlay] draw method:', {
         width: this.width,
         containerWidth: this.container?.offsetWidth,
         imageWidth: this.imageWrapper?.offsetWidth,
@@ -786,6 +792,12 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
     const newWidth = Math.max(config.minWidth, Math.min(config.maxWidth, startWidth + dx))
     
     if (newWidth !== lastWidth) {
+      console.log('[ResizeHandle] Width change:', {
+        oldWidth: lastWidth,
+        newWidth: newWidth,
+        timestamp: new Date().toISOString()
+      });
+      
       lastWidth = newWidth
       container.style.width = `${newWidth}px`
       config.onResize(newWidth)
