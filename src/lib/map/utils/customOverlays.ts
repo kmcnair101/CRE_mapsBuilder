@@ -264,7 +264,7 @@ export function createCustomImageOverlay(
                 lng: this.position.lng() 
               }
             };
-            onEdit(this.content, updatedStyle);
+            onEdit(updatedStyle);
           }
         }
       }
