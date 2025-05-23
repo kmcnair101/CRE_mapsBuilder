@@ -207,6 +207,12 @@ export function createCustomImageOverlay(
           this.draw()
           
           if (onEdit) {
+            console.log('[CustomImageOverlay] Calling onEdit with:', {
+              style: this.style,
+              width: width,
+              timestamp: new Date().toISOString()
+            });
+            
             onEdit({
               ...this.style,
               width: width
