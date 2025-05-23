@@ -187,3 +187,53 @@ export async function fetchLogos(businessName: string, location?: google.maps.La
     return []
   }
 }
+
+// Example edit handler for logo overlays
+export async function editLogoOverlay(overlay, updates) {
+  const updatedOverlay = {
+    ...overlay,
+    properties: {
+      ...(overlay.properties ?? {}),
+      ...(updates ?? {}),
+      width: (overlay.properties?.width ?? updates?.width ?? 200),
+      height: (overlay.properties?.height ?? updates?.height ?? 200),
+    }
+  }
+  console.log('[Brandfetch] editLogoOverlay:', { overlayId: overlay.id, before: overlay, after: updatedOverlay });
+  return updatedOverlay;
+}
+
+// Example edit handler for group overlays
+export async function editGroupOverlay(overlay, updates) {
+  const updatedOverlay = {
+    ...overlay,
+    properties: {
+      ...(overlay.properties ?? {}),
+      ...(updates ?? {}),
+      width: (overlay.properties?.width ?? updates?.width ?? 200),
+      height: (overlay.properties?.height ?? updates?.height ?? 200),
+    }
+  }
+  console.log('[Brandfetch] editGroupOverlay:', { overlayId: overlay.id, before: overlay, after: updatedOverlay });
+  return updatedOverlay;
+}
+
+// Example edit handler for text overlays
+export async function editTextOverlay(overlay, updates) {
+  const updatedOverlay = {
+    ...overlay,
+    properties: {
+      ...(overlay.properties ?? {}),
+      ...(updates ?? {}),
+      width: (overlay.properties?.width ?? updates?.width ?? 200),
+      height: (overlay.properties?.height ?? updates?.height ?? 200),
+    }
+  }
+  console.log('[Brandfetch] editTextOverlay:', { overlayId: overlay.id, before: overlay, after: updatedOverlay });
+  return updatedOverlay;
+}
+
+// Add a log for all overlay updates
+export function logOverlayUpdate(action, overlay) {
+  console.log(`[Brandfetch] Overlay update: ${action}`, { overlayId: overlay.id, overlay });
+}
