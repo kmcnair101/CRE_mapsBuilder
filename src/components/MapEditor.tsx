@@ -844,8 +844,7 @@ export default function MapEditor() {
         return overlay
       })
 
-      const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
-
+      // 1. Prepare map update WITHOUT thumbnail
       const simplifiedMapStyle = {
         type: mapType as MapStyleName | 'satellite' | 'terrain',
         customStyles: styles ? styles.map((style: any) => ({
@@ -863,24 +862,39 @@ export default function MapEditor() {
         zoom_level: zoom || 12,
         overlays: updatedOverlays,
         subject_property: mapData.subject_property,
-        thumbnail,
         map_style: simplifiedMapStyle
+        // thumbnail: OMITTED HERE
       }
 
+      let mapId = id
       if (id) {
         const { error } = await supabase
           .from('maps')
           .update(mapUpdate)
           .eq('id', id)
-
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('maps')
           .insert([mapUpdate])
-
+          .select('id')
+          .single()
         if (error) throw error
+        mapId = data.id
       }
+
+      // 2. Generate thumbnail in the background and update the map record
+      setTimeout(async () => {
+        try {
+          const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
+          await supabase
+            .from('maps')
+            .update({ thumbnail })
+            .eq('id', mapId)
+        } catch (err) {
+          console.error('[MapEditor] Error generating/updating thumbnail:', err)
+        }
+      }, 0)
 
       navigate('/')
     } catch (error) {
@@ -970,8 +984,7 @@ export default function MapEditor() {
         return overlay
       })
 
-      const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
-
+      // 1. Prepare map update WITHOUT thumbnail
       const simplifiedMapStyle = {
         type: mapType as MapStyleName | 'satellite' | 'terrain',
         customStyles: styles ? styles.map((style: any) => ({
@@ -989,7 +1002,6 @@ export default function MapEditor() {
         zoom_level: zoom || 12,
         overlays: updatedOverlays,
         subject_property: mapData.subject_property,
-        thumbnail,
         map_style: simplifiedMapStyle
       }
 
@@ -1000,9 +1012,11 @@ export default function MapEditor() {
           .eq('id', id)
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('maps')
           .insert([mapUpdate])
+          .select('id')
+          .single()
         if (error) throw error
       }
       // No navigation here!
