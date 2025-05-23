@@ -241,9 +241,10 @@ export default function MapEditor() {
         o.id === id ? {
           ...o,
           properties: {
-            ...o.properties,
+            ...(o.properties ?? {}),
             containerStyle: style,
-            ...(style.width && { width: style.width })
+            width: o.properties?.width ?? style.width ?? 200,
+            height: o.properties?.height ?? style.height ?? 200,
           }
         } : o
       )
