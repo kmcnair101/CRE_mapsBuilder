@@ -72,19 +72,23 @@ export function LogoSelectionModal({
       return
     }
 
-    // Log the logo object being passed to onSelect
-    const logoObject = {
-      url: logo,
-      width: 300, // Default width
-      height: 300 // Default height
+    // Create a new image to get natural dimensions
+    const img = new Image();
+    img.onload = () => {
+      const logoObject = {
+        url: logo,
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      }
+      
+      console.log('[LogoSelection] Passing logo to onSelect:', {
+        logoObject,
+        timestamp: new Date().toISOString()
+      })
+      
+      onSelect(logoObject)
     }
-    
-    console.log('[LogoSelection] Passing logo to onSelect:', {
-      logoObject,
-      timestamp: new Date().toISOString()
-    })
-    
-    onSelect(logoObject)
+    img.src = logo;
   }
 
   const handleConfirm = () => {

@@ -130,18 +130,23 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
     })
 
     try {
-      const logoObject = {
-        url: logo,
-        width: 300, // Default width
-        height: 300 // Default height
+      // Create a new image to get natural dimensions
+      const img = new Image();
+      img.onload = () => {
+        const logoObject = {
+          url: logo,
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        }
+
+        console.log('[LogoLayer] Passing logo to parent:', {
+          logoObject,
+          timestamp: new Date().toISOString()
+        })
+
+        onAdd(logoObject)
       }
-
-      console.log('[LogoLayer] Passing logo to parent:', {
-        logoObject,
-        timestamp: new Date().toISOString()
-      })
-
-      onAdd(logoObject)
+      img.src = logo;
     } catch (error) {
       console.error('[LogoLayer] Error handling logo selection:', {
         error,
