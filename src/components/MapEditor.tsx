@@ -446,10 +446,7 @@ export default function MapEditor() {
         }
       };
 
-      console.log('[MapEditor] Creating overlay:', {
-        overlay,
-        timestamp: new Date().toISOString()
-      });
+      console.log('[MapEditor] Creating overlay:', overlay);
 
       const instance = addOverlayToMap(overlay, googleMapRef.current);
       console.log('[MapEditor] Overlay added to map:', {
@@ -844,16 +841,26 @@ export default function MapEditor() {
             }
           }
           
-          return {
+          const updatedOverlay = {
             ...overlay,
             position: updatedPosition,
             properties: {
               ...overlay.properties,
               ...updatedProperties,
-              width: overlay.properties?.width ?? 200,   // fallback to 200 if missing
-              height: overlay.properties?.height ?? 200, // fallback to 200 if missing
+              width: overlay.properties?.width ?? 200,
+              height: overlay.properties?.height ?? 200,
             }
           }
+          console.log('[MapEditor] Updated overlay:', {
+            overlayId: overlay.id,
+            properties: {
+              ...overlay.properties,
+              ...updatedProperties,
+              width: overlay.properties?.width ?? 200,
+              height: overlay.properties?.height ?? 200,
+            }
+          });
+          return updatedOverlay
         }
         
         return overlay
@@ -962,16 +969,26 @@ export default function MapEditor() {
             }
           }
 
-          return {
+          const updatedOverlay = {
             ...overlay,
             position: updatedPosition,
             properties: {
               ...overlay.properties,
               ...updatedProperties,
-              width: overlay.properties?.width ?? 200,   // fallback to 200 if missing
-              height: overlay.properties?.height ?? 200, // fallback to 200 if missing
+              width: overlay.properties?.width ?? 200,
+              height: overlay.properties?.height ?? 200,
             }
           }
+          console.log('[MapEditor] Updated overlay:', {
+            overlayId: overlay.id,
+            properties: {
+              ...overlay.properties,
+              ...updatedProperties,
+              width: overlay.properties?.width ?? 200,
+              height: overlay.properties?.height ?? 200,
+            }
+          });
+          return updatedOverlay
         }
         return overlay
       })
@@ -1217,8 +1234,7 @@ export default function MapEditor() {
                 const width = overlay.properties?.width ?? 200;
                 const height = overlay.properties?.height ?? 200;
 
-                // ...rest of your rendering logic, e.g.:
-                // return <OverlayComponent key={overlay.id} overlay={overlay} width={width} height={height} />;
+                // ...rest of your rendering logic
               })}
             </div>
           </div>
