@@ -264,7 +264,7 @@ export function createCustomImageOverlay(
       this.cleanupFunctions.push(() => {
         div.removeEventListener('mousedown', handleDragStart)
         document.removeEventListener('mousemove', handleDragMove)
-        document.removeEventListener('mouseup', handleDragEnd)
+        div.removeEventListener('mouseup', handleDragEnd)
       })
 
       div.appendChild(container)
@@ -279,9 +279,10 @@ export function createCustomImageOverlay(
         return;
       }
       
-      console.log('[CustomImageOverlay] draw called:', {
+      console.log('[CustomImageOverlay] draw method details:', {
         width: this.width,
         containerWidth: this.container?.offsetWidth,
+        imageWidth: this.imageWrapper?.offsetWidth,
         timestamp: new Date().toISOString()
       });
 
