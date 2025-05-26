@@ -352,6 +352,9 @@ export function createCustomTextOverlay(
       this.currentWidth = this.baseWidth
       this.baseFontSize = style.fontSize || 14
       console.log('[TextOverlay] constructor style:', style, 'baseWidth:', this.baseWidth, 'currentWidth:', this.currentWidth)
+      if ('width' in style) {
+        console.log(`[TextOverlay] constructor style.width:`, style.width, typeof style.width)
+      }
     }
 
     private getRgbaColor(hex: string, opacity: number) {
@@ -372,6 +375,9 @@ export function createCustomTextOverlay(
 
     private applyStyles(contentDiv: HTMLDivElement, width: number | undefined) {
       console.log('[TextOverlay] applyStyles called with width:', width, 'style:', this.style)
+      if ('width' in this.style) {
+        console.log(`[TextOverlay] applyStyles this.style.width:`, this.style.width, typeof this.style.width)
+      }
       const scale = typeof width === 'number' && this.baseWidth ? width / this.baseWidth : 1;
       const scaled = {
         fontSize: Math.round(this.baseFontSize * scale),
@@ -401,8 +407,10 @@ export function createCustomTextOverlay(
       Object.assign(contentDiv.style, styles);
       if (typeof width === 'number') {
         contentDiv.style.width = `${width}px`;
+        console.log(`[TextOverlay] applyStyles set contentDiv.style.width: ${contentDiv.style.width}`)
       } else {
         contentDiv.style.removeProperty('width');
+        console.log('[TextOverlay] applyStyles removed contentDiv.style.width')
       }
       contentDiv.innerHTML = this.content;
       console.log('[TextOverlay] contentDiv.style.width:', contentDiv.style.width)
@@ -411,6 +419,9 @@ export function createCustomTextOverlay(
     
     updateContent(content: string, style: any) {
       console.log('[TextOverlay] updateContent called with:', content, style)
+      if ('width' in style) {
+        console.log(`[TextOverlay] updateContent style.width:`, style.width, typeof style.width)
+      }
       this.content = content;
       this.style = {
         ...this.style,
@@ -446,6 +457,9 @@ export function createCustomTextOverlay(
 
       this.draw();
       console.log('[TextOverlay] after updateContent, currentWidth:', this.currentWidth, 'style:', this.style)
+      if ('width' in this.style) {
+        console.log(`[TextOverlay] after updateContent this.style.width:`, this.style.width, typeof this.style.width)
+      }
     }
 
     onAdd() {
@@ -669,13 +683,24 @@ export function createCustomTextOverlay(
   }
 
   console.log('[TextOverlay] overlay object:', overlay)
-  console.log('[TextOverlay] overlay.properties.width:', overlay.properties.width)
+  if (overlay && overlay.id) {
+    console.log(`[TextOverlay] overlay.id: ${overlay.id}`)
+  }
+  if (overlay && overlay.properties) {
+    console.log(`[TextOverlay] overlay.properties:`, overlay.properties)
+    if ('width' in overlay.properties) {
+      console.log(`[TextOverlay] overlay.properties.width (raw):`, overlay.properties.width, typeof overlay.properties.width)
+    }
+  }
   const style = {
     ...containerStyle,
     ...textStyle,
     ...(typeof overlay.properties.width === 'number' ? { width: overlay.properties.width } : {})
   }
   console.log('[TextOverlay] style object created:', style)
+  if ('width' in style) {
+    console.log(`[TextOverlay] style.width:`, style.width, typeof style.width)
+  }
 
   const textOverlay = new CustomTextOverlay(
     new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
