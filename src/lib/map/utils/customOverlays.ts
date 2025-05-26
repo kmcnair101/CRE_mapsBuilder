@@ -698,7 +698,8 @@ export function createCustomTextOverlay(
   const style = {
     ...containerStyle,
     ...textStyle,
-    ...(typeof overlay.properties.width === 'number' ? { width: overlay.properties.width } : {})
+    // Only set width if explicitly set (not undefined/null/0)
+    ...(overlay.properties.width !== undefined && overlay.properties.width !== null ? { width: overlay.properties.width } : {})
   }
   console.log('[TextOverlay] style object created:', style)
   if ('width' in style) {
