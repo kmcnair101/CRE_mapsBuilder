@@ -230,18 +230,8 @@ export function createCustomImageOverlay(
 
       const handleDragEnd = () => {
         if (this.isDragging) {
-          this.isDragging = false;
-          document.body.style.cursor = 'default';
-
-          // Notify parent of position change
-          if (onEdit) {
-            onEdit(this.content, {
-              position: {
-                lat: this.position.lat(),
-                lng: this.position.lng()
-              }
-            });
-          }
+          this.isDragging = false
+          document.body.style.cursor = 'default'
         }
       }
 
@@ -252,7 +242,7 @@ export function createCustomImageOverlay(
       this.cleanupFunctions.push(() => {
         div.removeEventListener('mousedown', handleDragStart)
         document.removeEventListener('mousemove', handleDragMove)
-        div.removeEventListener('mouseup', handleDragEnd)
+        document.removeEventListener('mouseup', handleDragEnd)
       })
 
       div.appendChild(container)
@@ -264,7 +254,7 @@ export function createCustomImageOverlay(
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        return;
+        return
       }
       
       // First ensure all styles are applied
@@ -361,6 +351,7 @@ export function createCustomTextOverlay(
       this.baseWidth = style.width || 80
       this.currentWidth = this.baseWidth
       this.baseFontSize = style.fontSize || 14
+      console.log('[TextOverlay] constructor style:', style, 'baseWidth:', this.baseWidth, 'currentWidth:', this.currentWidth)
     }
 
     private getRgbaColor(hex: string, opacity: number) {
@@ -380,7 +371,8 @@ export function createCustomTextOverlay(
     }
 
     private applyStyles(contentDiv: HTMLDivElement, width: number) {
-      const scale = width / (this.baseWidth || 1);
+      console.log('[TextOverlay] applyStyles called with width:', width, 'style:', this.style)
+      const scale = width / this.baseWidth;
       const scaled = {
         fontSize: Math.round(this.baseFontSize * scale),
         padding: Math.round(this.style.padding * scale),
@@ -403,6 +395,7 @@ export function createCustomTextOverlay(
         
         // Layout styles
         minWidth: 'min-content',
+        width: `${width}px`,
         maxWidth: '400px',
         whiteSpace: 'pre',
         display: 'inline-block',
@@ -413,19 +406,17 @@ export function createCustomTextOverlay(
         cursor: 'move'
       };
 
+      // Apply all styles at once
       Object.assign(contentDiv.style, styles);
-      // Only set width if explicitly provided
-      if (typeof this.style.width === 'number') {
-        contentDiv.style.width = `${this.style.width}px`;
-      } else {
-        contentDiv.style.removeProperty('width');
-      }
+      
       // Set content after styles
       contentDiv.innerHTML = this.content;
+      console.log('[TextOverlay] contentDiv.style.width:', contentDiv.style.width)
     }
 
     
     updateContent(content: string, style: any) {
+      console.log('[TextOverlay] updateContent called with:', content, style)
       this.content = content;
       this.style = {
         ...this.style,
@@ -463,6 +454,7 @@ export function createCustomTextOverlay(
       }
 
       this.draw();
+      console.log('[TextOverlay] after updateContent, currentWidth:', this.currentWidth, 'style:', this.style)
     }
 
     onAdd() {
@@ -572,10 +564,8 @@ export function createCustomTextOverlay(
         const dy = e.clientY - this.startPos.y;
         const proj = this.getProjection();
         const point = proj.fromLatLngToDivPixel(this.initialPosition);
-        if (!point) return;
         const newPoint = new google.maps.Point(point.x + dx, point.y + dy);
         const newPosition = proj.fromDivPixelToLatLng(newPoint);
-        if (!newPosition) return;
         this.position = newPosition;
         this.initialPosition = newPosition;
         this.draw();
@@ -586,16 +576,10 @@ export function createCustomTextOverlay(
         if (this.isDragging) {
           this.isDragging = false;
           document.body.style.cursor = 'default';
-
-          // Notify parent of position change
-          if (onEdit) {
-            onEdit(this.content, {
-              position: {
-                lat: this.position.lat(),
-                lng: this.position.lng()
-              }
-            });
-          }
+        }
+        if (this.isResizing) {
+          this.isResizing = false;
+          document.body.style.cursor = 'default';
         }
       }
 
@@ -622,6 +606,7 @@ export function createCustomTextOverlay(
       // First ensure all styles are applied
       if (this.contentDiv) {
         this.applyStyles(this.contentDiv, this.currentWidth);
+        console.log('[TextOverlay] draw, contentDiv.style.width:', this.contentDiv.style.width, 'currentWidth:', this.currentWidth)
       }
       
       // Then calculate position
@@ -692,12 +677,12 @@ export function createCustomTextOverlay(
     textAlign: overlay.properties.textStyle?.textAlign || 'center'
   }
 
-  // Only set width if explicitly provided
   const style = {
     ...containerStyle,
     ...textStyle,
-    ...(typeof overlay.properties.width === 'number' ? { width: overlay.properties.width } : {})
+    width: overlay.properties.width || 80
   }
+  console.log('[TextOverlay] style object created:', style)
 
   const textOverlay = new CustomTextOverlay(
     new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
