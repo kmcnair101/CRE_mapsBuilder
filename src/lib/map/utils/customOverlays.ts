@@ -233,15 +233,14 @@ export function createCustomImageOverlay(
           this.isDragging = false;
           document.body.style.cursor = 'default';
 
+          // Notify parent of position change
           if (onEdit) {
-            const updatedStyle = {
-              ...this.style,
+            onEdit(this.content, {
               position: {
                 lat: this.position.lat(),
-                lng: this.position.lng() 
+                lng: this.position.lng()
               }
-            };
-            onEdit(updatedStyle);
+            });
           }
         }
       }
@@ -578,7 +577,7 @@ export function createCustomTextOverlay(
       }
 
       const handleDragEnd = () => {
-        if this.isDragging) {
+        if (this.isDragging) {
           this.isDragging = false;
           document.body.style.cursor = 'default';
 
