@@ -698,7 +698,7 @@ export function createCustomTextOverlay(
   const style = {
     ...containerStyle,
     ...textStyle,
-    // Only set width if explicitly set (not undefined/null/0)
+    // Only set width if explicitly set (not undefined/null)
     ...(overlay.properties.width !== undefined && overlay.properties.width !== null ? { width: overlay.properties.width } : {})
   }
   console.log('[TextOverlay] style object created:', style)
