@@ -205,7 +205,11 @@ export function useMapOverlays(
           setTimeout(() => {
             if (textOverlay.div) {
               const rect = textOverlay.div.getBoundingClientRect()
-              const padding = style?.padding ?? overlay.properties?.padding ?? overlay.properties?.containerStyle?.padding ?? 8
+              // Use the overlay's style or containerStyle for padding
+              const padding =
+                overlay.properties?.padding ??
+                overlay.properties?.containerStyle?.padding ??
+                8
               console.log(
                 `[TextOverlay] id=${overlay.id} width=${rect.width}px height=${rect.height}px padding=${padding}px`
               )
