@@ -690,6 +690,10 @@ export function createCustomTextOverlay(
     console.log(`[TextOverlay] overlay.properties:`, overlay.properties)
     if ('width' in overlay.properties) {
       console.log(`[TextOverlay] overlay.properties.width (raw):`, overlay.properties.width, typeof overlay.properties.width)
+      if (overlay.properties.width === 200) {
+        console.log('[TextOverlay][STACKTRACE] overlay.properties.width is 200, stack trace:')
+        console.trace()
+      }
     }
     if (overlay && overlay.properties && typeof overlay.properties.width === 'number') {
       console.log(`[TextOverlay][CONFIRM] overlay.properties.width is present and will be used:`, overlay.properties.width)
