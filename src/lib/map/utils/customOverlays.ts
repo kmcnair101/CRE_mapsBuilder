@@ -348,7 +348,7 @@ export function createCustomTextOverlay(
       this.initialPosition = position
       this.content = content
       this.style = style
-      this.baseWidth = style.width || 80
+      this.baseWidth = typeof style.width === 'number' ? style.width : undefined
       this.currentWidth = this.baseWidth
       this.baseFontSize = style.fontSize || 14
       console.log('[TextOverlay] constructor style:', style, 'baseWidth:', this.baseWidth, 'currentWidth:', this.currentWidth)
@@ -370,32 +370,25 @@ export function createCustomTextOverlay(
       }
     }
 
-    private applyStyles(contentDiv: HTMLDivElement, width: number) {
+    private applyStyles(contentDiv: HTMLDivElement, width: number | undefined) {
       console.log('[TextOverlay] applyStyles called with width:', width, 'style:', this.style)
-      const scale = width / this.baseWidth;
+      const scale = typeof width === 'number' && this.baseWidth ? width / this.baseWidth : 1;
       const scaled = {
         fontSize: Math.round(this.baseFontSize * scale),
         padding: Math.round(this.style.padding * scale),
         borderWidth: Math.round(this.style.borderWidth * scale)
       };
-      
       const styles = {
-        // Text styles
         color: this.style.color || '#000000',
         fontSize: `${scaled.fontSize}px`,
         fontFamily: this.style.fontFamily || 'Arial',
         fontWeight: this.style.fontWeight || 'normal',
         textAlign: this.style.textAlign || 'center',
-        
-        // Container styles
         backgroundColor: this.getRgbaColor(this.style.backgroundColor || '#FFFFFF', this.style.backgroundOpacity || 1),
         border: `${scaled.borderWidth}px solid ${this.getRgbaColor(this.style.borderColor || '#000000', this.style.borderOpacity || 1)}`,
         padding: `${scaled.padding}px`,
         borderRadius: '4px',
-        
-        // Layout styles
         minWidth: 'min-content',
-        width: `${width}px`,
         maxWidth: '400px',
         whiteSpace: 'pre',
         display: 'inline-block',
@@ -405,11 +398,12 @@ export function createCustomTextOverlay(
         verticalAlign: 'middle',
         cursor: 'move'
       };
-
-      // Apply all styles at once
       Object.assign(contentDiv.style, styles);
-      
-      // Set content after styles
+      if (typeof width === 'number') {
+        contentDiv.style.width = `${width}px`;
+      } else {
+        contentDiv.style.removeProperty('width');
+      }
       contentDiv.innerHTML = this.content;
       console.log('[TextOverlay] contentDiv.style.width:', contentDiv.style.width)
     }
@@ -420,14 +414,11 @@ export function createCustomTextOverlay(
       this.content = content;
       this.style = {
         ...this.style,
-        ...style,
-        width: style.width || this.baseWidth,
-        fontSize: style.fontSize || this.baseFontSize
+        ...style
       };
-      this.baseWidth = this.style.width;
+      this.baseWidth = typeof this.style.width === 'number' ? this.style.width : undefined;
       this.currentWidth = this.baseWidth;
       this.baseFontSize = this.style.fontSize;
-
       if (this.contentDiv) {
         this.applyStyles(this.contentDiv, this.currentWidth);
         // Recreate resize handle after updating content
@@ -573,7 +564,7 @@ export function createCustomTextOverlay(
       }
 
       const handleDragEnd = () => {
-        if (this.isDragging) {
+        if this.isDragging) {
           this.isDragging = false;
           document.body.style.cursor = 'default';
         }
@@ -682,7 +673,7 @@ export function createCustomTextOverlay(
   const style = {
     ...containerStyle,
     ...textStyle,
-    width: overlay.properties.width || 80
+    ...(typeof overlay.properties.width === 'number' ? { width: overlay.properties.width } : {})
   }
   console.log('[TextOverlay] style object created:', style)
 
