@@ -30,12 +30,6 @@ export function createCustomImageOverlay(
   onEdit?: (style: any) => void,
   createResizeHandle: (container: HTMLElement | null, config: ResizeConfig) => (() => void) | null
 ) {
-  console.log('[CustomImageOverlay] Creating overlay with config:', {
-    width: config.width,
-    url: config.url,
-    timestamp: new Date().toISOString()
-  });
-
   class CustomImageOverlay extends google.maps.OverlayView {
     private div: HTMLDivElement | null = null
     container: HTMLDivElement | null = null
@@ -97,11 +91,6 @@ export function createCustomImageOverlay(
     }
 
     onAdd() {
-      console.log('[CustomImageOverlay] onAdd called:', {
-        width: this.width,
-        timestamp: new Date().toISOString()
-      });
-
       const map = this.getMap();
 
       if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
@@ -196,23 +185,11 @@ export function createCustomImageOverlay(
         maxWidth: 400,
         maintainAspectRatio: true,
         onResize: (width: number) => {
-          console.log('[CustomImageOverlay] Resize handler:', {
-            oldWidth: this.width,
-            newWidth: width,
-            timestamp: new Date().toISOString()
-          });
-          
           this.width = width
           container.style.width = `${width}px`
           this.draw()
           
           if (onEdit) {
-            console.log('[CustomImageOverlay] Calling onEdit with:', {
-              style: this.style,
-              width: width,
-              timestamp: new Date().toISOString()
-            });
-            
             onEdit({
               ...this.style,
               width: width
@@ -291,13 +268,6 @@ export function createCustomImageOverlay(
         return;
       }
       
-      console.log('[CustomImageOverlay] draw method:', {
-        width: this.width,
-        containerWidth: this.container?.offsetWidth,
-        imageWidth: this.imageWrapper?.offsetWidth,
-        timestamp: new Date().toISOString()
-      });
-
       // First ensure all styles are applied
       if (this.container) {
         this.applyStyles(this.container)
@@ -798,12 +768,6 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
     const newWidth = Math.max(config.minWidth, Math.min(config.maxWidth, startWidth + dx))
     
     if (newWidth !== lastWidth) {
-      console.log('[ResizeHandle] Width change:', {
-        oldWidth: lastWidth,
-        newWidth: newWidth,
-        timestamp: new Date().toISOString()
-      });
-      
       lastWidth = newWidth
       container.style.width = `${newWidth}px`
       config.onResize(newWidth)
