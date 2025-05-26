@@ -564,7 +564,7 @@ export function createCustomTextOverlay(
       }
 
       const handleDragEnd = () => {
-        if this.isDragging) {
+        if (this.isDragging) {
           this.isDragging = false;
           document.body.style.cursor = 'default';
         }
