@@ -677,6 +677,8 @@ export function createCustomTextOverlay(
     textAlign: overlay.properties.textStyle?.textAlign || 'center'
   }
 
+  console.log('[TextOverlay] overlay object:', overlay)
+  console.log('[TextOverlay] overlay.properties.width:', overlay.properties.width)
   const style = {
     ...containerStyle,
     ...textStyle,
