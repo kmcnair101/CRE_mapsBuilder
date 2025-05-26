@@ -132,11 +132,13 @@ export default function MapEditor() {
 
         if (data) {
           if (Array.isArray(data.overlays)) {
-            data.overlays.forEach((o, i) => {
-              if (!o.properties) {
-                console.error('[MapEditor] Overlay loaded from DB missing properties:', { index: i, overlay: o });
+            data.overlays = data.overlays.map(o => ({
+              ...o,
+              properties: {
+                ...o.properties,
+                width: o.properties?.width ?? 200 // <-- Ensure width is set
               }
-            });
+            }));
           }
           setMapDataWithLog((prev: MapData) => ({
             ...prev,
@@ -415,7 +417,8 @@ export default function MapEditor() {
       },
       properties: {
         content: text,
-        ...style
+        ...style,
+        width: style.width ?? 200 // <-- Ensure width is set
       }
     }
 
