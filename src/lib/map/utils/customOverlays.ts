@@ -404,7 +404,6 @@ export function createCustomTextOverlay(
         
         // Layout styles
         minWidth: 'min-content',
-        width: `${width}px`,
         maxWidth: '400px',
         whiteSpace: 'pre',
         display: 'inline-block',
@@ -579,7 +578,7 @@ export function createCustomTextOverlay(
       }
 
       const handleDragEnd = () => {
-        if (this.isDragging) {
+        if this.isDragging) {
           this.isDragging = false;
           document.body.style.cursor = 'default';
 
