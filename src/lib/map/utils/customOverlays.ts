@@ -380,7 +380,7 @@ export function createCustomTextOverlay(
     }
 
     private applyStyles(contentDiv: HTMLDivElement, width: number) {
-      const scale = width / this.baseWidth;
+      const scale = width / (this.baseWidth || 1);
       const scaled = {
         fontSize: Math.round(this.baseFontSize * scale),
         padding: Math.round(this.style.padding * scale),
@@ -413,9 +413,13 @@ export function createCustomTextOverlay(
         cursor: 'move'
       };
 
-      // Apply all styles at once
       Object.assign(contentDiv.style, styles);
-      
+      // Only set width if explicitly provided
+      if (typeof this.style.width === 'number') {
+        contentDiv.style.width = `${this.style.width}px`;
+      } else {
+        contentDiv.style.removeProperty('width');
+      }
       // Set content after styles
       contentDiv.innerHTML = this.content;
     }
@@ -568,8 +572,10 @@ export function createCustomTextOverlay(
         const dy = e.clientY - this.startPos.y;
         const proj = this.getProjection();
         const point = proj.fromLatLngToDivPixel(this.initialPosition);
+        if (!point) return;
         const newPoint = new google.maps.Point(point.x + dx, point.y + dy);
         const newPosition = proj.fromDivPixelToLatLng(newPoint);
+        if (!newPosition) return;
         this.position = newPosition;
         this.initialPosition = newPosition;
         this.draw();
@@ -686,10 +692,11 @@ export function createCustomTextOverlay(
     textAlign: overlay.properties.textStyle?.textAlign || 'center'
   }
 
+  // Only set width if explicitly provided
   const style = {
     ...containerStyle,
     ...textStyle,
-    width: overlay.properties.width || 80
+    ...(typeof overlay.properties.width === 'number' ? { width: overlay.properties.width } : {})
   }
 
   const textOverlay = new CustomTextOverlay(
