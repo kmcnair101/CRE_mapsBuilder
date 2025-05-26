@@ -29,19 +29,9 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
   }>>([])
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessResult | null>(null)
 
-  console.log('[LogoLayer] Component mounted:', {
-    hasOnLogoSelect: typeof onAdd === 'function',
-    timestamp: new Date().toISOString()
-  })
-
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
-
-    console.log('[LogoLayer] Starting business search:', {
-      searchTerm,
-      timestamp: new Date().toISOString()
-    });
 
     setLoading(true)
     setError(null)
@@ -51,12 +41,6 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
 
     try {
       const results = await searchBusinesses(searchTerm)
-      
-      console.log('[LogoLayer] Business search results:', {
-        searchTerm,
-        resultCount: results.length,
-        timestamp: new Date().toISOString()
-      });
       
       if (results.length === 0) {
         setError('No businesses found with this name')
@@ -68,7 +52,6 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
         setBusinesses(results)
       }
     } catch (error) {
-      console.error('Error searching for business:', error)
       setError('Failed to search for business. Please try again.')
     } finally {
       setLoading(false)
@@ -76,46 +59,20 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
   }
 
   const handleBusinessSelect = async (business: BusinessResult) => {
-    console.log('[LogoLayer] Business selected:', {
-      name: business.name,
-      website: business.website,
-      timestamp: new Date().toISOString()
-    });
-
     setLoading(true)
     setError(null)
     setLogos([])
     setSelectedBusiness(business)
 
     try {
-      console.log('[LogoLayer] Starting logo fetch for business:', {
-        name: business.name,
-        timestamp: new Date().toISOString()
-      });
-
       const results = await fetchLogos(business.name)
-      
-      console.log('[LogoLayer] Logo fetch results:', {
-        businessName: business.name,
-        logoCount: results.length,
-        timestamp: new Date().toISOString()
-      });
 
       setLogos(results)
       
       if (results.length === 0) {
-        console.warn('[LogoLayer] No logos found for business:', {
-          name: business.name,
-          timestamp: new Date().toISOString()
-        });
         setError('No logos found for this business')
       }
     } catch (error) {
-      console.error('[LogoLayer] Error fetching logos:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        businessName: business.name,
-        timestamp: new Date().toISOString()
-      });
       setError('Failed to fetch logos. Please try again.')
     } finally {
       setLoading(false)
@@ -123,12 +80,6 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
   }
 
   const handleLogoSelect = async (logo: string) => {
-    console.log('[LogoLayer] Logo selected:', {
-      logo,
-      logoType: typeof logo,
-      timestamp: new Date().toISOString()
-    })
-
     try {
       // Create a new image to get natural dimensions
       const img = new Image();
@@ -138,11 +89,6 @@ export function LogoLayer({ onAdd, isActive, onToggle, onClose }: LogoLayerProps
           width: img.naturalWidth,
           height: img.naturalHeight
         }
-
-        console.log('[LogoLayer] Passing logo to parent:', {
-          logoObject,
-          timestamp: new Date().toISOString()
-        })
 
         onAdd(logoObject)
       }

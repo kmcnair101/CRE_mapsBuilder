@@ -16,22 +16,12 @@ import { DownloadMapModal } from './modals/DownloadMapModal'
 import { PricingPlans } from './pricing/PricingPlans'
 
 const calculateLogoDimensions = (naturalWidth: number, naturalHeight: number) => {
-  console.log('[MapEditor] Calculating logo dimensions:', {
-    naturalWidth,
-    naturalHeight,
-    timestamp: new Date().toISOString()
-  });
-
   // Define maximum dimensions
   const MAX_WIDTH = 200;
   const MAX_HEIGHT = 200;
 
   // Calculate aspect ratio
   const aspectRatio = naturalWidth / naturalHeight;
-  console.log('[MapEditor] Aspect ratio:', {
-    aspectRatio,
-    timestamp: new Date().toISOString()
-  });
 
   let width = naturalWidth;
   let height = naturalHeight;
@@ -47,12 +37,6 @@ const calculateLogoDimensions = (naturalWidth: number, naturalHeight: number) =>
     height = MAX_HEIGHT;
     width = height * aspectRatio;
   }
-
-  console.log('[MapEditor] Calculated dimensions:', {
-    original: { width: naturalWidth, height: naturalHeight },
-    calculated: { width, height },
-    timestamp: new Date().toISOString()
-  });
 
   return {
     width: Math.round(width),
@@ -80,20 +64,6 @@ export default function MapEditor() {
   const [showPricingPlans, setShowPricingPlans] = useState(false)
 
   const [mapData, setMapData] = useState<MapData>(() => {
-    console.log('[MapEditor] Initializing map data:', {
-      initialData: {
-        title: location.state?.subject_property?.name || 
-                location.state?.subject_property?.address || 
-                'New Map',
-        center_lat: location.state?.center_lat || 40.7128,
-        center_lng: location.state?.center_lng || -74.0060,
-        zoom_level: location.state?.zoom_level || 12,
-        overlays: location.state?.overlays || [],
-        subject_property: location.state?.subject_property || null,
-        mapStyle: location.state?.mapStyle
-      },
-      timestamp: new Date().toISOString()
-    })
     return {
       title: location.state?.subject_property?.name || 
               location.state?.subject_property?.address || 
@@ -180,7 +150,6 @@ export default function MapEditor() {
           }), 'load map data')
         }
       } catch (error) {
-        console.error('Error loading map:', error)
       } finally {
         setLoading(false)
       }
@@ -400,20 +369,7 @@ export default function MapEditor() {
     img.src = imageUrl
     
     img.onload = () => {
-      console.log('[MapEditor] Logo being added:', {
-        originalWidth: logo.width,
-        originalHeight: logo.height,
-        naturalWidth: img.naturalWidth,
-        naturalHeight: img.naturalHeight,
-        timestamp: new Date().toISOString()
-      });
-
       const dimensions = calculateLogoDimensions(img.naturalWidth, img.naturalHeight);
-      console.log('[MapEditor] Calculated dimensions:', {
-        original: { width: img.naturalWidth, height: img.naturalHeight },
-        calculated: dimensions,
-        timestamp: new Date().toISOString()
-      });
 
       const overlay: MapOverlay = {
         id: `logo-${Date.now()}`,
@@ -426,20 +382,7 @@ export default function MapEditor() {
         }
       };
 
-      console.log('[MapEditor] Creating overlay with properties:', {
-        overlayId: overlay.id,
-        properties: overlay.properties,
-        timestamp: new Date().toISOString()
-      });
-
       const instance = addOverlayToMap(overlay, googleMapRef.current);
-      console.log('[MapEditor] Overlay added to map:', {
-        overlayId: overlay.id,
-        instance,
-        hasWidth: instance?.get('width'),
-        hasHeight: instance?.get('height'),
-        timestamp: new Date().toISOString()
-      });
 
       setMapDataWithLog(prev => ({
         ...prev,
@@ -653,7 +596,6 @@ export default function MapEditor() {
       }
 
       if (!position) {
-        console.error('Could not get shape position')
         return
       }
 
@@ -744,7 +686,6 @@ export default function MapEditor() {
     try {
       await handleDownload(mapRef, false, undefined, undefined, googleMapRef)
     } catch (error) {
-      console.error('Error downloading map:', error)
     } finally {
       setDownloading(false)
     }
@@ -752,9 +693,7 @@ export default function MapEditor() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[MapEditor] handleSave called')
     if (!googleMapRef.current || !user) {
-      console.log('[MapEditor] googleMapRef.current or user missing')
       return
     }
 
@@ -770,12 +709,6 @@ export default function MapEditor() {
         const currentOverlay = overlaysRef.current[overlay.id]
         
         if (currentOverlay) {
-          console.log('[MapEditor] Processing overlay for save:', {
-            overlayId: overlay.id,
-            type: overlay.type,
-            currentProperties: overlay.properties,
-            timestamp: new Date().toISOString()
-          });
 
           let updatedPosition = overlay.position
           let updatedProperties = { ...overlay.properties }
@@ -832,12 +765,6 @@ export default function MapEditor() {
             }
           }
 
-          console.log('[MapEditor] Updated overlay for save:', {
-            overlayId: overlay.id,
-            properties: updatedOverlay.properties,
-            timestamp: new Date().toISOString()
-          });
-
           return updatedOverlay
         }
         
@@ -892,13 +819,11 @@ export default function MapEditor() {
             .update({ thumbnail })
             .eq('id', mapId)
         } catch (err) {
-          console.error('[MapEditor] Error generating/updating thumbnail:', err)
         }
       }, 0)
 
       navigate('/')
     } catch (error) {
-      console.error('Error saving map:', error)
     } finally {
       setSaving(false)
     }
@@ -971,14 +896,6 @@ export default function MapEditor() {
               height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
             }
           }
-          console.log('[MapEditor] Updated overlay:', {
-            overlayId: overlay.id,
-            properties: updatedOverlay.properties,
-            source: 'handleSave/handleSaveOnly'
-          });
-          if (!updatedOverlay.properties) {
-            console.error('[MapEditor] Updated overlay missing properties:', updatedOverlay);
-          }
           return updatedOverlay
         }
         return overlay
@@ -1021,7 +938,6 @@ export default function MapEditor() {
       }
       // No navigation here!
     } catch (error) {
-      console.error('Error saving map:', error)
     } finally {
       setSaving(false)
     }
@@ -1041,7 +957,6 @@ export default function MapEditor() {
 
       navigate('/maps')
     } catch (error) {
-      console.error('Error deleting map:', error)
     }
   }
 
@@ -1054,44 +969,8 @@ export default function MapEditor() {
   }, [])
 
   const setMapDataWithLog = (updater: (prev: MapData) => MapData, action: string) => {
-    console.log('[MapEditor] Updating map data:', {
-      action,
-      previousState: {
-        ...mapData,
-        overlays: mapData.overlays.map(o => ({
-          id: o.id,
-          type: o.type,
-          hasProperties: 'properties' in o,
-          properties: o.properties ? {
-            ...o.properties,
-            url: o.properties.url?.substring(0, 100) + '...'
-          } : null
-        }))
-      },
-      timestamp: new Date().toISOString()
-    });
-
     setMapData(prev => {
       const next = updater(prev);
-      console.log('[MapEditor] Map data updated:', {
-        action,
-        changes: {
-          overlaysCount: {
-            prev: prev.overlays.length,
-            next: next.overlays.length
-          },
-          overlays: next.overlays.map(o => ({
-            id: o.id,
-            type: o.type,
-            hasProperties: 'properties' in o,
-            properties: o.properties ? {
-              ...o.properties,
-              url: o.properties.url?.substring(0, 100) + '...'
-            } : null
-          }))
-        },
-        timestamp: new Date().toISOString()
-      });
       return next;
     });
   };
@@ -1104,7 +983,6 @@ export default function MapEditor() {
     )
   }
 
-  console.log('[MapEditor] Rendering PricingPlans with onSave:', typeof handleSaveOnly, handleSaveOnly)
   return (
     <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
       <div className="w-56 bg-gray-900 flex flex-col">
@@ -1202,25 +1080,6 @@ export default function MapEditor() {
               )}
               <div ref={mapRef} className="w-full h-full" />
               {mapData.overlays.map((overlay, i) => {
-                console.log('[MapEditor] Rendering overlay:', {
-                  overlayId: overlay.id,
-                  type: overlay.type,
-                  properties: overlay.properties,
-                  hasWidth: overlay.properties && typeof overlay.properties.width !== 'undefined',
-                  hasHeight: overlay.properties && typeof overlay.properties.height !== 'undefined',
-                });
-
-                if (!overlay.properties) {
-                  console.error('[MapEditor] Overlay missing properties:', overlay);
-                } else {
-                  if (typeof overlay.properties.width === 'undefined') {
-                    console.error('[MapEditor] Overlay missing width:', overlay);
-                  }
-                  if (typeof overlay.properties.height === 'undefined') {
-                    console.error('[MapEditor] Overlay missing height:', overlay);
-                  }
-                }
-
                 // Defensive fallback to prevent crash:
                 const width = overlay.properties?.width ?? 200;
                 const height = overlay.properties?.height ?? 200;
@@ -1264,7 +1123,6 @@ export default function MapEditor() {
               map.setZoom(originalZoom)
             }
           } catch (error) {
-            console.error('[MapEditor] Error during download:', error)
           } finally {
             setDownloading(false)
           }

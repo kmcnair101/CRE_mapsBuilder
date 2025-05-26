@@ -35,28 +35,12 @@ function MapPreview({
 
   useEffect(() => {
     if (!mapRef.current) {
-      console.log('[MapPreview] Map container not ready')
       return
     }
 
     // Log initial container state
-    console.log('[MapPreview] Container dimensions:', {
-      width: mapRef.current.offsetWidth,
-      height: mapRef.current.offsetHeight,
-      className: mapRef.current.className
-    })
-
     // Log initial props
-    console.log('[MapPreview] Initial props:', {
-      center: { lat: center_lat, lng: center_lng },
-      zoom: zoom_level,
-      mapStyle: mapStyle,
-      overlaysCount: overlays.length,
-      subjectProperty: subject_property
-    })
-
     loader.load().then(() => {
-      console.log('[MapPreview] Google Maps loaded')
       
       const map = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
@@ -71,25 +55,8 @@ function MapPreview({
         clickableIcons: false
       })
 
-      // Log map instance creation
-      console.log('[MapPreview] Map instance created:', {
-        center: map.getCenter()?.toJSON(),
-        zoom: map.getZoom(),
-        bounds: map.getBounds()?.toJSON(),
-        containerSize: {
-          width: mapRef.current?.offsetWidth,
-          height: mapRef.current?.offsetHeight
-        }
-      })
-
       // Add overlays
-      console.log('[MapPreview] Starting overlay creation')
       overlays.forEach((overlay, index) => {
-        console.log(`[MapPreview] Processing overlay ${index}:`, {
-          type: overlay.type,
-          position: overlay.position,
-          properties: overlay.properties
-        })
 
         if (overlay.type === 'text') {
           const textDiv = document.createElement('div')
@@ -102,7 +69,6 @@ function MapPreview({
           const textOverlay = new google.maps.OverlayView()
           
           textOverlay.onAdd = function() {
-            console.log(`[MapPreview] Text overlay ${index} onAdd called`)
             const panes = this.getPanes()!
             panes.overlayLayer.appendChild(textDiv)
           }
@@ -113,11 +79,6 @@ function MapPreview({
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
             )!
             
-            console.log(`[MapPreview] Text overlay ${index} draw called:`, {
-              position: position?.toJSON(),
-              content: overlay.properties.content,
-              divStyle: textDiv.style.cssText
-            })
 
             if (position) {
               textDiv.style.position = 'absolute'
@@ -128,16 +89,11 @@ function MapPreview({
           }
 
           textOverlay.setMap(map)
-          console.log(`[MapPreview] Text overlay ${index} added to map`)
         }
       })
 
       // Add subject property marker
       if (subject_property?.lat && subject_property?.lng) {
-        console.log('[MapPreview] Adding subject property:', {
-          position: { lat: subject_property.lat, lng: subject_property.lng },
-          style: subject_property.style
-        })
 
         const style = subject_property.style || {}
         const marker = new google.maps.Marker({
@@ -158,28 +114,13 @@ function MapPreview({
             fontFamily: style.fontFamily || 'Arial'
           } : undefined
         })
-
-        console.log('[MapPreview] Subject property marker created:', {
-          position: marker.getPosition()?.toJSON(),
-          label: marker.getLabel()
-        })
       }
 
       // Add map state change listener
       google.maps.event.addListenerOnce(map, 'idle', () => {
-        console.log('[MapPreview] Map idle state:', {
-          center: map.getCenter()?.toJSON(),
-          zoom: map.getZoom(),
-          bounds: map.getBounds()?.toJSON(),
-          containerSize: {
-            width: mapRef.current?.offsetWidth,
-            height: mapRef.current?.offsetHeight
-          }
-        })
       })
 
     }).catch(error => {
-      console.error('[MapPreview] Error loading map:', error)
     })
   }, [center_lat, center_lng, zoom_level, mapStyle, overlays, subject_property])
 
@@ -303,7 +244,6 @@ export function MapList() {
         if (json?.url) setPortalUrl(json.url)
       }
     } catch (error) {
-      console.error('Error downloading map:', error)
       alert('Failed to download map. Please try again.')
     } finally {
       setDownloadingMap(null)
@@ -463,17 +403,6 @@ export function MapList() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredMaps.map((map) => {
-              console.log('[MapList] Preview map object:', map)
-              console.log('[MapList] Preview map data:', {
-                id: map.id,
-                title: map.title,
-                center_lat: map.center_lat,
-                center_lng: map.center_lng,
-                zoom_level: map.zoom_level,
-                overlays: map.overlays,
-                map_style: map.map_style,
-              })
-
               const subjectProperty = map.subject_property as any;
               return (
                 <div
