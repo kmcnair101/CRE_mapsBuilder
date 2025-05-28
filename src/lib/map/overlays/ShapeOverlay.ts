@@ -394,15 +394,33 @@ export function createShapeOverlay(
     }
 
     draw() {
-      if (!this.div || !this.contentDiv) return
-      const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.position)
-      if (point) {
-        const width = this.contentDiv.offsetWidth
-        const height = this.contentDiv.offsetHeight
-        
-        this.div.style.left = `${point.x - width / 2}px`
-        this.div.style.top = `${point.y - height / 2}px`
+      // Position the controlsDiv over the shape
+      if (this.controlsDiv && this.shape) {
+        const projection = this.getProjection();
+        let anchor: google.maps.LatLng | null = null;
+
+        // Find the anchor point (center for rect/circle, centroid or first point for polygon)
+        if ('getBounds' in this.shape && typeof this.shape.getBounds === 'function') {
+          const bounds = this.shape.getBounds();
+          if (bounds) anchor = bounds.getCenter();
+        } else if ('getCenter' in this.shape && typeof this.shape.getCenter === 'function') {
+          anchor = this.shape.getCenter();
+        } else if ('getPath' in this.shape && typeof this.shape.getPath === 'function') {
+          const path = this.shape.getPath();
+          if (path.getLength() > 0) anchor = path.getAt(0);
+        }
+
+        if (anchor && projection) {
+          const point = projection.fromLatLngToDivPixel(anchor);
+          if (point) {
+            // Adjust offsets as needed to place controls above the shape
+            this.controlsDiv.style.left = `${point.x - this.controlsDiv.offsetWidth / 2}px`;
+            this.controlsDiv.style.top = `${point.y - this.controlsDiv.offsetHeight - 12}px`;
+            this.controlsDiv.style.position = 'absolute';
+            this.controlsDiv.style.display = this.isSelected ? 'flex' : 'none';
+            this.controlsDiv.style.zIndex = '1000';
+          }
+        }
       }
     }
 
