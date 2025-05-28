@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface DeleteMapModalProps {
   open: boolean
@@ -8,6 +8,11 @@ interface DeleteMapModalProps {
 
 export const DeleteMapModal: React.FC<DeleteMapModalProps> = ({ open, onCancel, onConfirm }) => {
   const [input, setInput] = useState('')
+
+  // Reset input when modal opens or closes
+  useEffect(() => {
+    if (open) setInput('')
+  }, [open])
 
   if (!open) return null
 
@@ -54,4 +59,4 @@ export const DeleteMapModal: React.FC<DeleteMapModalProps> = ({ open, onCancel, 
       </div>
     </div>
   )
-} 
+}
