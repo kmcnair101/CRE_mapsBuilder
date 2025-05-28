@@ -75,6 +75,14 @@ function MapPreview({
           textDiv.style.color = overlay.properties.color || '#000000'
           textDiv.style.fontSize = `${overlay.properties.fontSize || 14}px`
           textDiv.style.padding = `${overlay.properties.padding || 8}px`
+          textDiv.style.background = overlay.properties.backgroundColor || '#fff'
+          textDiv.style.border = '1px solid #ccc'
+          textDiv.style.borderRadius = '4px'
+          textDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
+          textDiv.style.whiteSpace = 'pre-line'
+          textDiv.style.minWidth = '40px'
+          textDiv.style.maxWidth = '300px'
+          textDiv.style.pointerEvents = 'none'
           textDiv.innerHTML = overlay.properties.content
 
           const textOverlay = new google.maps.OverlayView()
@@ -88,6 +96,7 @@ function MapPreview({
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
             )
+            console.log('[MapPreview] textOverlay.draw position:', position)
             if (position) {
               textDiv.style.position = 'absolute'
               textDiv.style.left = `${position.x}px`
@@ -107,6 +116,10 @@ function MapPreview({
           imgDiv.style.height = overlay.properties.height
             ? `${overlay.properties.height}px`
             : 'auto'
+          imgDiv.style.background = '#fff'
+          imgDiv.style.border = '1px solid #ccc'
+          imgDiv.style.borderRadius = '4px'
+          imgDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
 
           const img = document.createElement('img')
           img.src = overlay.properties.url
@@ -128,7 +141,9 @@ function MapPreview({
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
             )
+            console.log('[MapPreview] imageOverlay.draw position:', position)
             if (position) {
+              imgDiv.style.position = 'absolute'
               imgDiv.style.left = `${position.x - (overlay.properties.width || 100) / 2}px`
               imgDiv.style.top = `${position.y - (overlay.properties.height || (overlay.properties.width || 100) / 2) / 2}px`
             }
@@ -190,7 +205,8 @@ function MapPreview({
           overlayRefs.current.push(logoOverlay)
         } else if (overlay.type === 'shape') {
           console.log('[MapPreview] Adding shape overlay', overlay)
-          if (overlay.properties.shapeType === 'rectangle' && overlay.properties.bounds) {
+          // Accept both 'rect' and 'rectangle'
+          if ((overlay.properties.shapeType === 'rectangle' || overlay.properties.shapeType === 'rect') && overlay.properties.bounds) {
             const bounds = new google.maps.LatLngBounds(
               new google.maps.LatLng(overlay.properties.bounds.south, overlay.properties.bounds.west),
               new google.maps.LatLng(overlay.properties.bounds.north, overlay.properties.bounds.east)
