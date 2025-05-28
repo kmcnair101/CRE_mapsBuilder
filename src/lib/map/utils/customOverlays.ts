@@ -184,15 +184,23 @@ export function createCustomImageOverlay(
         minWidth: 50,
         maxWidth: 400,
         maintainAspectRatio: true,
+        aspectRatio: this.aspectRatio, // Make sure aspectRatio is set on image load!
         onResize: (width: number) => {
+          const aspectRatio = this.aspectRatio || 1
+          const height = Math.round(width / aspectRatio)
           this.width = width
+          // Update both width and height to maintain aspect ratio
           container.style.width = `${width}px`
+          container.style.height = `${height}px`
+          if (this.imageWrapper) {
+            this.imageWrapper.style.height = `${height}px`
+          }
           this.draw()
-          
           if (onEdit) {
             onEdit({
               ...this.style,
-              width: width
+              width,
+              height
             })
           }
         }
