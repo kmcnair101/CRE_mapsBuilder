@@ -32,14 +32,15 @@ function MapPreview({
   className?: string
 }) {
   const mapRef = useRef<HTMLDivElement>(null)
+  const overlayRefs = useRef<any[]>([])
 
   useEffect(() => {
-    if (!mapRef.current) {
-      return
-    }
+    if (!mapRef.current) return
+
+    let mapInstance: google.maps.Map | null = null
 
     loader.load().then(() => {
-      const map = new google.maps.Map(mapRef.current!, {
+      mapInstance = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
         zoom: zoom_level,
         disableDefaultUI: true,
@@ -52,10 +53,13 @@ function MapPreview({
         clickableIcons: false
       })
 
+      // Remove old overlays
+      overlayRefs.current.forEach(ov => ov.setMap(null))
+      overlayRefs.current = []
+
       // Add overlays
-      overlays.forEach((overlay, index) => {
+      overlays.forEach((overlay) => {
         if (overlay.type === 'text') {
-          // --- TEXT OVERLAY ---
           const textDiv = document.createElement('div')
           textDiv.className = 'map-text-overlay'
           textDiv.style.color = overlay.properties.color || '#000000'
@@ -65,14 +69,14 @@ function MapPreview({
 
           const textOverlay = new google.maps.OverlayView()
           textOverlay.onAdd = function() {
-            const panes = this.getPanes()!
+            const panes = this.getPanes()
             panes.overlayLayer.appendChild(textDiv)
           }
           textOverlay.draw = function() {
             const overlayProjection = this.getProjection()
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
-            )!
+            )
             if (position) {
               textDiv.style.position = 'absolute'
               textDiv.style.left = `${position.x}px`
@@ -80,9 +84,12 @@ function MapPreview({
               textDiv.style.transform = 'translate(-50%, -50%)'
             }
           }
-          textOverlay.setMap(map)
+          textOverlay.onRemove = function() {
+            if (textDiv.parentNode) textDiv.parentNode.removeChild(textDiv)
+          }
+          textOverlay.setMap(mapInstance)
+          overlayRefs.current.push(textOverlay)
         } else if (overlay.type === 'image') {
-          // --- IMAGE OVERLAY ---
           const imgDiv = document.createElement('div')
           imgDiv.style.position = 'absolute'
           imgDiv.style.width = `${overlay.properties.width || 200}px`
@@ -101,22 +108,25 @@ function MapPreview({
 
           const imageOverlay = new google.maps.OverlayView()
           imageOverlay.onAdd = function() {
-            const panes = this.getPanes()!
+            const panes = this.getPanes()
             panes.overlayLayer.appendChild(imgDiv)
           }
           imageOverlay.draw = function() {
             const overlayProjection = this.getProjection()
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
-            )!
+            )
             if (position) {
               imgDiv.style.left = `${position.x - (overlay.properties.width || 100) / 2}px`
               imgDiv.style.top = `${position.y - (overlay.properties.height || (overlay.properties.width || 100) / 2) / 2}px`
             }
           }
-          imageOverlay.setMap(map)
+          imageOverlay.onRemove = function() {
+            if (imgDiv.parentNode) imgDiv.parentNode.removeChild(imgDiv)
+          }
+          imageOverlay.setMap(mapInstance)
+          overlayRefs.current.push(imageOverlay)
         } else if (overlay.type === 'business') {
-          // --- LOGO OVERLAY ---
           const logoDiv = document.createElement('div')
           logoDiv.style.position = 'absolute'
           logoDiv.style.display = 'flex'
@@ -146,30 +156,33 @@ function MapPreview({
 
           const logoOverlay = new google.maps.OverlayView()
           logoOverlay.onAdd = function() {
-            const panes = this.getPanes()!
+            const panes = this.getPanes()
             panes.overlayLayer.appendChild(logoDiv)
           }
           logoOverlay.draw = function() {
             const overlayProjection = this.getProjection()
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
-            )!
+            )
             if (position) {
               logoDiv.style.left = `${position.x}px`
               logoDiv.style.top = `${position.y}px`
               logoDiv.style.transform = 'translate(-50%, -50%)'
             }
           }
-          logoOverlay.setMap(map)
+          logoOverlay.onRemove = function() {
+            if (logoDiv.parentNode) logoDiv.parentNode.removeChild(logoDiv)
+          }
+          logoOverlay.setMap(mapInstance)
+          overlayRefs.current.push(logoOverlay)
         } else if (overlay.type === 'shape') {
-          // --- SHAPE OVERLAY ---
           if (overlay.properties.shapeType === 'rectangle' && overlay.properties.bounds) {
             const bounds = new google.maps.LatLngBounds(
               new google.maps.LatLng(overlay.properties.bounds.south, overlay.properties.bounds.west),
               new google.maps.LatLng(overlay.properties.bounds.north, overlay.properties.bounds.east)
             )
-            new google.maps.Rectangle({
-              map,
+            const rect = new google.maps.Rectangle({
+              map: mapInstance,
               bounds,
               fillColor: overlay.properties.fillColor || '#3388ff',
               fillOpacity: overlay.properties.fillOpacity ?? 0.2,
@@ -180,9 +193,10 @@ function MapPreview({
               draggable: false,
               editable: false
             })
+            overlayRefs.current.push(rect)
           } else if (overlay.properties.shapeType === 'circle' && overlay.properties.center && overlay.properties.radius) {
-            new google.maps.Circle({
-              map,
+            const circ = new google.maps.Circle({
+              map: mapInstance,
               center: new google.maps.LatLng(overlay.properties.center.lat, overlay.properties.center.lng),
               radius: overlay.properties.radius,
               fillColor: overlay.properties.fillColor || '#3388ff',
@@ -194,10 +208,11 @@ function MapPreview({
               draggable: false,
               editable: false
             })
+            overlayRefs.current.push(circ)
           } else if (overlay.properties.shapeType === 'polygon' && overlay.properties.path) {
             const path = overlay.properties.path.map((pt: any) => new google.maps.LatLng(pt.lat, pt.lng))
-            new google.maps.Polygon({
-              map,
+            const poly = new google.maps.Polygon({
+              map: mapInstance,
               paths: path,
               fillColor: overlay.properties.fillColor || '#3388ff',
               fillOpacity: overlay.properties.fillOpacity ?? 0.2,
@@ -208,6 +223,7 @@ function MapPreview({
               draggable: false,
               editable: false
             })
+            overlayRefs.current.push(poly)
           }
         }
       })
@@ -215,8 +231,8 @@ function MapPreview({
       // Add subject property marker
       if (subject_property?.lat && subject_property?.lng) {
         const style = subject_property.style || {}
-        new google.maps.Marker({
-          map,
+        const marker = new google.maps.Marker({
+          map: mapInstance,
           position: { lat: subject_property.lat, lng: subject_property.lng },
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
@@ -233,14 +249,17 @@ function MapPreview({
             fontFamily: style.fontFamily || 'Arial'
           } : undefined
         })
+        overlayRefs.current.push(marker)
       }
-
-      // Add map state change listener
-      google.maps.event.addListenerOnce(map, 'idle', () => {
-      })
-
-    }).catch(error => {
     })
+
+    // Cleanup overlays and map on unmount or overlays change
+    return () => {
+      overlayRefs.current.forEach(ov => {
+        if (ov.setMap) ov.setMap(null)
+      })
+      overlayRefs.current = []
+    }
   }, [center_lat, center_lng, zoom_level, mapStyle, overlays, subject_property])
 
   return (
