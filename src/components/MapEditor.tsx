@@ -14,6 +14,7 @@ import type { MapData, MapOverlay, MapStyleName } from '@/lib/types'
 import { useMapStyle } from '@/lib/map/hooks/useMapStyle'
 import { DownloadMapModal } from './modals/DownloadMapModal'
 import { PricingPlans } from './pricing/PricingPlans'
+import { useSubscription } from '@/hooks/useSubscription'
 
 const calculateLogoDimensions = (naturalWidth: number, naturalHeight: number) => {
   // Define maximum dimensions
@@ -50,6 +51,8 @@ export default function MapEditor() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const mapRef = useRef<HTMLDivElement>(null)
+
+  const { hasAccess } = useSubscription(); // <-- ADD THIS LINE
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
