@@ -526,7 +526,7 @@ export function createShapeOverlay(
     }
 
     private handleDragEnd = () => {
-      if this.isDragging) {
+      if (this.isDragging) {
         this.isDragging = false
         document.body.style.cursor = 'default'
       }
