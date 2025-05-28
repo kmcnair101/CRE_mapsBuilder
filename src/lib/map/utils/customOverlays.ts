@@ -790,6 +790,7 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
     }
   }
 
+  
   const handleMouseUp = () => {
     if (isResizing) {
       isResizing = false
