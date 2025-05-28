@@ -426,14 +426,13 @@ export function createShapeOverlay(
 
         if (anchor && projection) {
           const point = projection.fromLatLngToDivPixel(anchor);
-          if (point) {
-            // Adjust offsets as needed to place controls above the shape
-            this.controlsDiv.style.left = `${point.x - this.controlsDiv.offsetWidth / 2}px`;
-            this.controlsDiv.style.top = `${point.y - this.controlsDiv.offsetHeight - 12}px`;
-            this.controlsDiv.style.position = 'absolute';
-            this.controlsDiv.style.display = this.isSelected ? 'flex' : 'none';
-            this.controlsDiv.style.zIndex = '1000';
-          }
+        if (point) {
+          this.controlsDiv.style.left = `${point.x - this.controlsDiv.offsetWidth / 2}px`;
+          this.controlsDiv.style.top = `${point.y - this.controlsDiv.offsetHeight - 12}px`;
+          this.controlsDiv.style.position = 'absolute';
+          // REMOVE or COMMENT OUT the next line:
+          // this.controlsDiv.style.display = this.isSelected ? 'flex' : 'none';
+          this.controlsDiv.style.zIndex = '1000';
         }
       }
     }
