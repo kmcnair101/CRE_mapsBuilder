@@ -328,6 +328,20 @@ export function createShapeOverlay(
           this.selectShape()
         })
 
+        // --- Add mouseover/mouseout handlers for hover controls ---
+        google.maps.event.addListener(this.shape, 'mouseover', () => {
+          if (this.controlsDiv && !this.isSelected) {
+            this.controlsDiv.style.display = 'flex'
+            this.draw()
+          }
+        })
+        google.maps.event.addListener(this.shape, 'mouseout', () => {
+          if (this.controlsDiv && !this.isSelected) {
+            this.controlsDiv.style.display = 'none'
+          }
+        })
+        // ---------------------------------------------------------
+
         // Add change handlers
         if ('bounds_changed' in this.shape) {
           google.maps.event.addListener(this.shape, 'bounds_changed', () => {
@@ -512,7 +526,7 @@ export function createShapeOverlay(
     }
 
     private handleDragEnd = () => {
-      if (this.isDragging) {
+      if this.isDragging) {
         this.isDragging = false
         document.body.style.cursor = 'default'
       }
