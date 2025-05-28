@@ -10,8 +10,6 @@ interface PricingPlanProps {
 }
 
 export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
-  console.log('[PricingPlans] Received onSave prop:', typeof onSave, onSave)
-  
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -22,15 +20,8 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
     setError('')
 
     try {
-      console.log('[PricingPlans] handleSubscribe called for plan:', plan)
-      console.log('[PricingPlans] onSave in handleSubscribe:', typeof onSave, onSave)
-
       if (onSave) {
-        console.log('[PricingPlans] Calling onSave before Stripe redirect')
         await onSave()
-        console.log('[PricingPlans] onSave completed')
-      } else {
-        console.log('[PricingPlans] No onSave prop provided')
       }
 
       const res = await fetch('/api/create-checkout-session', {
@@ -50,7 +41,6 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
         throw new Error('Failed to redirect to checkout.')
       }
     } catch (err) {
-      console.error('Subscription error:', err)
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
