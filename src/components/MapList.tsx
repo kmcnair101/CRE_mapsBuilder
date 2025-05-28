@@ -38,10 +38,7 @@ function MapPreview({
       return
     }
 
-    // Log initial container state
-    // Log initial props
     loader.load().then(() => {
-      
       const map = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
         zoom: zoom_level,
@@ -57,8 +54,8 @@ function MapPreview({
 
       // Add overlays
       overlays.forEach((overlay, index) => {
-
         if (overlay.type === 'text') {
+          // --- TEXT OVERLAY ---
           const textDiv = document.createElement('div')
           textDiv.className = 'map-text-overlay'
           textDiv.style.color = overlay.properties.color || '#000000'
@@ -67,19 +64,15 @@ function MapPreview({
           textDiv.innerHTML = overlay.properties.content
 
           const textOverlay = new google.maps.OverlayView()
-          
           textOverlay.onAdd = function() {
             const panes = this.getPanes()!
             panes.overlayLayer.appendChild(textDiv)
           }
-
           textOverlay.draw = function() {
             const overlayProjection = this.getProjection()
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
             )!
-            
-
             if (position) {
               textDiv.style.position = 'absolute'
               textDiv.style.left = `${position.x}px`
@@ -87,16 +80,142 @@ function MapPreview({
               textDiv.style.transform = 'translate(-50%, -50%)'
             }
           }
-
           textOverlay.setMap(map)
+        } else if (overlay.type === 'image') {
+          // --- IMAGE OVERLAY ---
+          const imgDiv = document.createElement('div')
+          imgDiv.style.position = 'absolute'
+          imgDiv.style.width = `${overlay.properties.width || 200}px`
+          imgDiv.style.height = overlay.properties.height
+            ? `${overlay.properties.height}px`
+            : 'auto'
+
+          const img = document.createElement('img')
+          img.src = overlay.properties.url
+          img.style.width = '100%'
+          img.style.height = '100%'
+          img.style.objectFit = 'contain'
+          img.style.display = 'block'
+          img.draggable = false
+          imgDiv.appendChild(img)
+
+          const imageOverlay = new google.maps.OverlayView()
+          imageOverlay.onAdd = function() {
+            const panes = this.getPanes()!
+            panes.overlayLayer.appendChild(imgDiv)
+          }
+          imageOverlay.draw = function() {
+            const overlayProjection = this.getProjection()
+            const position = overlayProjection.fromLatLngToDivPixel(
+              new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
+            )!
+            if (position) {
+              imgDiv.style.left = `${position.x - (overlay.properties.width || 100) / 2}px`
+              imgDiv.style.top = `${position.y - (overlay.properties.height || (overlay.properties.width || 100) / 2) / 2}px`
+            }
+          }
+          imageOverlay.setMap(map)
+        } else if (overlay.type === 'business') {
+          // --- LOGO OVERLAY ---
+          const logoDiv = document.createElement('div')
+          logoDiv.style.position = 'absolute'
+          logoDiv.style.display = 'flex'
+          logoDiv.style.alignItems = 'center'
+          logoDiv.style.background = '#fff'
+          logoDiv.style.borderRadius = '8px'
+          logoDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
+          logoDiv.style.padding = '6px 12px'
+          logoDiv.style.gap = '8px'
+
+          const img = document.createElement('img')
+          img.src = overlay.properties.logo
+          img.style.width = '32px'
+          img.style.height = '32px'
+          img.style.objectFit = 'contain'
+          img.style.borderRadius = '4px'
+          logoDiv.appendChild(img)
+
+          if (overlay.properties.businessName) {
+            const nameDiv = document.createElement('div')
+            nameDiv.textContent = overlay.properties.businessName
+            nameDiv.style.fontSize = '14px'
+            nameDiv.style.fontWeight = 'bold'
+            nameDiv.style.color = '#222'
+            logoDiv.appendChild(nameDiv)
+          }
+
+          const logoOverlay = new google.maps.OverlayView()
+          logoOverlay.onAdd = function() {
+            const panes = this.getPanes()!
+            panes.overlayLayer.appendChild(logoDiv)
+          }
+          logoOverlay.draw = function() {
+            const overlayProjection = this.getProjection()
+            const position = overlayProjection.fromLatLngToDivPixel(
+              new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
+            )!
+            if (position) {
+              logoDiv.style.left = `${position.x}px`
+              logoDiv.style.top = `${position.y}px`
+              logoDiv.style.transform = 'translate(-50%, -50%)'
+            }
+          }
+          logoOverlay.setMap(map)
+        } else if (overlay.type === 'shape') {
+          // --- SHAPE OVERLAY ---
+          if (overlay.properties.shapeType === 'rectangle' && overlay.properties.bounds) {
+            const bounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(overlay.properties.bounds.south, overlay.properties.bounds.west),
+              new google.maps.LatLng(overlay.properties.bounds.north, overlay.properties.bounds.east)
+            )
+            new google.maps.Rectangle({
+              map,
+              bounds,
+              fillColor: overlay.properties.fillColor || '#3388ff',
+              fillOpacity: overlay.properties.fillOpacity ?? 0.2,
+              strokeColor: overlay.properties.strokeColor || '#3388ff',
+              strokeOpacity: overlay.properties.strokeOpacity ?? 1,
+              strokeWeight: overlay.properties.strokeWeight ?? 2,
+              clickable: false,
+              draggable: false,
+              editable: false
+            })
+          } else if (overlay.properties.shapeType === 'circle' && overlay.properties.center && overlay.properties.radius) {
+            new google.maps.Circle({
+              map,
+              center: new google.maps.LatLng(overlay.properties.center.lat, overlay.properties.center.lng),
+              radius: overlay.properties.radius,
+              fillColor: overlay.properties.fillColor || '#3388ff',
+              fillOpacity: overlay.properties.fillOpacity ?? 0.2,
+              strokeColor: overlay.properties.strokeColor || '#3388ff',
+              strokeOpacity: overlay.properties.strokeOpacity ?? 1,
+              strokeWeight: overlay.properties.strokeWeight ?? 2,
+              clickable: false,
+              draggable: false,
+              editable: false
+            })
+          } else if (overlay.properties.shapeType === 'polygon' && overlay.properties.path) {
+            const path = overlay.properties.path.map((pt: any) => new google.maps.LatLng(pt.lat, pt.lng))
+            new google.maps.Polygon({
+              map,
+              paths: path,
+              fillColor: overlay.properties.fillColor || '#3388ff',
+              fillOpacity: overlay.properties.fillOpacity ?? 0.2,
+              strokeColor: overlay.properties.strokeColor || '#3388ff',
+              strokeOpacity: overlay.properties.strokeOpacity ?? 1,
+              strokeWeight: overlay.properties.strokeWeight ?? 2,
+              clickable: false,
+              draggable: false,
+              editable: false
+            })
+          }
         }
       })
 
       // Add subject property marker
       if (subject_property?.lat && subject_property?.lng) {
-
         const style = subject_property.style || {}
-        const marker = new google.maps.Marker({
+        new google.maps.Marker({
           map,
           position: { lat: subject_property.lat, lng: subject_property.lng },
           icon: {
