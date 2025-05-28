@@ -435,6 +435,7 @@ export function createShapeOverlay(
           this.controlsDiv.style.zIndex = '1000';
         }
       }
+     }
     }
 
     onRemove() {
