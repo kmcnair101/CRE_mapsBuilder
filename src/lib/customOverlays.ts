@@ -1,10 +1,18 @@
-export const createCustomImageOverlay = (overlay: MapOverlay, map: google.maps.Map) => {
+export const createCustomImageOverlay = (
+  overlay: MapOverlay,
+  map: google.maps.Map,
+  createDeleteButton?: (container: HTMLElement | null, onDelete: () => void) => (() => void) | null,
+  createEditButton?: (container: HTMLElement | null, onEdit: () => void) => (() => void) | null,
+  onDelete?: () => void,
+  onEdit?: () => void
+) => {
   const instance = new google.maps.OverlayView();
   let element: HTMLDivElement | null = null;
   let position: google.maps.LatLng | null = null;
   let isDragging = false;
   let dragStartPosition: google.maps.LatLng | null = null;
   let dragStartMousePosition: { x: number; y: number } | null = null;
+  let cleanupFns: Array<() => void> = [];
 
   instance.onAdd = function() {
     if (!overlay.properties) {
@@ -23,6 +31,20 @@ export const createCustomImageOverlay = (overlay: MapOverlay, map: google.maps.M
     element.style.cursor = 'move';
     element.style.width = `${overlay.properties?.width ?? 200}px`;
     element.style.height = `${overlay.properties?.height ?? 200}px`;
+
+    // Only add controls if the button creators return a real element
+    if (createDeleteButton && typeof onDelete === 'function') {
+      const deleteCleanup = createDeleteButton(element, onDelete);
+      if (deleteCleanup) {
+        cleanupFns.push(deleteCleanup);
+      }
+    }
+    if (createEditButton && typeof onEdit === 'function') {
+      const editCleanup = createEditButton(element, onEdit);
+      if (editCleanup) {
+        cleanupFns.push(editCleanup);
+      }
+    }
   };
 
   instance.onRemove = function() {
@@ -30,6 +52,8 @@ export const createCustomImageOverlay = (overlay: MapOverlay, map: google.maps.M
       element.remove();
       element = null;
     }
+    cleanupFns.forEach(fn => fn());
+    cleanupFns = [];
   };
 
   instance.draw = function() {
