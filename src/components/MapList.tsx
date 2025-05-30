@@ -203,12 +203,16 @@ function MapPreview({
             strokeColor: style.borderColor || '#FFFFFF',
             strokeWeight: (style.borderWidth ?? 2) * scaleFactor
           },
-          label: subject_property.name ? {
-            text: subject_property.name,
+          label: {
+            text: subject_property.name || '',
             color: style.color || '#000000',
             fontSize: `${(style.fontSize || 14) * scaleFactor}px`,
-            fontFamily: style.fontFamily || 'Arial'
-          } : undefined
+            fontFamily: style.fontFamily || 'Arial',
+            fontWeight: style.fontWeight || 'normal'
+          },
+          clickable: false,
+          draggable: false,
+          zIndex: 1000
         })
         overlayRefs.current.push(marker)
       }
