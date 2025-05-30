@@ -162,7 +162,7 @@ export function DownloadMapModal({
   const mainMapHeight = mapRef.current?.offsetHeight || 600
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
       <div className="bg-white w-full h-full flex">
         {/* Left Section (Controls) */}
         <div className="w-56 p-4 border-r bg-gray-50 flex flex-col">
