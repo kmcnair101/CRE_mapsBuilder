@@ -62,8 +62,8 @@ export function useMapOverlays(
             },
             map,
             () => {},
-            createDeleteButton,
-            createEditButton,
+            () => {},
+            () => {},
             () => {},
             createResizeHandle
           )
