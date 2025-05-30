@@ -93,10 +93,10 @@ function MapPreview({
               },
               map,
               () => {},
-              createDeleteButton,
-              createEditButton,
               () => {},
-              createResizeHandle
+              () => {},
+              () => {},
+              () => {}
             )
             overlayRefs.current.push(imageOverlay)
             break
@@ -118,10 +118,10 @@ function MapPreview({
               },
               map,
               () => {},
-              createDeleteButton,
-              createEditButton,
               () => {},
-              createResizeHandle
+              () => {},
+              () => {},
+              () => {}
             )
             overlayRefs.current.push(businessOverlay)
             break
@@ -139,10 +139,10 @@ function MapPreview({
               },
               map,
               () => {},
-              createDeleteButton,
-              createEditButton,
               () => {},
-              createResizeHandle
+              () => {},
+              () => {},
+              () => {}
             )
             overlayRefs.current.push(textOverlay)
             break
@@ -160,10 +160,10 @@ function MapPreview({
               },
               map,
               () => {},
-              createDeleteButton,
-              createEditButton,
               () => {},
-              createResizeHandle
+              () => {},
+              () => {},
+              () => {}
             )
             overlayRefs.current.push(groupOverlay)
             break
@@ -179,8 +179,7 @@ function MapPreview({
               },
               map,
               () => {},
-              createDeleteButton,
-              createEditButton,
+              () => {},
               () => {}
             )
             overlayRefs.current.push(shapeOverlay)
@@ -610,35 +609,6 @@ export function MapList() {
                               <Edit className="h-4 w-4 mr-3 text-gray-500" />
                               Edit
                             </Link>
-                            {/* 
-                            <button
-                              onClick={() => handleMapDownload(map.id)}
-                              disabled={downloadingMap === map.id}
-                              className={cn(
-                                "flex items-center w-full text-left px-4 py-2 text-sm",
-                                hasAccess() 
-                                  ? "text-gray-700 hover:bg-gray-100" 
-                                  : "text-gray-400 cursor-not-allowed"
-                              )}
-                            >
-                              
-                              {downloadingMap === map.id ? (
-                                <>
-                                  <div className="animate-spin h-4 w-4 mr-3 border-b-2 border-gray-600 rounded-full" />
-                                  Downloading...
-                                </>
-                              ) : (
-                                <>
-                                  {hasAccess() ? (
-                                    <Download className="h-4 w-4 mr-3 text-gray-500" />
-                                  ) : (
-                                    <Lock className="h-4 w-4 mr-3 text-gray-500" />
-                                  )}
-                                  <span>Download</span>
-                                </>
-                              )}
-                            </button>
-                            */}
                             <button
                               onClick={() => handleDelete(map.id)}
                               className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
