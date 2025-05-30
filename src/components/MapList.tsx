@@ -51,6 +51,9 @@ function MapPreview({
       const zoomAdjustment = Math.log2(containerWidth / 800) // 800px is a reference width
       const adjustedZoom = Math.min(Math.max(zoom_level + zoomAdjustment, 0), 20) // Clamp between 0 and 20
 
+      // Calculate scale factor for overlays
+      const scaleFactor = containerWidth / 800 // Scale factor relative to reference width
+
       mapInstance = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
         zoom: adjustedZoom,
@@ -78,12 +81,12 @@ function MapPreview({
               {
                 position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
                 url: overlay.properties.url || '',
-                width: overlay.properties.width || 200,
+                width: (overlay.properties.width || 200) * scaleFactor,
                 style: {
                   backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
                   borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
-                  borderWidth: overlay.properties.containerStyle?.borderWidth || 1,
-                  padding: overlay.properties.containerStyle?.padding || 8,
+                  borderWidth: (overlay.properties.containerStyle?.borderWidth || 1) * scaleFactor,
+                  padding: (overlay.properties.containerStyle?.padding || 8) * scaleFactor,
                   backgroundOpacity: overlay.properties.containerStyle?.backgroundOpacity || 1,
                   borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
                 }
@@ -104,11 +107,13 @@ function MapPreview({
                 position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
                 logo: overlay.properties.logo || '',
                 businessName: overlay.properties.businessName || '',
-                width: overlay.properties.width || 200,
+                width: (overlay.properties.width || 200) * scaleFactor,
                 style: {
                   ...overlay.properties.containerStyle,
                   position: 'absolute',
-                  transform: 'translate(-50%, -50%)'
+                  transform: 'translate(-50%, -50%)',
+                  fontSize: `${(overlay.properties.containerStyle?.fontSize || 14) * scaleFactor}px`,
+                  padding: `${(overlay.properties.containerStyle?.padding || 8) * scaleFactor}px`
                 }
               },
               map,
@@ -123,7 +128,15 @@ function MapPreview({
           }
           case 'text': {
             const textOverlay = createCustomTextOverlay(
-              overlay,
+              {
+                ...overlay,
+                properties: {
+                  ...overlay.properties,
+                  fontSize: (overlay.properties.fontSize || 14) * scaleFactor,
+                  padding: (overlay.properties.padding || 8) * scaleFactor,
+                  borderWidth: (overlay.properties.borderWidth || 1) * scaleFactor
+                }
+              },
               map,
               () => {},
               createDeleteButton,
@@ -136,7 +149,15 @@ function MapPreview({
           }
           case 'group': {
             const groupOverlay = createGroupOverlay(
-              overlay,
+              {
+                ...overlay,
+                properties: {
+                  ...overlay.properties,
+                  fontSize: (overlay.properties.fontSize || 14) * scaleFactor,
+                  padding: (overlay.properties.padding || 8) * scaleFactor,
+                  borderWidth: (overlay.properties.borderWidth || 1) * scaleFactor
+                }
+              },
               map,
               () => {},
               createDeleteButton,
@@ -149,7 +170,13 @@ function MapPreview({
           }
           case 'shape': {
             const shapeOverlay = createShapeOverlay(
-              overlay,
+              {
+                ...overlay,
+                properties: {
+                  ...overlay.properties,
+                  strokeWeight: (overlay.properties.strokeWeight || 2) * scaleFactor
+                }
+              },
               map,
               () => {},
               createDeleteButton,
@@ -170,16 +197,16 @@ function MapPreview({
           position: { lat: subject_property.lat, lng: subject_property.lng },
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
+            scale: 8 * scaleFactor,
             fillColor: style.backgroundColor || '#FF0000',
             fillOpacity: style.backgroundOpacity ?? 1,
             strokeColor: style.borderColor || '#FFFFFF',
-            strokeWeight: style.borderWidth ?? 2
+            strokeWeight: (style.borderWidth ?? 2) * scaleFactor
           },
           label: subject_property.name ? {
             text: subject_property.name,
             color: style.color || '#000000',
-            fontSize: `${style.fontSize || 14}px`,
+            fontSize: `${(style.fontSize || 14) * scaleFactor}px`,
             fontFamily: style.fontFamily || 'Arial'
           } : undefined
         })
