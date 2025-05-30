@@ -46,9 +46,14 @@ function MapPreview({
     let mapInstance: google.maps.Map | null = null
 
     loader.load().then(() => {
+      // Calculate adjusted zoom level based on container size
+      const containerWidth = mapRef.current?.offsetWidth || 0
+      const zoomAdjustment = Math.log2(containerWidth / 800) // 800px is a reference width
+      const adjustedZoom = Math.min(Math.max(zoom_level + zoomAdjustment, 0), 20) // Clamp between 0 and 20
+
       mapInstance = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
-        zoom: zoom_level,
+        zoom: adjustedZoom,
         disableDefaultUI: true,
         styles: Array.isArray(mapStyle)
           ? mapStyle
