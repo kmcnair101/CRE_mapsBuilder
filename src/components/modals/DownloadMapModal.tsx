@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { useMapInitialization } from '@/lib/map/hooks/useMapInitialization'
 import { useMapOverlays } from '@/lib/map/hooks/useMapOverlays'
 import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
+import { X } from 'lucide-react'
 
 interface DownloadMapModalProps {
   open: boolean
@@ -156,32 +157,28 @@ export function DownloadMapModal({
     }
   }
 
-  // Increased maximum dimensions for the preview
-  const maxPreviewWidth = 800 // Increased from 600 to 800
-  const maxPreviewHeight = 600 // Increased from 450 to 600
-
-  // Calculate dimensions while maintaining aspect ratio
-  const aspectRatio = width / height
-  let previewWidth = width
-  let previewHeight = height
-
-  if (width > maxPreviewWidth || height > maxPreviewHeight) {
-    if (aspectRatio > maxPreviewWidth / maxPreviewHeight) {
-      previewWidth = maxPreviewWidth
-      previewHeight = maxPreviewWidth / aspectRatio
-    } else {
-      previewHeight = maxPreviewHeight
-      previewWidth = Math.max(width, maxPreviewHeight * aspectRatio)
-    }
-  }
+  // Get the main map's dimensions
+  const mainMapWidth = mapRef.current?.offsetWidth || 800
+  const mainMapHeight = mapRef.current?.offsetHeight || 600
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full h-[800px]">
-        <h2 className="text-xl font-bold mb-4">Download Map</h2>
-        <div className="flex gap-6">
+      <div className="bg-white w-full h-full flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b flex justify-between items-center">
+          <h2 className="text-xl font-bold">Download Map</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex">
           {/* Controls Section - Left Side */}
-          <div className="w-1/3">
+          <div className="w-64 p-4 border-r bg-gray-50">
             <div className="space-y-6">
               <div>
                 <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,9 +189,9 @@ export function DownloadMapModal({
                     type="range"
                     id="width"
                     min="100"
-                    max="1000"
+                    max="2000"
                     value={width}
-                    onChange={(e) => onWidthChange(Math.min(1000, Math.max(100, parseInt(e.target.value) || 100)))}
+                    onChange={(e) => onWidthChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
                     className="flex-1"
                   />
                   <span className="text-sm text-gray-500 w-16">{width}px</span>
@@ -209,9 +206,9 @@ export function DownloadMapModal({
                     type="range"
                     id="height"
                     min="100"
-                    max="1000"
+                    max="2000"
                     value={height}
-                    onChange={(e) => onHeightChange(Math.min(1000, Math.max(100, parseInt(e.target.value) || 100)))}
+                    onChange={(e) => onHeightChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
                     className="flex-1"
                   />
                   <span className="text-sm text-gray-500 w-16">{height}px</span>
@@ -236,15 +233,13 @@ export function DownloadMapModal({
           </div>
 
           {/* Preview Section - Right Side */}
-          <div className="w-2/3">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">Preview</h3>
-            <div className="flex items-center justify-center">
+          <div className="flex-1 p-4">
+            <div className="w-full h-full flex items-center justify-center">
               <div
                 className="border border-gray-300 rounded shadow overflow-hidden"
                 style={{
-                  width: previewWidth,
-                  height: previewHeight,
-                  background: '#eee'
+                  width: mainMapWidth,
+                  height: mainMapHeight
                 }}
               >
                 <div ref={previewMapRef} className="w-full h-full" />
