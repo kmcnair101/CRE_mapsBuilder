@@ -46,6 +46,7 @@ export function LogoSelectionModal({
       width: 300, // Default width
       height: 300 // Default height
     };
+    console.log('[LogoSelectionModal] Selected logo:', logoObject);
     onSelect(logoObject);
   }
 
