@@ -157,98 +157,85 @@ export function DownloadMapModal({
     }
   }
 
-  // Get the main map's dimensions
+  // Get main map dimensions
   const mainMapWidth = mapRef.current?.offsetWidth || 800
   const mainMapHeight = mapRef.current?.offsetHeight || 600
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white w-full h-full flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-bold">Download Map</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X className="h-6 w-6" />
-          </button>
+      <div className="bg-white w-full h-full flex">
+        {/* Left Section (Controls) */}
+        <div className="w-56 p-4 border-r bg-gray-50 flex flex-col">
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-2">
+                Width (px)
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  id="width"
+                  min="100"
+                  max="2000"
+                  value={width}
+                  onChange={(e) => onWidthChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
+                  className="flex-1"
+                />
+                <span className="text-sm text-gray-500 w-16">{width}px</span>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-2">
+                Height (px)
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  id="height"
+                  min="100"
+                  max="2000"
+                  value={height}
+                  onChange={(e) => onHeightChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
+                  className="flex-1"
+                />
+                <span className="text-sm text-gray-500 w-16">{height}px</span>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePreviewDownload}
+                disabled={downloading}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {downloading ? 'Downloading...' : 'Download'}
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex">
-          {/* Controls Section - Left Side */}
-          <div className="w-64 p-4 border-r bg-gray-50">
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-2">
-                  Width (px)
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    id="width"
-                    min="100"
-                    max="2000"
-                    value={width}
-                    onChange={(e) => onWidthChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
-                    className="flex-1"
-                  />
-                  <span className="text-sm text-gray-500 w-16">{width}px</span>
-                </div>
-              </div>
-              <div>
-                <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-2">
-                  Height (px)
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    id="height"
-                    min="100"
-                    max="2000"
-                    value={height}
-                    onChange={(e) => onHeightChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
-                    className="flex-1"
-                  />
-                  <span className="text-sm text-gray-500 w-16">{height}px</span>
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handlePreviewDownload}
-                  disabled={downloading}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {downloading ? 'Downloading...' : 'Download'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Preview Section - Right Side */}
-          <div className="flex-1 p-4">
-            <div className="w-full h-full flex items-center justify-center">
-              <div
-                className="border border-gray-300 rounded shadow overflow-hidden"
-                style={{
-                  width: mainMapWidth,
-                  height: mainMapHeight
-                }}
-              >
-                <div ref={previewMapRef} className="w-full h-full" />
-              </div>
-            </div>
-            <span className="text-xs text-gray-500 mt-1 block text-center">
-              Preview ({width} × {height})
-            </span>
-          </div>
+        {/* Right Section (Preview) */}
+        <div
+          className="flex-1 flex items-center justify-center"
+          style={{
+            width: mainMapWidth,
+            height: mainMapHeight,
+            minWidth: 0, // Prevents overflow
+          }}
+        >
+          <div
+            ref={previewMapRef}
+            className="w-full h-full"
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
+          />
         </div>
       </div>
     </div>
