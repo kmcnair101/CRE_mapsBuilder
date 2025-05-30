@@ -35,7 +35,14 @@ export function useMapOverlays(
   }
 
   const addOverlayToMap = (overlay: MapOverlay, map: google.maps.Map) => {
+    console.log('[useMapOverlays] Adding overlay:', {
+      type: overlay.type,
+      isPreview,
+      overlay
+    })
+
     if (isPreview) {
+      console.log('[useMapOverlays] Creating preview overlay for type:', overlay.type)
       // For preview, create overlays with no-op callbacks and DO NOT touch overlaysRef
       switch (overlay.type) {
         case 'image': {
