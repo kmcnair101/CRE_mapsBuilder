@@ -156,7 +156,7 @@ export function DownloadMapModal({
       setDownloading(false)
     }
   }
-
+ 
   // Get main map dimensions
   const mainMapWidth = mapRef.current?.offsetWidth || 800
   const mainMapHeight = mapRef.current?.offsetHeight || 600
