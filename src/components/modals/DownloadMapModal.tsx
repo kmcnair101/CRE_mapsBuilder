@@ -223,7 +223,15 @@ export function DownloadMapModal({
         <div className="flex-1 relative">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-full h-full max-h-full flex items-center justify-center">
-              <div className="w-full h-full relative shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+              <div 
+                style={{ 
+                  width: `${width}px`, 
+                  height: `${height}px`,
+                  maxWidth: '100%',
+                  maxHeight: '100%'
+                }}
+                className="relative shadow-sm border border-gray-200 rounded-lg overflow-hidden"
+              >
                 <div 
                   ref={previewMapRef} 
                   className="w-full h-full"
