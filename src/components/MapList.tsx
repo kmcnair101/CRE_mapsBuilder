@@ -189,32 +189,63 @@ function MapPreview({
         }
       })
 
-      // Add subject property marker
+      // Add subject property overlay (non-interactive, styled like main map)
       if (subject_property?.lat && subject_property?.lng) {
-        const style = subject_property.style || {}
-        const marker = new google.maps.Marker({
-          map,
-          position: { lat: subject_property.lat, lng: subject_property.lng },
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8 * scaleFactor,
-            fillColor: style.backgroundColor || '#FF0000',
-            fillOpacity: style.backgroundOpacity ?? 1,
-            strokeColor: style.borderColor || '#FFFFFF',
-            strokeWeight: (style.borderWidth ?? 2) * scaleFactor
-          },
-          label: {
-            text: subject_property.name || '',
-            color: style.color || '#000000',
-            fontSize: `${(style.fontSize || 14) * scaleFactor}px`,
-            fontFamily: style.fontFamily || 'Arial',
-            fontWeight: style.fontWeight || 'normal'
-          },
-          clickable: false,
-          draggable: false,
-          zIndex: 1000
-        })
-        overlayRefs.current.push(marker)
+        const style = subject_property.style || {};
+        const position = new google.maps.LatLng(subject_property.lat, subject_property.lng);
+
+        class PreviewSubjectPropertyOverlay extends google.maps.OverlayView {
+          div: HTMLDivElement | null = null;
+          onAdd() {
+            const div = document.createElement('div');
+            div.style.position = 'absolute';
+            div.style.display = 'flex';
+            div.style.justifyContent = 'center';
+            div.style.alignItems = 'center';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.style.position = 'relative';
+            contentDiv.style.minWidth = 'min-content';
+            contentDiv.style.maxWidth = '400px';
+            contentDiv.style.backgroundColor = style.backgroundColor || '#FFFFFF';
+            contentDiv.style.border = `${(style.borderWidth || 1) * scaleFactor}px solid ${style.borderColor || '#000000'}`;
+            contentDiv.style.padding = `${(style.padding || 8) * scaleFactor}px`;
+            contentDiv.style.borderRadius = '4px';
+            contentDiv.style.boxSizing = 'border-box';
+            contentDiv.style.color = style.color || '#000000';
+            contentDiv.style.fontSize = `${(style.fontSize || 14) * scaleFactor}px`;
+            contentDiv.style.fontFamily = style.fontFamily || 'Arial';
+            contentDiv.style.textAlign = 'center';
+            contentDiv.style.whiteSpace = 'pre';
+            contentDiv.style.display = 'inline-block';
+            contentDiv.innerHTML = subject_property.name || '';
+
+            div.appendChild(contentDiv);
+            this.div = div;
+            this.getPanes()?.overlayLayer.appendChild(div);
+          }
+          draw() {
+            if (!this.div) return;
+            const overlayProjection = this.getProjection();
+            const pos = overlayProjection.fromLatLngToDivPixel(position);
+            if (pos) {
+              const width = this.div.offsetWidth;
+              const height = this.div.offsetHeight;
+              this.div.style.left = `${pos.x - width / 2}px`;
+              this.div.style.top = `${pos.y - height / 2}px`;
+            }
+          }
+          onRemove() {
+            if (this.div && this.div.parentNode) {
+              this.div.parentNode.removeChild(this.div);
+            }
+            this.div = null;
+          }
+        }
+
+        const overlay = new PreviewSubjectPropertyOverlay();
+        overlay.setMap(map);
+        overlayRefs.current.push(overlay);
       }
     })
 
