@@ -320,6 +320,7 @@ export function BusinessLayer({
       onClose?.()
     }
   }
+  
 
   const handleLogoUpload = async (file: File) => {
     if (!selectedBusiness) return
