@@ -65,7 +65,7 @@ export function useMapOverlays(
             () => {},
             () => {},
             () => {},
-            createResizeHandle
+            () => {}
           )
           break
         }
@@ -84,10 +84,10 @@ export function useMapOverlays(
             },
             map,
             () => {},
-            createDeleteButton,
-            createEditButton,
             () => {},
-            createResizeHandle
+            () => {},
+            () => {},
+            () => {}
           )
           break
         }
@@ -96,10 +96,10 @@ export function useMapOverlays(
             overlay,
             map,
             () => {},
-            createDeleteButton,
-            createEditButton,
             () => {},
-            createResizeHandle
+            () => {},
+            () => {},
+            () => {}
           )
           break
         }
@@ -108,10 +108,10 @@ export function useMapOverlays(
             overlay,
             map,
             () => {},
-            createDeleteButton,
-            createEditButton,
             () => {},
-            createResizeHandle
+            () => {},
+            () => {},
+            () => {}
           )
           break
         }
@@ -120,8 +120,8 @@ export function useMapOverlays(
             overlay,
             map,
             () => {},
-            createDeleteButton,
-            createEditButton,
+            () => {},
+            () => {},
             () => {}
           )
           break
