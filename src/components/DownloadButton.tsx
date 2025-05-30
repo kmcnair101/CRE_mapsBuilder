@@ -10,30 +10,22 @@ interface DownloadButtonProps {
   onDownload: () => void
   className?: string
   loading?: boolean
-  handleSaveOnly?: () => Promise<void> // <-- add this
+  handleSaveOnly?: () => Promise<void>
 }
 
 export function DownloadButton({ onDownload, className, loading = false, handleSaveOnly }: DownloadButtonProps) {
   const { hasAccess } = useSubscription()
   const [showPricingPlans, setShowPricingPlans] = useState(false)
-  // Get handleSaveOnly from context or props, or pass it down from parent
-  // For example, if you use context:
-  // const { handleSaveOnly } = useContext(MapEditorContext)
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    console.log('[DownloadButton] Button clicked')
-    console.log('[DownloadButton] hasAccess() result:', hasAccess())
-    
+
     if (!hasAccess()) {
-      console.log('[DownloadButton] User does not have access, showing pricing plans')
       setShowPricingPlans(true)
       return
     }
-    
-    console.log('[DownloadButton] User has access, calling onDownload')
+
     onDownload()
   }
 
@@ -69,10 +61,9 @@ export function DownloadButton({ onDownload, className, loading = false, handleS
       <PricingPlans 
         isOpen={showPricingPlans} 
         onClose={() => {
-          console.log('[DownloadButton] Pricing plans modal closed')
           setShowPricingPlans(false)
         }} 
-        onSave={handleSaveOnly} // <-- now this is defined!
+        onSave={handleSaveOnly}
       />
     </>
   )

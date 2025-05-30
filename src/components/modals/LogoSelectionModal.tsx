@@ -29,65 +29,33 @@ export function LogoSelectionModal({
   const [selectedLogo, setSelectedLogo] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  console.log('[LogoSelection] Modal opened with logos:', {
-    logoCount: logos.length,
-    logos: logos.map(logo => ({
-      url: logo.url,
-      width: logo.width,
-      height: logo.height,
-      isDataUrl: logo.url.startsWith('data:'),
-      isProxied: logo.url.startsWith('/api/proxy-image')
-    })),
-    timestamp: new Date().toISOString()
-  })
-
   const getProxiedImageUrl = (url: string): string => {
     if (url.startsWith('data:') || url.startsWith('/api/proxy-image')) {
-      console.log('[LogoSelection] Using already proxied URL:', {
-        url: url.substring(0, 100) + '...',
-        type: url.startsWith('data:') ? 'data-url' : 'proxy-url'
-      })
       return url
     }
     const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`
-    console.log('[LogoSelection] Proxying URL:', {
-      original: url.substring(0, 100) + '...',
-      proxied: proxiedUrl
-    })
     return proxiedUrl
   }
 
   const handleLogoSelect = (logo: string) => {
-    console.log('[LogoSelection] handleLogoSelect called with:', {
-      logo,
-      timestamp: new Date().toISOString()
-    });
-    
     if (!logo) {
-      console.error('[LogoSelection] Invalid logo selection:', {
-        logo,
-        timestamp: new Date().toISOString()
-      });
       return;
     }
-
     const logoObject = {
       url: logo,
       width: 300, // Default width
       height: 300 // Default height
     };
-    
-    console.log('[LogoSelection] Passing logo to onSelect:', {
-      logoObject,
-      timestamp: new Date().toISOString()
-    });
-    
     onSelect(logoObject);
   }
 
   const handleConfirm = () => {
     if (selectedLogo) {
-      onSelect(selectedLogo)
+      onSelect({
+        url: selectedLogo,
+        width: 300,
+        height: 300
+      })
       onClose()
     }
   }
@@ -182,15 +150,6 @@ export function LogoSelectionModal({
               </h3>
               <div className="grid grid-cols-3 gap-3 max-h-[250px] overflow-y-auto pr-2">
                 {logos.map((logo, index) => {
-                  console.log('[LogoSelection] Rendering logo:', {
-                    index,
-                    logo,
-                    hasUrl: 'url' in logo,
-                    hasWidth: 'width' in logo,
-                    hasHeight: 'height' in logo,
-                    timestamp: new Date().toISOString()
-                  })
-                  
                   return (
                     <button
                       key={logo.url}
@@ -209,25 +168,8 @@ export function LogoSelectionModal({
                               alt={`Logo option ${index + 1}`}
                               className="max-w-full max-h-full object-contain"
                               crossOrigin="anonymous"
-                              onError={(e) => {
-                                console.error('[LogoSelection] Image load error:', {
-                                  src: e.currentTarget.src,
-                                  error: e,
-                                  index,
-                                  logo,
-                                  timestamp: new Date().toISOString()
-                                })
-                              }}
-                              onLoad={(e) => {
-                                console.log('[LogoSelection] Image loaded:', {
-                                  src: e.currentTarget.src,
-                                  naturalWidth: e.currentTarget.naturalWidth,
-                                  naturalHeight: e.currentTarget.naturalHeight,
-                                  index,
-                                  logo,
-                                  timestamp: new Date().toISOString()
-                                })
-                              }}
+                              onError={() => {}}
+                              onLoad={() => {}}
                               loading="lazy"
                             />
                           )}

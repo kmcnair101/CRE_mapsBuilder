@@ -35,17 +35,13 @@ function MapPreview({
   const overlayRefs = useRef<any[]>([])
 
   useEffect(() => {
-    console.log('[MapPreview] useEffect triggered', { center_lat, center_lng, zoom_level, overlays, subject_property })
-
     if (!mapRef.current) {
-      console.log('[MapPreview] mapRef.current is null')
       return
     }
 
     let mapInstance: google.maps.Map | null = null
 
     loader.load().then(() => {
-      console.log('[MapPreview] Google Maps loaded')
       mapInstance = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
         zoom: zoom_level,
@@ -61,14 +57,12 @@ function MapPreview({
 
       // Remove old overlays
       overlayRefs.current.forEach((ov, i) => {
-        console.log(`[MapPreview] Removing overlay #${i}`, ov)
         if (ov.setMap) ov.setMap(null)
       })
       overlayRefs.current = []
 
       // Add overlays
       overlays.forEach((overlay, idx) => {
-        console.log(`[MapPreview] Adding overlay #${idx}`, overlay)
         if (overlay.type === 'text') {
           const textDiv = document.createElement('div')
           textDiv.className = 'map-text-overlay'
@@ -88,7 +82,6 @@ function MapPreview({
           const textOverlay = new google.maps.OverlayView()
           textOverlay.onAdd = function() {
             const panes = this.getPanes()
-            console.log('[MapPreview] textOverlay.onAdd panes:', panes)
             panes.overlayLayer.appendChild(textDiv)
           }
           textOverlay.draw = function() {
@@ -96,7 +89,6 @@ function MapPreview({
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
             )
-            console.log('[MapPreview] textOverlay.draw position:', position)
             if (position) {
               textDiv.style.position = 'absolute'
               textDiv.style.left = `${position.x}px`
@@ -133,7 +125,6 @@ function MapPreview({
           const imageOverlay = new google.maps.OverlayView()
           imageOverlay.onAdd = function() {
             const panes = this.getPanes()
-            console.log('[MapPreview] imageOverlay.onAdd panes:', panes)
             panes.overlayLayer.appendChild(imgDiv)
           }
           imageOverlay.draw = function() {
@@ -141,7 +132,6 @@ function MapPreview({
             const position = overlayProjection.fromLatLngToDivPixel(
               new google.maps.LatLng(overlay.position.lat, overlay.position.lng)
             )
-            console.log('[MapPreview] imageOverlay.draw position:', position)
             if (position) {
               imgDiv.style.position = 'absolute'
               imgDiv.style.left = `${position.x - (overlay.properties.width || 100) / 2}px`
@@ -184,7 +174,6 @@ function MapPreview({
           const logoOverlay = new google.maps.OverlayView()
           logoOverlay.onAdd = function() {
             const panes = this.getPanes()
-            console.log('[MapPreview] logoOverlay.onAdd panes:', panes)
             panes.overlayLayer.appendChild(logoDiv)
           }
           logoOverlay.draw = function() {
@@ -204,7 +193,6 @@ function MapPreview({
           logoOverlay.setMap(mapInstance)
           overlayRefs.current.push(logoOverlay)
         } else if (overlay.type === 'shape') {
-          console.log('[MapPreview] Adding shape overlay', overlay)
           // Accept both 'rect' and 'rectangle'
           if ((overlay.properties.shapeType === 'rectangle' || overlay.properties.shapeType === 'rect') && overlay.properties.bounds) {
             const bounds = new google.maps.LatLngBounds(
@@ -261,7 +249,6 @@ function MapPreview({
       // Add subject property marker
       if (subject_property?.lat && subject_property?.lng) {
         const style = subject_property.style || {}
-        console.log('[MapPreview] Adding subject property marker', subject_property)
         const marker = new google.maps.Marker({
           map: mapInstance,
           position: { lat: subject_property.lat, lng: subject_property.lng },
@@ -283,12 +270,11 @@ function MapPreview({
         overlayRefs.current.push(marker)
       }
     }).catch(error => {
-      console.error('[MapPreview] Google Maps loader error', error)
+      // Optionally handle error here, but no console.log
     })
 
     // Cleanup overlays and map on unmount or overlays change
     return () => {
-      console.log('[MapPreview] Cleanup overlays')
       overlayRefs.current.forEach(ov => {
         if (ov.setMap) ov.setMap(null)
       })
