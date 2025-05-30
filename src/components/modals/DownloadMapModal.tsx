@@ -220,22 +220,17 @@ export function DownloadMapModal({
         </div>
 
         {/* Right Section (Preview) */}
-        <div
-          className="flex-1 flex items-center justify-center"
-          style={{
-            width: mainMapWidth,
-            height: mainMapHeight,
-            minWidth: 0, // Prevents overflow
-          }}
-        >
-          <div
-            ref={previewMapRef}
-            className="w-full h-full"
-            style={{
-              width: '100%',
-              height: '100%',
-            }}
-          />
+        <div className="flex-1 relative">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-full h-full max-h-full flex items-center justify-center">
+              <div className="w-full h-full relative shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+                <div 
+                  ref={previewMapRef} 
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
