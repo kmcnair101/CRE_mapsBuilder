@@ -350,6 +350,21 @@ export function createShapeOverlay(
               if (bounds) {
                 const center = bounds.getCenter()
                 this.position = center
+                // --- LOG RECTANGLE SIZE ---
+                if (this.properties.shapeType === 'rect') {
+                  const ne = bounds.getNorthEast()
+                  const sw = bounds.getSouthWest()
+                  const width = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(ne.lat(), sw.lng()),
+                    new google.maps.LatLng(ne.lat(), ne.lng())
+                  )
+                  const height = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(ne.lat(), ne.lng()),
+                    new google.maps.LatLng(sw.lat(), ne.lng())
+                  )
+                  console.log('[ShapeOverlay] Rectangle bounds changed. Calculated width:', width, 'height:', height)
+                  console.log('[ShapeOverlay] Current properties.shapeWidth:', this.properties.shapeWidth, 'shapeHeight:', this.properties.shapeHeight)
+                }
                 this.draw()
               }
             }
@@ -361,6 +376,12 @@ export function createShapeOverlay(
               const center = this.shape.getCenter()
               if (center) {
                 this.position = center
+                // --- LOG CIRCLE RADIUS ---
+                if (this.properties.shapeType === 'circle' && 'getRadius' in this.shape) {
+                  const radius = this.shape.getRadius()
+                  console.log('[ShapeOverlay] Circle center changed. Current radius:', radius)
+                  console.log('[ShapeOverlay] Current properties.radius:', this.properties.radius)
+                }
                 this.draw()
               }
             }
