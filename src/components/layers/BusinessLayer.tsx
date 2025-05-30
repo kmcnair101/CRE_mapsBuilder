@@ -306,13 +306,15 @@ export function BusinessLayer({
     }
   }
 
-  const handleLogoSelect = (logoUrl: string) => {
-    console.log('[BusinessLayer] Logo selected:', logoUrl);
+  const handleLogoSelect = (logoObj: { url: string; width?: number; height?: number }) => {
+    console.log('[BusinessLayer] Logo selected:', logoObj);
     if (selectedBusiness) {
       console.log('[BusinessLayer] Selected business:', selectedBusiness);
       onAdd({
         ...selectedBusiness,
-        logo: logoUrl
+        logo: logoObj.url,
+        logoWidth: logoObj.width,
+        logoHeight: logoObj.height
       })
       if (searchInputRef.current) {
         searchInputRef.current.value = ''

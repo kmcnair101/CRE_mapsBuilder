@@ -11,7 +11,7 @@ interface LogoSelectionModalProps {
     width: number
     height: number
   }>
-  onSelect: (logo: string) => void
+  onSelect: (logo: { url: string; width?: number; height?: number }) => void
   onUpload: (file: File) => void
   onTextOnly?: (businessName: string) => void
   businessName?: string
