@@ -437,6 +437,8 @@ export default function MapEditor() {
     address: string
     location: google.maps.LatLng
     logo?: string
+    logoWidth?: number
+    logoHeight?: number
   }) => {
     console.log('[MapEditor] Received business from BusinessLayer:', business);
 
@@ -465,7 +467,11 @@ export default function MapEditor() {
       }
     }
 
-    console.log('[MapEditor] Created overlay:', overlay);
+    // Log the overlay object and its key properties
+    console.log('[MapEditor] About to add overlay:', overlay);
+    console.log('[MapEditor] Overlay businessName:', overlay.properties.businessName);
+    console.log('[MapEditor] Overlay address:', overlay.properties.address);
+    console.log('[MapEditor] Overlay logo:', overlay.properties.logo);
 
     addOverlayToMap(overlay, googleMapRef.current)
     setMapDataWithLog((prev: MapData) => ({
