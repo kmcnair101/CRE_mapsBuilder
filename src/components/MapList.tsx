@@ -528,7 +528,21 @@ export function MapList() {
                             zoom_level={map.zoom_level}
                             mapStyle={map.map_style}
                             overlays={map.overlays}
-                            subject_property={map.subject_property}
+                            subject_property={map.subject_property ? {
+                              lat: (map.subject_property as any).lat,
+                              lng: (map.subject_property as any).lng,
+                              name: (map.subject_property as any).name,
+                              style: {
+                                backgroundColor: (map.subject_property as any).style?.backgroundColor || '#FF0000',
+                                backgroundOpacity: (map.subject_property as any).style?.backgroundOpacity ?? 1,
+                                borderColor: (map.subject_property as any).style?.borderColor || '#FFFFFF',
+                                borderWidth: (map.subject_property as any).style?.borderWidth ?? 2,
+                                color: (map.subject_property as any).style?.color || '#000000',
+                                fontSize: (map.subject_property as any).style?.fontSize || 14,
+                                fontFamily: (map.subject_property as any).style?.fontFamily || 'Arial',
+                                fontWeight: (map.subject_property as any).style?.fontWeight || 'normal'
+                              }
+                            } : undefined}
                             className="w-full h-full"
                           />
                         )}
