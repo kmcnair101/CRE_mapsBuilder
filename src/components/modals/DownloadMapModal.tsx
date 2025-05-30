@@ -176,9 +176,9 @@ export function DownloadMapModal({
                   type="range"
                   id="width"
                   min="100"
-                  max="2000"
+                  max={mapRef.current?.offsetWidth || 2000}
                   value={width}
-                  onChange={(e) => onWidthChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
+                  onChange={(e) => onWidthChange(Math.min(mapRef.current?.offsetWidth || 2000, Math.max(100, parseInt(e.target.value) || 100)))}
                   className="flex-1"
                 />
                 <span className="text-sm text-gray-500 w-16">{width}px</span>
@@ -193,9 +193,9 @@ export function DownloadMapModal({
                   type="range"
                   id="height"
                   min="100"
-                  max="2000"
+                  max={mapRef.current?.offsetHeight || 2000}
                   value={height}
-                  onChange={(e) => onHeightChange(Math.min(2000, Math.max(100, parseInt(e.target.value) || 100)))}
+                  onChange={(e) => onHeightChange(Math.min(mapRef.current?.offsetHeight || 2000, Math.max(100, parseInt(e.target.value) || 100)))}
                   className="flex-1"
                 />
                 <span className="text-sm text-gray-500 w-16">{height}px</span>
