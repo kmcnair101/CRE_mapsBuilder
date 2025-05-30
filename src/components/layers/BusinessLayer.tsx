@@ -307,7 +307,9 @@ export function BusinessLayer({
   }
 
   const handleLogoSelect = (logoUrl: string) => {
+    console.log('[BusinessLayer] Logo selected:', logoUrl);
     if (selectedBusiness) {
+      console.log('[BusinessLayer] Selected business:', selectedBusiness);
       onAdd({
         ...selectedBusiness,
         logo: logoUrl
@@ -367,6 +369,16 @@ export function BusinessLayer({
     } else {
       return `${Math.round(miles)} miles away`
     }
+  }
+
+  const handleBusinessAdd = (business: {
+    name: string
+    address: string
+    location: google.maps.LatLng
+    logo?: string
+  }) => {
+    console.log('[MapEditor] Adding business with logo:', business);
+    // ... rest of the function
   }
 
   return (
