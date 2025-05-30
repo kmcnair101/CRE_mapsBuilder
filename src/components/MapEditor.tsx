@@ -715,7 +715,6 @@ export default function MapEditor() {
         const currentOverlay = overlaysRef.current[overlay.id]
         
         if (currentOverlay) {
-
           let updatedPosition = overlay.position
           let updatedProperties = { ...overlay.properties }
           
@@ -749,6 +748,27 @@ export default function MapEditor() {
                 fillOpacity: shape.fillOpacity || 0.5,
                 strokeOpacity: shape.strokeOpacity || 1
               }
+            }
+
+            // Add size properties based on shape type
+            if ('getBounds' in shape) {
+              const bounds = shape.getBounds()
+              if (bounds) {
+                const ne = bounds.getNorthEast()
+                const sw = bounds.getSouthWest()
+                const width = google.maps.geometry.spherical.computeDistanceBetween(
+                  new google.maps.LatLng(ne.lat(), sw.lng()),
+                  new google.maps.LatLng(ne.lat(), ne.lng())
+                )
+                const height = google.maps.geometry.spherical.computeDistanceBetween(
+                  new google.maps.LatLng(ne.lat(), ne.lng()),
+                  new google.maps.LatLng(sw.lat(), ne.lng())
+                )
+                updatedProperties.shapeWidth = width
+                updatedProperties.shapeHeight = height
+              }
+            } else if ('getRadius' in shape) {
+              updatedProperties.radius = shape.getRadius()
             }
           } else if ('getPosition' in currentOverlay) {
             const position = currentOverlay.getPosition()
@@ -881,6 +901,27 @@ export default function MapEditor() {
                 fillOpacity: shape.fillOpacity || 0.5,
                 strokeOpacity: shape.strokeOpacity || 1
               }
+            }
+
+            // Add size properties based on shape type
+            if ('getBounds' in shape) {
+              const bounds = shape.getBounds()
+              if (bounds) {
+                const ne = bounds.getNorthEast()
+                const sw = bounds.getSouthWest()
+                const width = google.maps.geometry.spherical.computeDistanceBetween(
+                  new google.maps.LatLng(ne.lat(), sw.lng()),
+                  new google.maps.LatLng(ne.lat(), ne.lng())
+                )
+                const height = google.maps.geometry.spherical.computeDistanceBetween(
+                  new google.maps.LatLng(ne.lat(), ne.lng()),
+                  new google.maps.LatLng(sw.lat(), ne.lng())
+                )
+                updatedProperties.shapeWidth = width
+                updatedProperties.shapeHeight = height
+              }
+            } else if ('getRadius' in shape) {
+              updatedProperties.radius = shape.getRadius()
             }
           } else if ('getPosition' in currentOverlay) {
             const position = currentOverlay.getPosition()
