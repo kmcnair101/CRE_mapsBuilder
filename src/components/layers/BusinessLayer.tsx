@@ -309,13 +309,14 @@ export function BusinessLayer({
   const handleLogoSelect = (logoObj: { url: string; width?: number; height?: number }) => {
     console.log('[BusinessLayer] Logo selected:', logoObj);
     if (selectedBusiness) {
-      console.log('[BusinessLayer] Selected business:', selectedBusiness);
-      onAdd({
+      const businessData = {
         ...selectedBusiness,
         logo: logoObj.url,
         logoWidth: logoObj.width,
         logoHeight: logoObj.height
-      })
+      };
+      console.log('[BusinessLayer] Passing to onAdd:', businessData);
+      onAdd(businessData);
       if (searchInputRef.current) {
         searchInputRef.current.value = ''
       }

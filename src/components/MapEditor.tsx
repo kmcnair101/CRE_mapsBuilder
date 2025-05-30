@@ -438,6 +438,8 @@ export default function MapEditor() {
     location: google.maps.LatLng
     logo?: string
   }) => {
+    console.log('[MapEditor] Received business from BusinessLayer:', business);
+
     if (!googleMapRef.current) return
 
     const overlay: MapOverlay = {
@@ -462,6 +464,8 @@ export default function MapEditor() {
         }
       }
     }
+
+    console.log('[MapEditor] Created overlay:', overlay);
 
     addOverlayToMap(overlay, googleMapRef.current)
     setMapDataWithLog((prev: MapData) => ({
