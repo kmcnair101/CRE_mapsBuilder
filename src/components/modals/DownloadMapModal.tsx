@@ -43,6 +43,12 @@ export function DownloadMapModal({
     true // Add this parameter to indicate preview mode
   )
 
+  // Add this log
+  console.log('[DownloadMapModal] Initializing with mapData:', {
+    overlays: mapData.overlays,
+    isPreview: true
+  })
+
   const { googleMapRef } = useMapInitialization(
     previewMapRef,
     previewMapData,

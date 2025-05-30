@@ -3,6 +3,7 @@ import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 
 export function createDeleteButton(container: HTMLElement | null, onDelete: () => void) {
+  console.log('[createDeleteButton] Creating delete button')
   if (!container) return null
 
   const deleteButton = document.createElement('button')
@@ -95,6 +96,7 @@ export function createDeleteButton(container: HTMLElement | null, onDelete: () =
 }
 
 export function createEditButton(container: HTMLElement | null, onEdit: () => void) {
+  console.log('[createEditButton] Creating edit button')
   if (!container) {
     console.log('Edit button: container is null');
     return null;
@@ -207,6 +209,7 @@ interface ResizeConfig {
 }
 
 export function createResizeHandle(container: HTMLElement | null, config: ResizeConfig) {
+  console.log('[createResizeHandle] Creating resize handle')
   if (!container) return null
 
   const {
