@@ -163,6 +163,14 @@ export function useMapOverlays(
           break
         }
         case 'business': {
+          console.log('[useMapOverlays] Creating business overlay with properties:', {
+            position: overlay.position,
+            logo: overlay.properties.logo,
+            businessName: overlay.properties.businessName,
+            width: overlay.properties.width,
+            containerStyle: overlay.properties.containerStyle
+          });
+
           const businessOverlay = createBusinessLogoOverlay(
             {
               position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
@@ -187,7 +195,38 @@ export function useMapOverlays(
             },
             createResizeHandle
           )
-          overlaysRef.current[overlay.id] = businessOverlay
+
+          console.log('[useMapOverlays] Business overlay created:', businessOverlay);
+          
+          // Add a check after the overlay is added to the map
+          setTimeout(() => {
+            if (businessOverlay.div) {
+              const rect = businessOverlay.div.getBoundingClientRect();
+              console.log('[useMapOverlays] Business overlay dimensions:', {
+                id: overlay.id,
+                width: rect.width,
+                height: rect.height,
+                position: {
+                  top: rect.top,
+                  left: rect.left
+                }
+              });
+
+              // Check if the logo image is present
+              const logoImg = businessOverlay.div.querySelector('img');
+              console.log('[useMapOverlays] Logo image element:', {
+                exists: !!logoImg,
+                src: logoImg?.src,
+                width: logoImg?.width,
+                height: logoImg?.height
+              });
+            } else {
+              console.warn('[useMapOverlays] Business overlay div not found');
+            }
+          }, 500);
+
+          overlaysRef.current[overlay.id] = businessOverlay;
+          console.log('[useMapOverlays] Business overlay added to map with ID:', overlay.id);
           break
         }
         case 'text': {
