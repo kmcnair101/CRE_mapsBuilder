@@ -12,6 +12,14 @@ interface BusinessOverlayConfig {
   style: ContainerStyle
 }
 
+interface ResizeConfig {
+  minWidth: number
+  maxWidth: number
+  maintainAspectRatio: boolean
+  aspectRatio: number
+  onResize: (width: number) => void
+}
+
 const defaultContainerStyle = {
   backgroundColor: '#FFFFFF',
   borderColor: '#000000',
@@ -24,115 +32,268 @@ const defaultContainerStyle = {
 export function createBusinessLogoOverlay(
   options: BusinessOverlayConfig,
   map: google.maps.Map,
-  ...rest: any[]
+  onDelete: () => void,
+  createDeleteButton: (container: HTMLElement | null, onDelete: () => void) => (() => void) | null,
+  createEditButton: (container: HTMLElement | null, onEdit: () => void) => (() => void) | null,
+  onEdit?: (style: any) => void,
+  createResizeHandle: (container: HTMLElement | null, config: ResizeConfig) => (() => void) | null
 ) {
   class BusinessLogoOverlay extends google.maps.OverlayView {
-    private div: HTMLElement | null = null;
+    private div: HTMLDivElement | null = null;
+    private container: HTMLDivElement | null = null;
+    private imageWrapper: HTMLDivElement | null = null;
     private position: google.maps.LatLng;
+    private initialPosition: google.maps.LatLng;
+    private isDragging = false;
+    private cleanupFunctions: Array<() => void> = [];
+    private aspectRatio: number = 1;
+    private isMapReady = false;
+    private isImageLoaded = false;
 
     constructor() {
       super();
       this.position = options.position;
-      this.setMap(map);
+      this.initialPosition = options.position;
+    }
+
+    private getRgbaColor(hex: string, opacity: number) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+
+    private applyStyles(container: HTMLDivElement) {
+      const styles = {
+        backgroundColor: this.getRgbaColor(options.style.backgroundColor, options.style.backgroundOpacity),
+        border: `${options.style.borderWidth}px solid ${this.getRgbaColor(options.style.borderColor, options.style.borderOpacity)}`,
+        padding: `${options.style.padding}px`,
+        borderRadius: '4px',
+        display: 'inline-block',
+        position: 'relative',
+        minWidth: '50px',
+        maxWidth: '400px',
+        width: `${options.width}px`,
+        boxSizing: 'border-box'
+      };
+
+      Object.assign(container.style, styles);
+    }
+
+    updateStyle(style: ContainerStyle) {
+      options.style = style;
+      if (this.container) {
+        this.applyStyles(this.container);
+      }
     }
 
     onAdd() {
       console.log('[BusinessLogoOverlay] onAdd called');
-      // Create the main div
-      this.div = document.createElement('div');
-      this.div.className = 'business-logo-overlay';
-      Object.assign(this.div.style, {
+      const map = this.getMap();
+
+      if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
+        map?.addListener('idle', () => {
+          this.isMapReady = true;
+          this.draw();
+        });
+        return;
+      }
+
+      this.isMapReady = true;
+      const div = document.createElement('div');
+      div.className = 'business-logo-overlay';
+      Object.assign(div.style, {
         position: 'absolute',
         cursor: 'move',
         userSelect: 'none',
-        width: `${options.width}px`,
-        height: `${options.height}px`,
-        backgroundColor: options.style.backgroundColor,
-        border: `${options.style.borderWidth}px solid ${options.style.borderColor}`,
-        padding: `${options.style.padding}px`,
-        boxSizing: 'border-box',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '4px'
+        zIndex: '1000'
       });
 
-      // Create the image element
+      const container = document.createElement('div');
+      this.applyStyles(container);
+      this.container = container;
+
+      const imageWrapper = document.createElement('div');
+      Object.assign(imageWrapper.style, {
+        position: 'relative',
+        width: '100%',
+        overflow: 'hidden'
+      });
+      this.imageWrapper = imageWrapper;
+
       const img = document.createElement('img');
       img.src = options.logo;
       img.alt = options.businessName;
-      img.style.maxWidth = '100%';
-      img.style.maxHeight = '100%';
-      img.style.display = 'block';
+      Object.assign(img.style, {
+        width: '100%',
+        height: 'auto',
+        display: 'block'
+      });
+      img.draggable = false;
 
-      // Add image load/error logging
-      img.onload = () => console.log('[BusinessLogoOverlay] Image loaded successfully:', options.logo);
-      img.onerror = () => console.error('[BusinessLogoOverlay] Image failed to load:', options.logo);
+      img.onload = () => {
+        this.aspectRatio = img.naturalWidth / img.naturalHeight;
+        this.isImageLoaded = true;
+        if (this.imageWrapper) {
+          this.imageWrapper.style.height = 'auto';
+        }
+        this.draw();
+      };
 
-      this.div.appendChild(img);
+      imageWrapper.appendChild(img);
+      container.appendChild(imageWrapper);
 
-      // Attach to the overlay pane
+      const deleteCleanup = createDeleteButton(div, onDelete);
+      if (deleteCleanup) {
+        this.cleanupFunctions.push(deleteCleanup);
+      }
+
+      if (onEdit) {
+        const editCleanup = createEditButton(div, () => {
+          if (onEdit) {
+            onEdit({
+              ...options.style,
+              width: options.width
+            });
+          }
+        });
+        if (editCleanup) {
+          this.cleanupFunctions.push(editCleanup);
+        }
+      }
+
+      const resizeCleanup = createResizeHandle(container, {
+        minWidth: 50,
+        maxWidth: 400,
+        maintainAspectRatio: true,
+        aspectRatio: this.aspectRatio,
+        onResize: (width: number) => {
+          const aspectRatio = this.aspectRatio || 1;
+          const height = Math.round(width / aspectRatio);
+          options.width = width;
+          container.style.width = `${width}px`;
+          container.style.height = `${height}px`;
+          if (this.imageWrapper) {
+            this.imageWrapper.style.height = `${height}px`;
+          }
+          this.draw();
+          if (onEdit) {
+            onEdit({
+              ...options.style,
+              width,
+              height
+            });
+          }
+        }
+      });
+      if (resizeCleanup) {
+        this.cleanupFunctions.push(resizeCleanup);
+      }
+
+      const handleDragStart = (e: MouseEvent) => {
+        e.stopPropagation();
+        this.isDragging = true;
+        document.body.style.cursor = 'move';
+      };
+
+      const handleDragMove = (e: MouseEvent) => {
+        if (!this.isDragging) return;
+        
+        const overlayProjection = this.getProjection();
+        const oldPoint = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
+        
+        if (oldPoint) {
+          const newPoint = new google.maps.Point(
+            oldPoint.x + e.movementX,
+            oldPoint.y + e.movementY
+          );
+          const newPosition = overlayProjection.fromDivPixelToLatLng(newPoint);
+          
+          if (newPosition) {
+            this.position = newPosition;
+            this.initialPosition = newPosition;
+            this.draw();
+          }
+        }
+      };
+
+      const handleDragEnd = () => {
+        if (this.isDragging) {
+          this.isDragging = false;
+          document.body.style.cursor = 'default';
+        }
+      };
+
+      div.addEventListener('mousedown', handleDragStart);
+      document.addEventListener('mousemove', handleDragMove);
+      document.addEventListener('mouseup', handleDragEnd);
+
+      this.cleanupFunctions.push(() => {
+        div.removeEventListener('mousedown', handleDragStart);
+        document.removeEventListener('mousemove', handleDragMove);
+        document.removeEventListener('mouseup', handleDragEnd);
+      });
+
+      div.appendChild(container);
+      this.div = div;
+
       const panes = this.getPanes();
-      console.log('[BusinessLogoOverlay] Available panes:', panes ? Object.keys(panes) : 'none');
       if (panes) {
-        panes.overlayMouseTarget.appendChild(this.div);
-        console.log('[BusinessLogoOverlay] Div attached to overlayMouseTarget');
+        panes.overlayLayer.appendChild(div);
+        console.log('[BusinessLogoOverlay] Div attached to overlayLayer');
       } else {
         console.error('[BusinessLogoOverlay] No panes available');
       }
     }
 
     draw() {
-      if (!this.div) {
-        console.log('[BusinessLogoOverlay] draw called but div is null');
+      if (!this.div || !this.isMapReady || !this.getProjection()) {
         return;
       }
-
-      const projection = this.getProjection();
-      if (!projection) {
-        console.log('[BusinessLogoOverlay] No projection available');
-        return;
+      
+      // First ensure all styles are applied
+      if (this.container) {
+        this.applyStyles(this.container);
       }
-
-      const point = projection.fromLatLngToDivPixel(this.position);
-      if (!point) {
-        console.log('[BusinessLogoOverlay] Could not convert position to pixel coordinates');
-        return;
+      
+      // Then calculate position
+      const overlayProjection = this.getProjection();
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
+      
+      if (point) {
+        // Get dimensions AFTER styles are applied
+        const width = this.div.offsetWidth;
+        const height = this.div.offsetHeight;
+        
+        // Calculate position
+        const left = Math.round(point.x - width / 2);
+        const top = Math.round(point.y - height / 2);
+        
+        // Apply position
+        if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
+          this.div.style.left = `${left}px`;
+          this.div.style.top = `${top}px`;
+        }
       }
+    }
 
-      console.log('[BusinessLogoOverlay] Drawing at position:', {
-        lat: this.position.lat(),
-        lng: this.position.lng(),
-        pixelX: point.x,
-        pixelY: point.y
-      });
-
-      this.div.style.left = `${point.x}px`;
-      this.div.style.top = `${point.y}px`;
-      this.div.style.position = 'absolute';
-      this.div.style.transform = 'translate(-50%, -50%)';
+    onRemove() {
+      this.cleanupFunctions.forEach(cleanup => cleanup());
+      this.cleanupFunctions = [];
+      if (this.div) {
+        this.div.parentNode?.removeChild(this.div);
+        this.div = null;
+        this.container = null;
+        this.imageWrapper = null;
+      }
     }
 
     getPosition() {
       return this.position;
     }
-
-    setPosition(position: google.maps.LatLng) {
-      this.position = position;
-      this.draw();
-    }
-    
-    // ... rest of the implementation
   }
 
-  // Add map event listeners to track when drawing might occur
-  map.addListener('bounds_changed', () => {
-    console.log('[BusinessLogoOverlay] Map bounds changed');
-  });
-
-  map.addListener('zoom_changed', () => {
-    console.log('[BusinessLogoOverlay] Map zoom changed');
-  });
-
-  return new BusinessLogoOverlay();
+  const businessOverlay = new BusinessLogoOverlay();
+  businessOverlay.setMap(map);
+  return businessOverlay;
 }
