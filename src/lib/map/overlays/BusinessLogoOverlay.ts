@@ -75,13 +75,11 @@ export function createBusinessLogoOverlay(
         border: `${options.style.borderWidth}px solid ${this.getRgbaColor(options.style.borderColor, options.style.borderOpacity)}`,
         padding: `${options.style.padding}px`,
         borderRadius: '4px',
-        display: 'block',
+        display: 'inline-block',
         minWidth: '50px',
         maxWidth: '400px',
         width: `${options.width}px`,
-        height: `${options.height}px`,
-        boxSizing: 'border-box',
-        overflow: 'visible'
+        boxSizing: 'border-box'
       };
 
       Object.assign(container.style, styles);
@@ -149,8 +147,7 @@ export function createBusinessLogoOverlay(
       Object.assign(img.style, {
         width: '100%',
         height: 'auto',
-        display: 'block',
-        objectFit: 'contain'
+        display: 'block'
       });
       img.draggable = false;
       console.log('[BusinessLogoOverlay] Created image with styles:', img.style.cssText);
@@ -183,7 +180,7 @@ export function createBusinessLogoOverlay(
         containerExists: !!container,
         containerStyle: container.style.cssText
       });
-      const deleteCleanup = createDeleteButton(container, onDelete);
+      const deleteCleanup = createDeleteButton(div, onDelete);
       if (deleteCleanup) {
         console.log('[BusinessLogoOverlay] Delete button added successfully');
         this.cleanupFunctions.push(deleteCleanup);
@@ -197,7 +194,7 @@ export function createBusinessLogoOverlay(
           containerExists: !!container,
           containerStyle: container.style.cssText
         });
-        const editCleanup = createEditButton(container, () => {
+        const editCleanup = createEditButton(div, () => {
           console.log('[BusinessLogoOverlay] Edit button clicked');
           if (!this.modalRoot) {
             this.modalRoot = document.createElement('div');
@@ -241,7 +238,7 @@ export function createBusinessLogoOverlay(
         containerStyle: container.style.cssText,
         aspectRatio: this.aspectRatio
       });
-      const resizeCleanup = createResizeHandle(container, {
+      const resizeCleanup = createResizeHandle(div, {
         minWidth: 50,
         maxWidth: 400,
         maintainAspectRatio: true,
