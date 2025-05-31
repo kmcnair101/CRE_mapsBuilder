@@ -39,25 +39,34 @@ export function LogoSelectionModal({
 
   const handleLogoSelect = (logo: string) => {
     if (!logo) {
+      console.warn('[LogoSelectionModal] No logo selected');
       return;
     }
-    const logoObject = {
-      url: logo,
-      width: 300, // Default width
-      height: 300 // Default height
+    const img = new Image();
+    img.onload = () => {
+      const logoObject = {
+        url: logo,
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      };
+      console.log('[LogoSelectionModal] Selected logo:', logoObject);
+      onSelect(logoObject);
     };
-    console.log('[LogoSelectionModal] Selected logo:', logoObject);
-    onSelect(logoObject);
+    img.src = logo;
   }
 
   const handleConfirm = () => {
     if (selectedLogo) {
-      onSelect({
-        url: selectedLogo,
-        width: 300,
-        height: 300
-      })
-      onClose()
+      const img = new Image();
+      img.onload = () => {
+        onSelect({
+          url: selectedLogo,
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        });
+        onClose();
+      };
+      img.src = selectedLogo;
     }
   }
 

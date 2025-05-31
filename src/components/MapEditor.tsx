@@ -455,7 +455,8 @@ export default function MapEditor() {
         businessName: business.name,
         address: business.address,
         logo: business.logo,
-        width: 200,
+        width: business.logoWidth || 200,
+        height: business.logoHeight || 200,
         containerStyle: {
           backgroundColor: '#FFFFFF',
           borderColor: '#000000',
@@ -472,6 +473,10 @@ export default function MapEditor() {
     console.log('[MapEditor] Overlay businessName:', overlay.properties.businessName);
     console.log('[MapEditor] Overlay address:', overlay.properties.address);
     console.log('[MapEditor] Overlay logo:', overlay.properties.logo);
+    console.log('[MapEditor] Overlay dimensions:', {
+      width: overlay.properties.width,
+      height: overlay.properties.height
+    });
 
     addOverlayToMap(overlay, googleMapRef.current)
     setMapDataWithLog((prev: MapData) => ({

@@ -8,6 +8,15 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface ContainerStyle {
+  backgroundColor: string
+  borderColor: string
+  borderWidth: number
+  padding: number
+  backgroundOpacity: number
+  borderOpacity: number
+}
+
 export interface MapOverlay {
   id: string
   type: 'image' | 'text' | 'business' | 'group' | 'shape'
@@ -18,6 +27,7 @@ export interface MapOverlay {
   properties: {
     // Common properties
     width?: number
+    height?: number
     draggable?: boolean
     zIndex?: number
     
@@ -25,19 +35,13 @@ export interface MapOverlay {
     url?: string
     content?: string
     businessName?: string
+    address?: string
     logo?: string
     paths?: google.maps.LatLngLiteral[]
     children?: MapOverlay[]
     
     // Style properties
-    containerStyle?: {
-      backgroundColor: string
-      borderColor: string
-      borderWidth: number
-      padding: number
-      backgroundOpacity: number
-      borderOpacity: number
-    }
+    containerStyle?: ContainerStyle
     textStyle?: {
       color: string
       fontSize: number

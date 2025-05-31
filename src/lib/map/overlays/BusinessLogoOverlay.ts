@@ -8,6 +8,7 @@ interface BusinessOverlayConfig {
   logo: string
   businessName: string
   width: number
+  height: number
   style: ContainerStyle
 }
 
