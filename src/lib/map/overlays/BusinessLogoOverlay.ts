@@ -164,17 +164,14 @@ export function createBusinessLogoOverlay(
       imageWrapper.appendChild(img);
       container.appendChild(imageWrapper);
 
-      // Log when controls are added
-      console.log('[BusinessLogoOverlay] Adding controls...');
-
+      // Add delete button
       const deleteCleanup = createDeleteButton(div, onDelete);
       if (deleteCleanup) {
         console.log('[BusinessLogoOverlay] Delete button added');
         this.cleanupFunctions.push(deleteCleanup);
-      } else {
-        console.warn('[BusinessLogoOverlay] Failed to add delete button');
       }
 
+      // Add edit button
       if (onEdit) {
         const editCleanup = createEditButton(div, () => {
           console.log('[BusinessLogoOverlay] Edit button clicked');
@@ -209,11 +206,10 @@ export function createBusinessLogoOverlay(
         if (editCleanup) {
           console.log('[BusinessLogoOverlay] Edit button added');
           this.cleanupFunctions.push(editCleanup);
-        } else {
-          console.warn('[BusinessLogoOverlay] Failed to add edit button');
         }
       }
 
+      // Add resize handle
       const resizeCleanup = createResizeHandle(container, {
         minWidth: 50,
         maxWidth: 400,
@@ -250,10 +246,9 @@ export function createBusinessLogoOverlay(
       if (resizeCleanup) {
         console.log('[BusinessLogoOverlay] Resize handle added');
         this.cleanupFunctions.push(resizeCleanup);
-      } else {
-        console.warn('[BusinessLogoOverlay] Failed to add resize handle');
       }
 
+      // Handle dragging
       const handleDragStart = (e: MouseEvent) => {
         e.stopPropagation();
         this.isDragging = true;
