@@ -76,6 +76,7 @@ export function useMapOverlays(
               logo: overlay.properties.logo || '',
               businessName: overlay.properties.businessName || '',
               width: overlay.properties.width || 200,
+              height: overlay.properties.height || 200,
               style: {
                 ...overlay.properties.containerStyle,
                 position: 'absolute',
@@ -168,6 +169,7 @@ export function useMapOverlays(
             logo: overlay.properties.logo,
             businessName: overlay.properties.businessName,
             width: overlay.properties.width,
+            height: overlay.properties.height,
             containerStyle: overlay.properties.containerStyle
           });
 
@@ -177,6 +179,7 @@ export function useMapOverlays(
               logo: overlay.properties.logo || '',
               businessName: overlay.properties.businessName || '',
               width: overlay.properties.width || 200,
+              height: overlay.properties.height || 200,
               style: {
                 ...overlay.properties.containerStyle,
                 position: 'absolute',
