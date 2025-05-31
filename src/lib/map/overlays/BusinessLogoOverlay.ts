@@ -96,10 +96,16 @@ export function createBusinessLogoOverlay(
       console.log('[BusinessLogoOverlay] onAdd called with options:', {
         width: options.width,
         height: options.height,
-        style: options.style
+        style: options.style,
+        logo: options.logo
       });
 
       const map = this.getMap();
+      console.log('[BusinessLogoOverlay] Map state:', {
+        hasMap: !!map,
+        isGoogleMap: map instanceof google.maps.Map,
+        hasProjection: !!map?.getProjection()
+      });
 
       if (!map || !(map instanceof google.maps.Map) || !map.getProjection()) {
         console.log('[BusinessLogoOverlay] Map not ready, waiting for idle event');
@@ -119,10 +125,12 @@ export function createBusinessLogoOverlay(
         userSelect: 'none',
         zIndex: '1000'
       });
+      console.log('[BusinessLogoOverlay] Created main div with styles:', div.style.cssText);
 
       const container = document.createElement('div');
       this.applyStyles(container);
       this.container = container;
+      console.log('[BusinessLogoOverlay] Created container with styles:', container.style.cssText);
 
       const imageWrapper = document.createElement('div');
       Object.assign(imageWrapper.style, {
@@ -131,6 +139,7 @@ export function createBusinessLogoOverlay(
         overflow: 'hidden'
       });
       this.imageWrapper = imageWrapper;
+      console.log('[BusinessLogoOverlay] Created image wrapper with styles:', imageWrapper.style.cssText);
 
       const img = document.createElement('img');
       img.src = options.logo;
@@ -142,12 +151,15 @@ export function createBusinessLogoOverlay(
         objectFit: 'contain'
       });
       img.draggable = false;
+      console.log('[BusinessLogoOverlay] Created image with styles:', img.style.cssText);
 
       img.onload = () => {
         console.log('[BusinessLogoOverlay] Image loaded with dimensions:', {
           naturalWidth: img.naturalWidth,
           naturalHeight: img.naturalHeight,
-          aspectRatio: img.naturalWidth / img.naturalHeight
+          aspectRatio: img.naturalWidth / img.naturalHeight,
+          currentWidth: img.offsetWidth,
+          currentHeight: img.offsetHeight
         });
         this.aspectRatio = img.naturalWidth / img.naturalHeight;
         this.isImageLoaded = true;
@@ -165,14 +177,24 @@ export function createBusinessLogoOverlay(
       container.appendChild(imageWrapper);
 
       // Add delete button
+      console.log('[BusinessLogoOverlay] Attempting to add delete button to container:', {
+        containerExists: !!container,
+        containerStyle: container.style.cssText
+      });
       const deleteCleanup = createDeleteButton(container, onDelete);
       if (deleteCleanup) {
-        console.log('[BusinessLogoOverlay] Delete button added');
+        console.log('[BusinessLogoOverlay] Delete button added successfully');
         this.cleanupFunctions.push(deleteCleanup);
+      } else {
+        console.warn('[BusinessLogoOverlay] Failed to add delete button');
       }
 
       // Add edit button
       if (onEdit) {
+        console.log('[BusinessLogoOverlay] Attempting to add edit button to container:', {
+          containerExists: !!container,
+          containerStyle: container.style.cssText
+        });
         const editCleanup = createEditButton(container, () => {
           console.log('[BusinessLogoOverlay] Edit button clicked');
           if (!this.modalRoot) {
@@ -204,12 +226,19 @@ export function createBusinessLogoOverlay(
           );
         });
         if (editCleanup) {
-          console.log('[BusinessLogoOverlay] Edit button added');
+          console.log('[BusinessLogoOverlay] Edit button added successfully');
           this.cleanupFunctions.push(editCleanup);
+        } else {
+          console.warn('[BusinessLogoOverlay] Failed to add edit button');
         }
       }
 
       // Add resize handle
+      console.log('[BusinessLogoOverlay] Attempting to add resize handle to container:', {
+        containerExists: !!container,
+        containerStyle: container.style.cssText,
+        aspectRatio: this.aspectRatio
+      });
       const resizeCleanup = createResizeHandle(container, {
         minWidth: 50,
         maxWidth: 400,
@@ -244,12 +273,18 @@ export function createBusinessLogoOverlay(
         }
       });
       if (resizeCleanup) {
-        console.log('[BusinessLogoOverlay] Resize handle added');
+        console.log('[BusinessLogoOverlay] Resize handle added successfully');
         this.cleanupFunctions.push(resizeCleanup);
+      } else {
+        console.warn('[BusinessLogoOverlay] Failed to add resize handle');
       }
 
       // Handle dragging
       const handleDragStart = (e: MouseEvent) => {
+        console.log('[BusinessLogoOverlay] Drag start:', {
+          target: e.target,
+          isDragging: this.isDragging
+        });
         e.stopPropagation();
         this.isDragging = true;
         document.body.style.cursor = 'move';
@@ -257,6 +292,12 @@ export function createBusinessLogoOverlay(
 
       const handleDragMove = (e: MouseEvent) => {
         if (!this.isDragging) return;
+        
+        console.log('[BusinessLogoOverlay] Drag move:', {
+          movementX: e.movementX,
+          movementY: e.movementY,
+          position: this.position
+        });
         
         const overlayProjection = this.getProjection();
         const oldPoint = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
@@ -277,6 +318,10 @@ export function createBusinessLogoOverlay(
       };
 
       const handleDragEnd = () => {
+        console.log('[BusinessLogoOverlay] Drag end:', {
+          isDragging: this.isDragging,
+          finalPosition: this.position
+        });
         if (this.isDragging) {
           this.isDragging = false;
           document.body.style.cursor = 'default';
@@ -297,6 +342,12 @@ export function createBusinessLogoOverlay(
       this.div = div;
 
       const panes = this.getPanes();
+      console.log('[BusinessLogoOverlay] Available panes:', {
+        hasPanes: !!panes,
+        overlayLayer: !!panes?.overlayLayer,
+        overlayMouseTarget: !!panes?.overlayMouseTarget
+      });
+      
       if (panes) {
         panes.overlayLayer.appendChild(div);
         console.log('[BusinessLogoOverlay] Div attached to overlayLayer');
