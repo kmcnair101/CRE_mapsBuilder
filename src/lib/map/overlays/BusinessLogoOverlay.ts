@@ -70,12 +70,12 @@ export function createBusinessLogoOverlay(
 
     private applyStyles(container: HTMLDivElement) {
       const styles = {
+        position: 'relative',
         backgroundColor: this.getRgbaColor(options.style.backgroundColor, options.style.backgroundOpacity),
         border: `${options.style.borderWidth}px solid ${this.getRgbaColor(options.style.borderColor, options.style.borderOpacity)}`,
         padding: `${options.style.padding}px`,
         borderRadius: '4px',
         display: 'inline-block',
-        position: 'relative',
         minWidth: '50px',
         maxWidth: '400px',
         width: `${options.width}px`,
@@ -165,7 +165,7 @@ export function createBusinessLogoOverlay(
       container.appendChild(imageWrapper);
 
       // Add delete button
-      const deleteCleanup = createDeleteButton(div, onDelete);
+      const deleteCleanup = createDeleteButton(container, onDelete);
       if (deleteCleanup) {
         console.log('[BusinessLogoOverlay] Delete button added');
         this.cleanupFunctions.push(deleteCleanup);
@@ -173,7 +173,7 @@ export function createBusinessLogoOverlay(
 
       // Add edit button
       if (onEdit) {
-        const editCleanup = createEditButton(div, () => {
+        const editCleanup = createEditButton(container, () => {
           console.log('[BusinessLogoOverlay] Edit button clicked');
           if (!this.modalRoot) {
             this.modalRoot = document.createElement('div');
