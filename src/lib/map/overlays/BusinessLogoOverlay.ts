@@ -37,7 +37,48 @@ export function createBusinessLogoOverlay(
     }
 
     onAdd() {
-      // Create div code...
+      // Create the main div
+      this.div = document.createElement('div');
+      this.div.className = 'business-logo-overlay';
+      Object.assign(this.div.style, {
+        position: 'absolute',
+        cursor: 'move',
+        userSelect: 'none',
+        width: `${options.width}px`,
+        height: `${options.height}px`,
+        backgroundColor: options.style.backgroundColor,
+        border: `${options.style.borderWidth}px solid ${options.style.borderColor}`,
+        padding: `${options.style.padding}px`,
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '4px'
+      });
+
+      // Create the image element
+      const img = document.createElement('img');
+      img.src = options.logo;
+      img.alt = options.businessName;
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
+      img.style.display = 'block';
+
+      this.div.appendChild(img);
+
+      // Optionally, add the business name below the logo
+      // const nameDiv = document.createElement('div');
+      // nameDiv.textContent = options.businessName;
+      // nameDiv.style.textAlign = 'center';
+      // nameDiv.style.fontSize = '14px';
+      // nameDiv.style.marginTop = '4px';
+      // this.div.appendChild(nameDiv);
+
+      // Attach to the overlay pane
+      const panes = this.getPanes();
+      if (panes) {
+        panes.overlayMouseTarget.appendChild(this.div);
+      }
     }
 
     draw() {
