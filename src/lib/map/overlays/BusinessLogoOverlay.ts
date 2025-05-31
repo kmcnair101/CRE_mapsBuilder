@@ -75,11 +75,13 @@ export function createBusinessLogoOverlay(
         border: `${options.style.borderWidth}px solid ${this.getRgbaColor(options.style.borderColor, options.style.borderOpacity)}`,
         padding: `${options.style.padding}px`,
         borderRadius: '4px',
-        display: 'inline-block',
+        display: 'block',
         minWidth: '50px',
         maxWidth: '400px',
         width: `${options.width}px`,
-        boxSizing: 'border-box'
+        height: `${options.height}px`,
+        boxSizing: 'border-box',
+        overflow: 'visible'
       };
 
       Object.assign(container.style, styles);
