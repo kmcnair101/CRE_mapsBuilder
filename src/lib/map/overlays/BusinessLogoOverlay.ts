@@ -42,6 +42,8 @@ export function createBusinessLogoOverlay(
     private div: HTMLDivElement | null = null;
     private container: HTMLDivElement | null = null;
     private imageWrapper: HTMLDivElement | null = null;
+    private modalRoot: HTMLDivElement | null = null;
+    private modalReactRoot: ReturnType<typeof createRoot> | null = null;
     private position: google.maps.LatLng;
     private initialPosition: google.maps.LatLng;
     private isDragging = false;
@@ -49,6 +51,9 @@ export function createBusinessLogoOverlay(
     private aspectRatio: number = 1;
     private isMapReady = false;
     private isImageLoaded = false;
+    private drawCount = 0;
+    private lastWidth: number = 0;
+    private lastHeight: number = 0;
 
     constructor() {
       super();
@@ -127,7 +132,8 @@ export function createBusinessLogoOverlay(
       Object.assign(img.style, {
         width: '100%',
         height: 'auto',
-        display: 'block'
+        display: 'block',
+        objectFit: 'contain'
       });
       img.draggable = false;
 
@@ -150,12 +156,32 @@ export function createBusinessLogoOverlay(
 
       if (onEdit) {
         const editCleanup = createEditButton(div, () => {
-          if (onEdit) {
-            onEdit({
-              ...options.style,
-              width: options.width
-            });
+          if (!this.modalRoot) {
+            this.modalRoot = document.createElement('div');
+            document.body.appendChild(this.modalRoot);
+            this.modalReactRoot = createRoot(this.modalRoot);
           }
+
+          this.modalReactRoot?.render(
+            createElement(ImageEditModal, {
+              isOpen: true,
+              onClose: () => this.modalReactRoot?.render(null),
+              initialStyle: options.style,
+              imageUrl: options.logo,
+              onSave: (style) => {
+                this.updateStyle(style);
+                if (onEdit) {
+                  onEdit({
+                    ...style,
+                    width: options.width,
+                    height: options.height,
+                    position: this.position
+                  });
+                }
+                this.modalReactRoot?.render(null);
+              }
+            })
+          );
         });
         if (editCleanup) {
           this.cleanupFunctions.push(editCleanup);
@@ -171,17 +197,24 @@ export function createBusinessLogoOverlay(
           const aspectRatio = this.aspectRatio || 1;
           const height = Math.round(width / aspectRatio);
           options.width = width;
+          options.height = height;
+          
+          // Update container size
           container.style.width = `${width}px`;
           container.style.height = `${height}px`;
+          
+          // Update image wrapper size
           if (this.imageWrapper) {
             this.imageWrapper.style.height = `${height}px`;
           }
+          
           this.draw();
           if (onEdit) {
             onEdit({
               ...options.style,
               width,
-              height
+              height,
+              position: this.position
             });
           }
         }
@@ -285,6 +318,12 @@ export function createBusinessLogoOverlay(
         this.div = null;
         this.container = null;
         this.imageWrapper = null;
+      }
+      if (this.modalRoot) {
+        this.modalReactRoot?.unmount();
+        this.modalRoot.parentNode?.removeChild(this.modalRoot);
+        this.modalRoot = null;
+        this.modalReactRoot = null;
       }
     }
 
