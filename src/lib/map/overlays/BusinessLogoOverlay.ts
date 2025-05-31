@@ -122,8 +122,7 @@ export function createBusinessLogoOverlay(
       Object.assign(div.style, {
         position: 'absolute',
         cursor: 'move',
-        userSelect: 'none',
-        zIndex: '1000'
+        userSelect: 'none'
       });
       console.log('[BusinessLogoOverlay] Created main div with styles:', div.style.cssText);
 
@@ -175,11 +174,7 @@ export function createBusinessLogoOverlay(
       imageWrapper.appendChild(img);
       container.appendChild(imageWrapper);
 
-      // Add delete button
-      console.log('[BusinessLogoOverlay] Attempting to add delete button to container:', {
-        containerExists: !!container,
-        containerStyle: container.style.cssText
-      });
+      // Attach controls to the main div
       const deleteCleanup = createDeleteButton(div, onDelete);
       if (deleteCleanup) {
         console.log('[BusinessLogoOverlay] Delete button added successfully');
@@ -188,7 +183,6 @@ export function createBusinessLogoOverlay(
         console.warn('[BusinessLogoOverlay] Failed to add delete button');
       }
 
-      // Add edit button
       if (onEdit) {
         console.log('[BusinessLogoOverlay] Attempting to add edit button to container:', {
           containerExists: !!container,
@@ -232,13 +226,7 @@ export function createBusinessLogoOverlay(
         }
       }
 
-      // Add resize handle
-      console.log('[BusinessLogoOverlay] Attempting to add resize handle to container:', {
-        containerExists: !!container,
-        containerStyle: container.style.cssText,
-        aspectRatio: this.aspectRatio
-      });
-      const resizeCleanup = createResizeHandle(div, {
+      const resizeCleanup = createResizeHandle(container, {
         minWidth: 50,
         maxWidth: 400,
         maintainAspectRatio: true,
@@ -348,8 +336,8 @@ export function createBusinessLogoOverlay(
       });
       
       if (panes) {
-        panes.overlayLayer.appendChild(div);
-        console.log('[BusinessLogoOverlay] Div attached to overlayLayer');
+        panes.overlayMouseTarget.appendChild(div);
+        console.log('[BusinessLogoOverlay] Div attached to overlayMouseTarget');
       } else {
         console.error('[BusinessLogoOverlay] No panes available');
       }
