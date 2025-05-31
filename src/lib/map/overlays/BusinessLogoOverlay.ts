@@ -195,7 +195,7 @@ export function createBusinessLogoOverlay(
             document.body.appendChild(this.modalRoot);
             this.modalReactRoot = createRoot(this.modalRoot);
           }
-
+ 
           this.modalReactRoot?.render(
             createElement(ImageEditModal, {
               isOpen: true,
