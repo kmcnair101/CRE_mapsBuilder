@@ -37,6 +37,7 @@ export function createBusinessLogoOverlay(
     }
 
     onAdd() {
+      console.log('[BusinessLogoOverlay] onAdd called');
       // Create the main div
       this.div = document.createElement('div');
       this.div.className = 'business-logo-overlay';
@@ -64,35 +65,47 @@ export function createBusinessLogoOverlay(
       img.style.maxHeight = '100%';
       img.style.display = 'block';
 
-      this.div.appendChild(img);
+      // Add image load/error logging
+      img.onload = () => console.log('[BusinessLogoOverlay] Image loaded successfully:', options.logo);
+      img.onerror = () => console.error('[BusinessLogoOverlay] Image failed to load:', options.logo);
 
-      // Optionally, add the business name below the logo
-      // const nameDiv = document.createElement('div');
-      // nameDiv.textContent = options.businessName;
-      // nameDiv.style.textAlign = 'center';
-      // nameDiv.style.fontSize = '14px';
-      // nameDiv.style.marginTop = '4px';
-      // this.div.appendChild(nameDiv);
+      this.div.appendChild(img);
 
       // Attach to the overlay pane
       const panes = this.getPanes();
+      console.log('[BusinessLogoOverlay] Available panes:', panes ? Object.keys(panes) : 'none');
       if (panes) {
         panes.overlayMouseTarget.appendChild(this.div);
+        console.log('[BusinessLogoOverlay] Div attached to overlayMouseTarget');
+      } else {
+        console.error('[BusinessLogoOverlay] No panes available');
       }
     }
 
     draw() {
-      if (!this.div) return;
+      if (!this.div) {
+        console.log('[BusinessLogoOverlay] draw called but div is null');
+        return;
+      }
 
       const projection = this.getProjection();
       if (!projection) {
+        console.log('[BusinessLogoOverlay] No projection available');
         return;
       }
 
       const point = projection.fromLatLngToDivPixel(this.position);
       if (!point) {
+        console.log('[BusinessLogoOverlay] Could not convert position to pixel coordinates');
         return;
       }
+
+      console.log('[BusinessLogoOverlay] Drawing at position:', {
+        lat: this.position.lat(),
+        lng: this.position.lng(),
+        pixelX: point.x,
+        pixelY: point.y
+      });
 
       this.div.style.left = `${point.x}px`;
       this.div.style.top = `${point.y}px`;
@@ -113,9 +126,13 @@ export function createBusinessLogoOverlay(
   }
 
   // Add map event listeners to track when drawing might occur
-  map.addListener('bounds_changed', () => {});
+  map.addListener('bounds_changed', () => {
+    console.log('[BusinessLogoOverlay] Map bounds changed');
+  });
 
-  map.addListener('zoom_changed', () => {});
+  map.addListener('zoom_changed', () => {
+    console.log('[BusinessLogoOverlay] Map zoom changed');
+  });
 
   return new BusinessLogoOverlay();
 }
