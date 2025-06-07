@@ -42,6 +42,9 @@ export function useMapOverlays(
     })
 
     if (isPreview) {
+      // Clear any existing overlays first
+      map.overlayMapTypes.clear();
+      
       console.log('[useMapOverlays] Creating preview overlay for type:', overlay.type)
       // For preview, create overlays with no-op callbacks and DO NOT touch overlaysRef
       switch (overlay.type) {

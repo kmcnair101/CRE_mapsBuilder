@@ -275,5 +275,17 @@ export function useMapInitialization(
     }
   }, [])
 
+  useEffect(() => {
+    if (!googleMapRef.current) return;
+    
+    // Clear existing overlays
+    googleMapRef.current.overlayMapTypes.clear();
+    
+    // Re-add all overlays
+    mapData.overlays.forEach(overlay => {
+      addOverlayToMap(overlay, googleMapRef.current!);
+    });
+  }, [mapData.overlays, googleMapRef.current]);
+
   return { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition }
 }

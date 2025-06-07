@@ -60,25 +60,19 @@ export function DownloadMapModal({
   const isInitializedRef = useRef(false)
 
   useEffect(() => {
-    if (!open || isInitializedRef.current) {
-      return
-    }
+    if (!open || isInitializedRef.current) return;
 
-    // Set preview data only once when modal opens
-    setPreviewMapData((prev: typeof mapData) => {
-      const newData = {
-        ...prev,
-        subject_property: mapData.subject_property
-      }
-      return newData
-    })
+    // Update all data including overlays
+    setPreviewMapData((prev: typeof mapData) => ({
+      ...mapData  // Use entire mapData instead of just updating subject_property
+    }));
 
-    isInitializedRef.current = true
+    isInitializedRef.current = true;
 
     return () => {
-      isInitializedRef.current = false
+      isInitializedRef.current = false;
     }
-  }, [open]) // Remove mapData.subject_property from dependencies
+  }, [open, mapData]) // Add mapData as dependency
 
   // Sync preview map with main map data
   useEffect(() => {
