@@ -1037,6 +1037,61 @@ export default function MapEditor() {
     });
   };
 
+  function extractLiveOverlays(overlaysRef, mapData) {
+    return mapData.overlays.map(overlay => {
+      const currentOverlay = overlaysRef.current[overlay.id]
+      if (currentOverlay) {
+        let updatedPosition = overlay.position
+        let updatedProperties = { ...overlay.properties }
+
+        if (overlay.type === 'shape' && 'shape' in currentOverlay) {
+          const shape = currentOverlay.shape
+          let position = null
+          if ('getCenter' in shape) {
+            position = shape.getCenter()
+          } else if ('getBounds' in shape) {
+            position = shape.getBounds()?.getCenter() || null
+          } else if ('getPath' in shape) {
+            const bounds = new google.maps.LatLngBounds()
+            shape.getPath().forEach((point) => bounds.extend(point))
+            position = bounds.getCenter()
+          }
+          if (position) {
+            updatedPosition = { lat: position.lat(), lng: position.lng() }
+          }
+          updatedProperties = {
+            ...updatedProperties,
+            style: {
+              fillColor: shape.fillColor || '#FFFFFF',
+              strokeColor: shape.strokeColor || '#000000',
+              strokeWeight: shape.strokeWeight || 2,
+              fillOpacity: shape.fillOpacity || 0.5,
+              strokeOpacity: shape.strokeOpacity || 1
+            }
+          }
+          // Add size/radius as needed...
+        } else if ('getPosition' in currentOverlay) {
+          const position = currentOverlay.getPosition()
+          if (position) {
+            updatedPosition = { lat: position.lat(), lng: position.lng() }
+          }
+        }
+
+        return {
+          ...overlay,
+          position: updatedPosition,
+          properties: {
+            ...(overlay.properties ?? {}),
+            ...(updatedProperties ?? {}),
+            width: (overlay.properties?.width ?? updatedProperties?.width ?? 200),
+            height: (overlay.properties?.height ?? updatedProperties?.height ?? 200),
+          }
+        }
+      }
+      return overlay
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -1157,15 +1212,9 @@ export default function MapEditor() {
         open={downloadModalOpen}
         width={downloadWidth}
         height={downloadHeight}
-        onWidthChange={(w) => {
-          setDownloadWidth(w)
-        }}
-        onHeightChange={(h) => {
-          setDownloadHeight(h)
-        }}
-        onClose={() => {
-          setDownloadModalOpen(false)
-        }}
+        onWidthChange={setDownloadWidth}
+        onHeightChange={setDownloadHeight}
+        onClose={() => setDownloadModalOpen(false)}
         onDownload={async (center, zoom) => {
           setDownloading(true)
           try {
@@ -1178,7 +1227,16 @@ export default function MapEditor() {
               map.setZoom(zoom)
               await new Promise(res => setTimeout(res, 400))
             }
-            await handleDownload(mapRef, false, downloadWidth, downloadHeight, googleMapRef)
+            // --- Use live overlays here ---
+            const liveOverlays = extractLiveOverlays(overlaysRef, mapData)
+            await handleDownload(
+              mapRef,
+              false,
+              downloadWidth,
+              downloadHeight,
+              googleMapRef,
+              liveOverlays // <-- pass live overlays
+            )
             setDownloadModalOpen(false)
             if (map && originalCenter && originalZoom !== undefined) {
               map.setCenter(originalCenter)
@@ -1190,7 +1248,7 @@ export default function MapEditor() {
           }
         }}
         mapRef={mapRef}
-        mapData={mapData}
+        mapData={{ ...mapData, overlays: extractLiveOverlays(overlaysRef, mapData) }} // <-- also for preview
       />
 
       <PricingPlans
