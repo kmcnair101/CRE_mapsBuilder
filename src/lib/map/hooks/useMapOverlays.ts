@@ -123,7 +123,8 @@ export function useMapOverlays(
             () => {},
             () => {},
             () => {},
-            () => {}
+            () => {},
+            isPreview // <-- pass isPreview here
           )
           break
         }
@@ -286,7 +287,8 @@ export function useMapOverlays(
             () => removeOverlay(overlay.id),
             createDeleteButton,
             createEditButton,
-            (style: any) => handleShapeEdit?.(overlay.id, style)
+            (style: any) => handleShapeEdit?.(overlay.id, style),
+            isPreview // <-- pass isPreview here too
           )
           overlaysRef.current[overlay.id] = shapeOverlay
           break

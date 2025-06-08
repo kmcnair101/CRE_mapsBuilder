@@ -38,7 +38,8 @@ export function createShapeOverlay(
   onDelete: () => void,
   createDeleteButton: (container: HTMLElement | null, onDelete: () => void) => (() => void) | null,
   createEditButton: (container: HTMLElement | null, onEdit: () => void) => (() => void) | null,
-  onEdit?: (properties: ShapeProperties) => void
+  onEdit?: (properties: ShapeProperties) => void,
+  isPreview?: boolean // <-- add this
 ) {
   class ShapeOverlay extends google.maps.OverlayView {
     private shape: google.maps.Rectangle | google.maps.Circle | google.maps.Polygon | null = null
@@ -63,6 +64,7 @@ export function createShapeOverlay(
     }
 
     private createControls() {
+      if (isPreview) return document.createElement('div'); // <-- skip controls in preview
       const controls = document.createElement('div')
       controls.className = 'shape-controls'
       Object.assign(controls.style, {
