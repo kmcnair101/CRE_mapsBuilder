@@ -258,17 +258,15 @@ export function createShapeOverlay(
           const height = this.properties.shapeHeight || 100
           const center = this.position
 
-          // Calculate NE and SW corners using the same logic as when saving
-          const ne = new google.maps.LatLng(
-            google.maps.geometry.spherical.computeOffset(center, height / 2, 0).lat(),
-            google.maps.geometry.spherical.computeOffset(center, width / 2, 90).lng()
-          );
-          const sw = new google.maps.LatLng(
-            google.maps.geometry.spherical.computeOffset(center, -height / 2, 180).lat(),
-            google.maps.geometry.spherical.computeOffset(center, -width / 2, -90).lng()
-          );
+          // Helper to offset both latitude and longitude
+          function offsetLatLng(center, dLatMeters, dLngMeters) {
+            const latOffset = google.maps.geometry.spherical.computeOffset(center, dLatMeters, 0);
+            return google.maps.geometry.spherical.computeOffset(latOffset, dLngMeters, 90);
+          }
 
-          // Add this log:
+          const ne = offsetLatLng(center, height / 2, width / 2);
+          const sw = offsetLatLng(center, -height / 2, -width / 2);
+
           console.log('[ShapeOverlay] Creating rectangle:', {
             shapeWidth: this.properties.shapeWidth,
             shapeHeight: this.properties.shapeHeight,
@@ -292,8 +290,8 @@ export function createShapeOverlay(
             draggable: true,
             editable: false,
             zIndex: 0
-          })
-          break
+          });
+          break;
         }
         case 'circle': {
           this.shape = new google.maps.Circle({
