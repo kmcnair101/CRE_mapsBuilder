@@ -258,16 +258,17 @@ export function createShapeOverlay(
           const height = this.properties.shapeHeight || 100
           const center = this.position
 
-          const bounds = new google.maps.LatLngBounds(
-            google.maps.geometry.spherical.computeOffset(
-              google.maps.geometry.spherical.computeOffset(center, -height/2, 0),
-              -width/2, 90
-            ),
-            google.maps.geometry.spherical.computeOffset(
-              google.maps.geometry.spherical.computeOffset(center, height/2, 0),
-              width/2, 90
-            )
-          )
+          // Calculate NE and SW corners using the same logic as when saving
+          const ne = new google.maps.LatLng(
+            google.maps.geometry.spherical.computeOffset(center, height / 2, 0).lat(),
+            google.maps.geometry.spherical.computeOffset(center, width / 2, 90).lng()
+          );
+          const sw = new google.maps.LatLng(
+            google.maps.geometry.spherical.computeOffset(center, -height / 2, 180).lat(),
+            google.maps.geometry.spherical.computeOffset(center, -width / 2, -90).lng()
+          );
+
+          const bounds = new google.maps.LatLngBounds(sw, ne);
 
           this.shape = new google.maps.Rectangle({
             bounds,
