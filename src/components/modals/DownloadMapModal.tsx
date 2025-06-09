@@ -96,12 +96,25 @@ export function DownloadMapModal({
     if (open && googleMapRef.current) {
       const map = googleMapRef.current
 
-      // Log preview map dimensions
+      // Log preview map dimensions and scale
       console.log('[DownloadMapModal] Preview map dimensions:', {
         width: previewMapRef.current?.offsetWidth,
         height: previewMapRef.current?.offsetHeight,
-        scale
+        scale,
+        mainMapWidth,
+        mainMapHeight
       })
+
+      // Log polygon overlays specifically
+      console.log('[DownloadMapModal] Polygon overlays:', previewMapData.overlays
+        .filter(overlay => overlay.type === 'shape' && overlay.properties.shapeType === 'polygon')
+        .map(overlay => ({
+          id: overlay.id,
+          position: overlay.position,
+          points: overlay.properties.points,
+          scale
+        }))
+      )
 
       // Update map center and zoom
       map.setCenter({ lat: mapData.center_lat, lng: mapData.center_lng })
