@@ -300,12 +300,16 @@ export function createShapeOverlay(
           break
         }
         case 'polygon': {
+          // The position stored in the overlay is not being used correctly for polygons
+          // We should use the actual points array from properties
+          const points = this.properties.points || [
+            this.position, // Fallback if no points
+            google.maps.geometry.spherical.computeOffset(this.position, 100, 120),
+            google.maps.geometry.spherical.computeOffset(this.position, 100, 240)
+          ]
+
           this.shape = new google.maps.Polygon({
-            paths: this.properties.points || [
-              this.position,
-              google.maps.geometry.spherical.computeOffset(this.position, 100, 120),
-              google.maps.geometry.spherical.computeOffset(this.position, 100, 240)
-            ],
+            paths: points.map(point => new google.maps.LatLng(point.lat, point.lng)), // Convert points to LatLng
             map: this.getMap() as google.maps.Map,
             fillColor: this.properties.style.fillColor,
             fillOpacity: this.properties.style.fillOpacity,
