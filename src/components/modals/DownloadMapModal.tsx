@@ -64,6 +64,17 @@ export function DownloadMapModal({
       return
     }
 
+    // Log original overlay positions
+    console.log('[DownloadMapModal] Original overlay positions:', mapData.overlays.map(overlay => ({
+      id: overlay.id,
+      type: overlay.type,
+      position: overlay.position,
+      properties: {
+        width: overlay.properties.width,
+        height: overlay.properties.height
+      }
+    })))
+
     // Set preview data only once when modal opens
     setPreviewMapData((prev: typeof mapData) => {
       const newData = {
@@ -78,16 +89,34 @@ export function DownloadMapModal({
     return () => {
       isInitializedRef.current = false
     }
-  }, [open]) // Remove mapData.subject_property from dependencies
+  }, [open])
 
-  // Sync preview map with main map data
+  // Add logging for preview map initialization
   useEffect(() => {
     if (open && googleMapRef.current) {
       const map = googleMapRef.current
 
+      // Log preview map dimensions
+      console.log('[DownloadMapModal] Preview map dimensions:', {
+        width: previewMapRef.current?.offsetWidth,
+        height: previewMapRef.current?.offsetHeight,
+        scale
+      })
+
       // Update map center and zoom
       map.setCenter({ lat: mapData.center_lat, lng: mapData.center_lng })
       map.setZoom(mapData.zoom_level)
+
+      // Log preview overlay positions after initialization
+      console.log('[DownloadMapModal] Preview overlay positions:', previewMapData.overlays.map(overlay => ({
+        id: overlay.id,
+        type: overlay.type,
+        position: overlay.position,
+        properties: {
+          width: overlay.properties.width,
+          height: overlay.properties.height
+        }
+      })))
 
       // Apply map style
       if (mapData.mapStyle) {
