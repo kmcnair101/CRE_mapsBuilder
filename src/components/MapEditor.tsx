@@ -1047,29 +1047,31 @@ export default function MapEditor() {
         if (overlay.type === 'shape' && 'shape' in currentOverlay) {
           const shape = currentOverlay.shape
           let position = null
-          if ('getCenter' in shape) {
-            position = shape.getCenter()
-          } else if ('getBounds' in shape) {
-            position = shape.getBounds()?.getCenter() || null
-          } else if ('getPath' in shape) {
-            const bounds = new google.maps.LatLngBounds()
-            shape.getPath().forEach((point) => bounds.extend(point))
-            position = bounds.getCenter()
-          }
-          if (position) {
-            updatedPosition = { lat: position.lat(), lng: position.lng() }
-          }
-          updatedProperties = {
-            ...updatedProperties,
-            style: {
-              fillColor: shape.fillColor || '#FFFFFF',
-              strokeColor: shape.strokeColor || '#000000',
-              strokeWeight: shape.strokeWeight || 2,
-              fillOpacity: shape.fillOpacity || 0.5,
-              strokeOpacity: shape.strokeOpacity || 1
+          if (shape) { // <-- Minimal fix: only proceed if shape is not null
+            if ('getCenter' in shape) {
+              position = shape.getCenter()
+            } else if ('getBounds' in shape) {
+              position = shape.getBounds()?.getCenter() || null
+            } else if ('getPath' in shape) {
+              const bounds = new google.maps.LatLngBounds()
+              shape.getPath().forEach((point) => bounds.extend(point))
+              position = bounds.getCenter()
             }
+            if (position) {
+              updatedPosition = { lat: position.lat(), lng: position.lng() }
+            }
+            updatedProperties = {
+              ...updatedProperties,
+              style: {
+                fillColor: shape.fillColor || '#FFFFFF',
+                strokeColor: shape.strokeColor || '#000000',
+                strokeWeight: shape.strokeWeight || 2,
+                fillOpacity: shape.fillOpacity || 0.5,
+                strokeOpacity: shape.strokeOpacity || 1
+              }
+            }
+            // Add size/radius as needed...
           }
-          // Add size/radius as needed...
         } else if ('getPosition' in currentOverlay) {
           const position = currentOverlay.getPosition()
           if (position) {
