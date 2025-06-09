@@ -167,6 +167,18 @@ export function DownloadMapModal({
   const mainMapWidth = mapRef.current?.offsetWidth || 800
   const mainMapHeight = mapRef.current?.offsetHeight || 600
 
+  // Add these for scaling the preview
+  const previewAreaRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+
+  useEffect(() => {
+    if (!previewAreaRef.current) return
+    const area = previewAreaRef.current.getBoundingClientRect()
+    const scaleW = area.width / width
+    const scaleH = area.height / height
+    setScale(Math.min(scaleW, scaleH, 1)) // Don't upscale beyond 1:1
+  }, [width, height, open])
+
   return (
     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
       <div className="bg-white w-full h-full flex">
@@ -227,22 +239,24 @@ export function DownloadMapModal({
 
         {/* Right Section (Preview) */}
         <div className="flex-1 relative">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-full h-full max-h-full flex items-center justify-center">
-              <div 
-                style={{ 
-                  width: `${width}px`, 
-                  height: `${height}px`,
-                  maxWidth: '100%',
-                  maxHeight: '100%'
-                }}
-                className="relative shadow-sm border border-gray-200 rounded-lg overflow-hidden"
-              >
-                <div 
-                  ref={previewMapRef} 
-                  className="w-full h-full"
-                />
-              </div>
+          <div
+            ref={previewAreaRef}
+            className="absolute inset-0 flex items-center justify-center bg-gray-100"
+          >
+            <div
+              style={{
+                width: `${width}px`,
+                height: `${height}px`,
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}
+              className="relative shadow-sm border border-gray-200 rounded-lg overflow-hidden bg-white"
+            >
+              <div
+                ref={previewMapRef}
+                className="w-full h-full"
+              />
             </div>
           </div>
         </div>
