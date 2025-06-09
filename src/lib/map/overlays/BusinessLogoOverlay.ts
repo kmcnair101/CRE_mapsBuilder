@@ -282,13 +282,19 @@ export function createBusinessLogoOverlay(
       }
       
       const overlayProjection = this.getProjection();
-      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
+      const point = overlayProjection.fromLatLngToDivPixel(this.position);
       
       if (point) {
-        const width = this.div.offsetWidth;
-        const height = this.div.offsetHeight;
-        const left = Math.round(point.x - width / 2);
-        const top = Math.round(point.y - height / 2);
+        // Get container dimensions
+        const containerWidth = this.container?.offsetWidth || 0;
+        const containerHeight = this.container?.offsetHeight || 0;
+        
+        // Calculate position adjusting for the container's actual dimensions
+        // rather than the outer div's dimensions
+        const left = Math.round(point.x - containerWidth / 2);
+        const top = Math.round(point.y - containerHeight / 2);
+        
+        // Apply position only if it has changed
         if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
           this.div.style.left = `${left}px`;
           this.div.style.top = `${top}px`;
