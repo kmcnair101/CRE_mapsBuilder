@@ -268,6 +268,17 @@ export function createShapeOverlay(
             google.maps.geometry.spherical.computeOffset(center, -width / 2, -90).lng()
           );
 
+          // Add this log:
+          console.log('[ShapeOverlay] Creating rectangle:', {
+            shapeWidth: this.properties.shapeWidth,
+            shapeHeight: this.properties.shapeHeight,
+            usedWidth: width,
+            usedHeight: height,
+            center: center.toJSON(),
+            ne: ne.toJSON(),
+            sw: sw.toJSON()
+          });
+
           const bounds = new google.maps.LatLngBounds(sw, ne);
 
           this.shape = new google.maps.Rectangle({
