@@ -105,7 +105,40 @@ export function DownloadMapModal({
         mainMapHeight
       })
 
-      // Log polygon overlays specifically
+      // Log image overlays
+      console.log('[DownloadMapModal] Image overlays:', previewMapData.overlays
+        .filter(overlay => overlay.type === 'image')
+        .map(overlay => ({
+          id: overlay.id,
+          position: overlay.position,
+          properties: {
+            width: overlay.properties.width,
+            height: overlay.properties.height,
+            url: overlay.properties.url,
+            containerStyle: overlay.properties.containerStyle
+          },
+          scale
+        }))
+      )
+
+      // Log business logo overlays
+      console.log('[DownloadMapModal] Business logo overlays:', previewMapData.overlays
+        .filter(overlay => overlay.type === 'business')
+        .map(overlay => ({
+          id: overlay.id,
+          position: overlay.position,
+          properties: {
+            width: overlay.properties.width,
+            height: overlay.properties.height,
+            logo: overlay.properties.logo,
+            businessName: overlay.properties.businessName,
+            containerStyle: overlay.properties.containerStyle
+          },
+          scale
+        }))
+      )
+
+      // Log polygon overlays
       console.log('[DownloadMapModal] Polygon overlays:', previewMapData.overlays
         .filter(overlay => overlay.type === 'shape' && overlay.properties.shapeType === 'polygon')
         .map(overlay => ({
@@ -115,6 +148,33 @@ export function DownloadMapModal({
           scale
         }))
       )
+
+      // Log all overlay positions after initialization
+      console.log('[DownloadMapModal] All preview overlay positions:', previewMapData.overlays.map(overlay => ({
+        id: overlay.id,
+        type: overlay.type,
+        position: overlay.position,
+        properties: {
+          width: overlay.properties.width,
+          height: overlay.properties.height,
+          // Include shape-specific properties
+          ...(overlay.type === 'shape' && {
+            shapeType: overlay.properties.shapeType,
+            points: overlay.properties.points
+          }),
+          // Include image-specific properties
+          ...(overlay.type === 'image' && {
+            url: overlay.properties.url,
+            containerStyle: overlay.properties.containerStyle
+          }),
+          // Include business-specific properties
+          ...(overlay.type === 'business' && {
+            logo: overlay.properties.logo,
+            businessName: overlay.properties.businessName,
+            containerStyle: overlay.properties.containerStyle
+          })
+        }
+      })))
 
       // Update map center and zoom
       map.setCenter({ lat: mapData.center_lat, lng: mapData.center_lng })
