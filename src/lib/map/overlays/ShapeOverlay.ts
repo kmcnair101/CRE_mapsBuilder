@@ -267,16 +267,6 @@ export function createShapeOverlay(
           const ne = offsetLatLng(center, height / 2, width / 2);
           const sw = offsetLatLng(center, -height / 2, -width / 2);
 
-          console.log('[ShapeOverlay] Creating rectangle:', {
-            shapeWidth: this.properties.shapeWidth,
-            shapeHeight: this.properties.shapeHeight,
-            usedWidth: width,
-            usedHeight: height,
-            center: center.toJSON(),
-            ne: ne.toJSON(),
-            sw: sw.toJSON()
-          });
-
           const bounds = new google.maps.LatLngBounds(sw, ne);
 
           this.shape = new google.maps.Rectangle({
@@ -338,7 +328,6 @@ export function createShapeOverlay(
             e.domEvent?.stopPropagation()
           }
           this.selectShape()
-          console.log('[ShapeOverlay] Shape selected. Current properties:', this.properties)
         })
 
         // --- Add mouseover/mouseout handlers for hover controls ---
@@ -347,13 +336,11 @@ export function createShapeOverlay(
             this.controlsDiv.style.display = 'flex'
             this.draw()
           }
-          console.log('[ShapeOverlay] Mouse over shape. Current properties:', this.properties)
         })
         google.maps.event.addListener(this.shape, 'mouseout', () => {
           if (this.controlsDiv && !this.isSelected) {
             this.controlsDiv.style.display = 'none'
           }
-          console.log('[ShapeOverlay] Mouse out shape. Current properties:', this.properties)
         })
         // ---------------------------------------------------------
 
@@ -365,23 +352,6 @@ export function createShapeOverlay(
               if (bounds) {
                 const center = bounds.getCenter()
                 this.position = center
-                // --- LOG RECTANGLE SIZE ---
-                if (this.properties.shapeType === 'rect') {
-                  const ne = bounds.getNorthEast()
-                  const sw = bounds.getSouthWest()
-                  const width = google.maps.geometry.spherical.computeDistanceBetween(
-                    new google.maps.LatLng(ne.lat(), sw.lng()),
-                    new google.maps.LatLng(ne.lat(), ne.lng())
-                  )
-                  const height = google.maps.geometry.spherical.computeDistanceBetween(
-                    new google.maps.LatLng(ne.lat(), ne.lng()),
-                    new google.maps.LatLng(sw.lat(), ne.lng())
-                  )
-                  console.log('[ShapeOverlay] Rectangle bounds changed. Calculated width:', width, 'height:', height)
-                  console.log('[ShapeOverlay] Current properties.shapeWidth:', this.properties.shapeWidth, 'shapeHeight:', this.properties.shapeHeight)
-                  // Extra log: properties object
-                  console.log('[ShapeOverlay] Rectangle properties object:', this.properties)
-                }
                 this.draw()
               }
             }
@@ -393,14 +363,6 @@ export function createShapeOverlay(
               const center = this.shape.getCenter()
               if (center) {
                 this.position = center
-                // --- LOG CIRCLE RADIUS ---
-                if (this.properties.shapeType === 'circle' && 'getRadius' in this.shape) {
-                  const radius = this.shape.getRadius()
-                  console.log('[ShapeOverlay] Circle center changed. Current radius:', radius)
-                  console.log('[ShapeOverlay] Current properties.radius:', this.properties.radius)
-                  // Extra log: properties object
-                  console.log('[ShapeOverlay] Circle properties object:', this.properties)
-                }
                 this.draw()
               }
             }
@@ -470,8 +432,6 @@ export function createShapeOverlay(
           this.controlsDiv.style.left = `${point.x - this.controlsDiv.offsetWidth / 2}px`;
           this.controlsDiv.style.top = `${point.y - this.controlsDiv.offsetHeight - 12}px`;
           this.controlsDiv.style.position = 'absolute';
-          // REMOVE or COMMENT OUT the next line:
-          // this.controlsDiv.style.display = this.isSelected ? 'flex' : 'none';
           this.controlsDiv.style.zIndex = '1000';
         }
       }
@@ -504,8 +464,6 @@ export function createShapeOverlay(
       if (selectedShape === this) {
         selectedShape = null
       }
-
-      console.log('[ShapeOverlay] onRemove called. Final properties:', this.properties)
     }
 
     getPosition() {

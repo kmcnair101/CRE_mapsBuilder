@@ -158,6 +158,22 @@ export async function createSubjectPropertyOverlay(
         contentDiv.style.whiteSpace = 'pre'
         contentDiv.style.display = 'inline-block'
         contentDiv.style.width = `${this.currentWidth}px`
+
+        const boldElem = contentDiv.querySelector('b');
+        if (boldElem) {
+          const cs = window.getComputedStyle(boldElem);
+          console.log('[SubjectPropertyOverlay] <b> computed fontWeight:', cs.fontWeight);
+        }
+        const italicElem = contentDiv.querySelector('i');
+        if (italicElem) {
+          const cs = window.getComputedStyle(italicElem);
+          console.log('[SubjectPropertyOverlay] <i> computed fontStyle:', cs.fontStyle);
+        }
+        const underlineElem = contentDiv.querySelector('u');
+        if (underlineElem) {
+          const cs = window.getComputedStyle(underlineElem);
+          console.log('[SubjectPropertyOverlay] <u> computed textDecoration:', cs.textDecorationLine);
+        }
       }
 
       // Add edit button if no image

@@ -440,8 +440,6 @@ export default function MapEditor() {
     logoWidth?: number
     logoHeight?: number
   }) => {
-    console.log('[MapEditor] Received business from BusinessLayer:', business);
-
     if (!googleMapRef.current) return
 
     const overlay: MapOverlay = {
@@ -467,16 +465,6 @@ export default function MapEditor() {
         }
       }
     }
-
-    // Log the overlay object and its key properties
-    console.log('[MapEditor] About to add overlay:', overlay);
-    console.log('[MapEditor] Overlay businessName:', overlay.properties.businessName);
-    console.log('[MapEditor] Overlay address:', overlay.properties.address);
-    console.log('[MapEditor] Overlay logo:', overlay.properties.logo);
-    console.log('[MapEditor] Overlay dimensions:', {
-      width: overlay.properties.width,
-      height: overlay.properties.height
-    });
 
     addOverlayToMap(overlay, googleMapRef.current)
     setMapDataWithLog((prev: MapData) => ({

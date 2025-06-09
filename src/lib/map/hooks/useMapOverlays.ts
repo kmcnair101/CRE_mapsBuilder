@@ -35,14 +35,9 @@ export function useMapOverlays(
   }
 
   const addOverlayToMap = (overlay: MapOverlay, map: google.maps.Map) => {
-    console.log('[useMapOverlays] Adding overlay:', {
-      type: overlay.type,
-      isPreview,
-      overlay
-    })
+    // Removed all console.log and console.warn statements
 
     if (isPreview) {
-      console.log('[useMapOverlays] Creating preview overlay for type:', overlay.type)
       // For preview, create overlays with no-op callbacks and DO NOT touch overlaysRef
       switch (overlay.type) {
         case 'image': {
@@ -165,15 +160,6 @@ export function useMapOverlays(
           break
         }
         case 'business': {
-          console.log('[useMapOverlays] Creating business overlay with properties:', {
-            position: overlay.position,
-            logo: overlay.properties.logo,
-            businessName: overlay.properties.businessName,
-            width: overlay.properties.width,
-            height: overlay.properties.height,
-            containerStyle: overlay.properties.containerStyle
-          });
-
           const businessOverlay = createBusinessLogoOverlay(
             {
               position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
@@ -199,38 +185,7 @@ export function useMapOverlays(
             },
             createResizeHandle
           )
-
-          console.log('[useMapOverlays] Business overlay created:', businessOverlay);
-          
-          // Add a check after the overlay is added to the map
-          setTimeout(() => {
-            if (businessOverlay.div) {
-              const rect = businessOverlay.div.getBoundingClientRect();
-              console.log('[useMapOverlays] Business overlay dimensions:', {
-                id: overlay.id,
-                width: rect.width,
-                height: rect.height,
-                position: {
-                  top: rect.top,
-                  left: rect.left
-                }
-              });
-
-              // Check if the logo image is present
-              const logoImg = businessOverlay.div.querySelector('img');
-              console.log('[useMapOverlays] Logo image element:', {
-                exists: !!logoImg,
-                src: logoImg?.src,
-                width: logoImg?.width,
-                height: logoImg?.height
-              });
-            } else {
-              console.warn('[useMapOverlays] Business overlay div not found');
-            }
-          }, 500);
-
-          overlaysRef.current[overlay.id] = businessOverlay;
-          console.log('[useMapOverlays] Business overlay added to map with ID:', overlay.id);
+          overlaysRef.current[overlay.id] = businessOverlay
           break
         }
         case 'text': {
@@ -250,21 +205,6 @@ export function useMapOverlays(
             createResizeHandle
           )
           overlaysRef.current[overlay.id] = textOverlay
-
-          // Log the dimensions and padding after the overlay is added to the map
-          setTimeout(() => {
-            if (textOverlay.div) {
-              const rect = textOverlay.div.getBoundingClientRect()
-              // Use the overlay's style or containerStyle for padding
-              const padding =
-                overlay.properties?.padding ??
-                overlay.properties?.containerStyle?.padding ??
-                8
-              console.log(
-                `[TextOverlay] id=${overlay.id} width=${rect.width}px height=${rect.height}px padding=${padding}px`
-              )
-            }
-          }, 500)
           break
         }
         case 'group': {

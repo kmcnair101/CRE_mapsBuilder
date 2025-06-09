@@ -3,7 +3,7 @@ import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 
 export function createDeleteButton(container: HTMLElement | null, onDelete: () => void) {
-  console.log('[createDeleteButton] Creating delete button')
+  // Removed all console.log statements
   if (!container) return null
 
   const deleteButton = document.createElement('button')
@@ -75,7 +75,7 @@ export function createDeleteButton(container: HTMLElement | null, onDelete: () =
   try {
     container.appendChild(deleteButton)
   } catch (error) {
-    console.warn('Failed to append delete button')
+    // Removed console.warn
     return null
   }
 
@@ -90,15 +90,14 @@ export function createDeleteButton(container: HTMLElement | null, onDelete: () =
         container.removeChild(deleteButton)
       }
     } catch (error) {
-      console.warn('Failed to remove delete button')
+      // Removed console.warn
     }
   }
 }
 
 export function createEditButton(container: HTMLElement | null, onEdit: () => void) {
-  console.log('[createEditButton] Creating edit button')
+  // Removed all console.log statements
   if (!container) {
-    console.log('Edit button: container is null');
     return null;
   }
 
@@ -129,12 +128,11 @@ export function createEditButton(container: HTMLElement | null, onEdit: () => vo
     iconRoot = createRoot(editButton);
     iconRoot.render(createElement(Pencil, { size: 14 }));
   } catch (error) {
-    console.warn('Failed to create edit button icon');
+    // Removed console.warn
     return null;
   }
 
   const handleClick = (e: MouseEvent) => {
-    console.log('Edit button DOM click event fired');
     e.stopPropagation();
     onEdit();
   };
@@ -178,7 +176,6 @@ export function createEditButton(container: HTMLElement | null, onEdit: () => vo
   try {
     container.appendChild(editButton);
   } catch (error) {
-    console.warn('Failed to append edit button');
     iconRoot?.unmount();
     return null;
   }
@@ -195,7 +192,7 @@ export function createEditButton(container: HTMLElement | null, onEdit: () => vo
         container.removeChild(editButton);
       }
     } catch (error) {
-      console.warn('Failed to remove edit button');
+      // Removed console.warn
     }
   };
 }
@@ -209,7 +206,7 @@ interface ResizeConfig {
 }
 
 export function createResizeHandle(container: HTMLElement | null, config: ResizeConfig) {
-  console.log('[createResizeHandle] Creating resize handle')
+  // Removed all console.log statements
   if (!container) return null
 
   const {
@@ -251,7 +248,7 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
   try {
     handle.appendChild(icon)
   } catch (error) {
-    console.warn('Failed to append resize handle icon')
+    // Removed console.warn
     return null
   }
 
@@ -364,7 +361,7 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
   try {
     container.appendChild(handle)
   } catch (error) {
-    console.warn('Failed to append resize handle')
+    // Removed console.warn
     return null
   }
 
@@ -381,7 +378,7 @@ export function createResizeHandle(container: HTMLElement | null, config: Resize
         container.removeChild(handle)
       }
     } catch (error) {
-      console.warn('Failed to remove resize handle')
+      // Removed console.warn
     }
   }
 }
