@@ -205,6 +205,14 @@ export function DownloadMapModal({
           map.setOptions({ styles: mapData.mapStyle.customStyles })
         }
       }
+
+      console.log('[Map Context]', {
+        width: mapRef.current?.offsetWidth,
+        height: mapRef.current?.offsetHeight,
+        center: { lat: map.getCenter().lat(), lng: map.getCenter().lng() },
+        zoom: map.getZoom(),
+        scale
+      });
     }
   }, [open, mapData, googleMapRef.current])
   
@@ -280,6 +288,19 @@ export function DownloadMapModal({
     const scaleH = area.height / height
     setScale(Math.min(scaleW, scaleH, 1)) // Don't upscale beyond 1:1
   }, [width, height, open])
+
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+
+  const handleOpenDownloadModal = () => {
+    // Log overlay positions right before opening the modal
+    console.log('[Before Modal Open] Overlay positions:', mapData.overlays.map(overlay => ({
+      id: overlay.id,
+      type: overlay.type,
+      position: overlay.position,
+      properties: overlay.properties
+    })));
+    setDownloadModalOpen(true);
+  };
 
   return (
     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
