@@ -358,22 +358,13 @@ export function DownloadMapModal({
           console.log('[DownloadMapModal] Starting map refresh sequence...');
           
           setTimeout(() => {
-            console.log('[DownloadMapModal] Triggering resize event...');
             google.maps.event.trigger(map, 'resize')
+            console.log('[DownloadMapModal] Simple resize triggered');
             
-            setTimeout(() => {
-              console.log('[DownloadMapModal] Final state after all operations:', {
-                mapTypeId: map.getMapTypeId(),
-                hasStyles: !!map.get('styles'),
-                stylesCount: map.get('styles')?.length || 0,
-                isVisible: map.getDiv().style.visibility !== 'hidden'
-              });
-              
-              // Remove listener after successful application
-              google.maps.event.removeListener(idleListener);
-              console.log('[DownloadMapModal] Idle listener removed after successful style application');
-            }, 100);
-          }, 100);
+            // Remove listener after style application
+            google.maps.event.removeListener(idleListener);
+            console.log('[DownloadMapModal] Idle listener removed');
+          }, 50);
         } else {
           console.log('[DownloadMapModal] No mapData.mapStyle found in idle listener');
         }
