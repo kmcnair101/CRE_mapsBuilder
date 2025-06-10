@@ -278,6 +278,29 @@ export function DownloadMapModal({
         });
       }
 
+      // Test what's actually loaded when this effect runs
+      console.log('[DownloadMapModal] Map state check:', {
+        mapExists: !!map,
+        mapReady: map.getProjection() !== undefined,
+        tilesLoaded: map.get('tilesloaded'),
+        mapTypeId: map.getMapTypeId(),
+        center: map.getCenter() ? { lat: map.getCenter().lat(), lng: map.getCenter().lng() } : null,
+        zoom: map.getZoom(),
+        hasStyles: !!map.get('styles'),
+        stylesCount: map.get('styles')?.length || 0
+      });
+
+      // Also test if we can add an idle listener
+      const testIdleListener = map.addListener('idle', () => {
+        console.log('[DownloadMapModal] IDLE EVENT FIRED - Map is now fully loaded:', {
+          mapTypeId: map.getMapTypeId(),
+          hasStyles: !!map.get('styles'),
+          stylesCount: map.get('styles')?.length || 0,
+          tilesLoaded: true
+        });
+        google.maps.event.removeListener(testIdleListener);
+      });
+
       console.log('[Map Context]', {
         width: mapRef.current?.offsetWidth,
         height: mapRef.current?.offsetHeight,
