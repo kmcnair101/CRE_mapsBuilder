@@ -54,7 +54,7 @@ function MapPreview({
       })
 
       // Calculate zoomed-out level for preview
-      const previewZoom = Math.max(zoom_level - 1.5, 8) // Zoom out by 1.5 levels, minimum zoom 8
+      const previewZoom = Math.max(zoom_level - 1.2, 8) // Zoom out by 1.5 levels, minimum zoom 8
       const zoomReduction = zoom_level - previewZoom
       
       // Calculate scale factor based on zoom reduction
