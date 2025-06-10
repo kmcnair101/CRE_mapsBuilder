@@ -119,9 +119,57 @@ export function useMapDownload() {
             clonedLogo.style.visibility = 'hidden'
           }
 
-          // Ensure all images are loaded
+          // Add line breaks ONLY in the cloned document for download
+          const addLineBreaksToTextOverlays = () => {
+            // Find all divs that might be text overlays
+            const allDivs = clonedDoc.querySelectorAll('div')
+            allDivs.forEach((element: Element) => {
+              if (element instanceof HTMLElement && element.textContent && element.textContent.trim()) {
+                // Check if this looks like a text overlay or subject property
+                const hasBackground = element.style.backgroundColor && 
+                                     element.style.backgroundColor !== 'rgba(0, 0, 0, 0)' && 
+                                     element.style.backgroundColor !== 'transparent'
+                const hasBorder = element.style.border || element.style.borderWidth
+                const hasAbsolutePosition = element.style.position === 'absolute'
+                
+                // If it looks like a text overlay
+                if ((hasBackground || hasBorder) && hasAbsolutePosition) {
+                  // Add line break to the end if not already present
+                  if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
+                    element.innerHTML = element.innerHTML + '<br>'
+                  }
+                }
+              }
+            })
+
+            // Also target specific classes for text overlays
+            const textOverlays = clonedDoc.querySelectorAll('.text-content, .custom-map-overlay')
+            textOverlays.forEach((element: Element) => {
+              if (element instanceof HTMLElement && element.innerHTML) {
+                if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
+                  element.innerHTML = element.innerHTML + '<br>'
+                }
+              }
+            })
+
+            // Handle subject property specifically
+            const subjectPropertyDivs = clonedDoc.querySelectorAll('div')
+            subjectPropertyDivs.forEach((element: Element) => {
+              if (element instanceof HTMLElement && 
+                  element.textContent && 
+                  (element.textContent.includes('Subject Property') || 
+                   element.getAttribute('data-subject-property') === 'true')) {
+                if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
+                  element.innerHTML = element.innerHTML + '<br>'
+                }
+              }
+            })
+          }
+
+          addLineBreaksToTextOverlays()
+
+          // Handle images
           const images = clonedDoc.getElementsByTagName('img')
-          
           return Promise.all(Array.from(images).map(img => {
             if (img.complete) {
               return Promise.resolve<void>(undefined)
@@ -351,36 +399,54 @@ export function useMapDownload() {
                 clonedLogo.style.visibility = 'hidden'
               }
 
-              // Add blank lines to text elements in the cloned document
-              const addBlankLinesToClonedText = () => {
-                // Find all text overlays and add blank lines
-                const textOverlays = clonedDoc.querySelectorAll('.custom-map-overlay .text-content, .text-content')
-                textOverlays.forEach((element: Element) => {
-                  if (element instanceof HTMLElement && element.textContent) {
-                    if (!element.textContent.endsWith('\n')) {
-                      element.textContent = element.textContent + '\n'
+              // Add line breaks ONLY in the cloned document for download
+              const addLineBreaksToTextOverlays = () => {
+                // Find all divs that might be text overlays
+                const allDivs = clonedDoc.querySelectorAll('div')
+                allDivs.forEach((element: Element) => {
+                  if (element instanceof HTMLElement && element.textContent && element.textContent.trim()) {
+                    // Check if this looks like a text overlay or subject property
+                    const hasBackground = element.style.backgroundColor && 
+                                         element.style.backgroundColor !== 'rgba(0, 0, 0, 0)' && 
+                                         element.style.backgroundColor !== 'transparent'
+                    const hasBorder = element.style.border || element.style.borderWidth
+                    const hasAbsolutePosition = element.style.position === 'absolute'
+                    
+                    // If it looks like a text overlay
+                    if ((hasBackground || hasBorder) && hasAbsolutePosition) {
+                      // Add line break to the end if not already present
+                      if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
+                        element.innerHTML = element.innerHTML + '<br>'
+                      }
                     }
                   }
                 })
- 
-                // Find subject property and other text elements
-                const allTextElements = clonedDoc.querySelectorAll('div')
-                allTextElements.forEach((element: Element) => {
-                  if (element instanceof HTMLElement && element.textContent) {
-                    // Check if it's a text overlay or subject property
-                    const isTextOverlay = element.closest('.custom-map-overlay') || 
-                                         element.classList.contains('text-content') ||
-                                         (element.style.backgroundColor && element.style.border && 
-                                          element.style.position === 'absolute')
-                    
-                    if (isTextOverlay && !element.textContent.endsWith('\n')) {
+
+                // Also target specific classes for text overlays
+                const textOverlays = clonedDoc.querySelectorAll('.text-content, .custom-map-overlay')
+                textOverlays.forEach((element: Element) => {
+                  if (element instanceof HTMLElement && element.innerHTML) {
+                    if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
+                      element.innerHTML = element.innerHTML + '<br>'
+                    }
+                  }
+                })
+
+                // Handle subject property specifically
+                const subjectPropertyDivs = clonedDoc.querySelectorAll('div')
+                subjectPropertyDivs.forEach((element: Element) => {
+                  if (element instanceof HTMLElement && 
+                      element.textContent && 
+                      (element.textContent.includes('Subject Property') || 
+                       element.getAttribute('data-subject-property') === 'true')) {
+                    if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
                       element.innerHTML = element.innerHTML + '<br>'
                     }
                   }
                 })
               }
 
-              addBlankLinesToClonedText()
+              addLineBreaksToTextOverlays()
 
               // Ensure all images are loaded
               const images = clonedDoc.getElementsByTagName('img')
