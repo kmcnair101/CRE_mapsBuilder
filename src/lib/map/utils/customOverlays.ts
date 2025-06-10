@@ -262,31 +262,30 @@ export function createCustomImageOverlay(
 
     draw() {
       if (!this.div || !this.isMapReady || !this.getProjection()) {
-        return
+        return;
       }
       
       // First ensure all styles are applied
       if (this.container) {
-        this.applyStyles(this.container)
+        this.applyStyles(this.container);
       }
       
-      // Then calculate position
-      const overlayProjection = this.getProjection()
-      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition)
+      const overlayProjection = this.getProjection();
+      const point = overlayProjection.fromLatLngToDivPixel(this.initialPosition);
       
       if (point) {
-        // Get dimensions AFTER styles are applied
-        const width = this.div.offsetWidth
-        const height = this.div.offsetHeight
+        // Get container dimensions instead of div dimensions
+        const containerWidth = this.container?.offsetWidth || 0;
+        const containerHeight = this.container?.offsetHeight || 0;
         
-        // Calculate position
-        const left = Math.round(point.x - width / 2)
-        const top = Math.round(point.y - height / 2)
+        // Calculate position using container dimensions
+        const left = Math.round(point.x - containerWidth / 2);
+        const top = Math.round(point.y - containerHeight / 2);
         
         // Apply position
         if (this.div.style.left !== `${left}px` || this.div.style.top !== `${top}px`) {
-          this.div.style.left = `${left}px`
-          this.div.style.top = `${top}px`
+          this.div.style.left = `${left}px`;
+          this.div.style.top = `${top}px`;
         }
       }
     }
