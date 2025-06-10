@@ -202,103 +202,95 @@ export function DownloadMapModal({
       if (mapData.mapStyle) {
         console.log('[DownloadMapModal] Style:', mapData.mapStyle.type);
         
+        // Set basic map type immediately
         if (mapData.mapStyle.type === 'satellite') {
           map.setMapTypeId('satellite')
         } else if (mapData.mapStyle.type === 'terrain') {
           map.setMapTypeId('terrain')
         } else {
           map.setMapTypeId('roadmap')
-          
-          // Apply custom styles from the mapStyles object
-          if (mapData.mapStyle.type in mapStyles) {
-            const customStyles = mapStyles[mapData.mapStyle.type as keyof typeof mapStyles]
-            map.setOptions({ styles: customStyles })
-            console.log('[DownloadMapModal] Applied predefined styles for:', mapData.mapStyle.type)
-          }
         }
 
-        // Still check for custom styles from mapData
-        if (mapData.mapStyle.customStyles) {
-          map.setOptions({ styles: mapData.mapStyle.customStyles })
-        }
-
-        // Apply label hiding and highway highlighting
-        const additionalStyles = []
-        
-        if (mapData.mapStyle.hideAllLabels || mapData.mapStyle.hideLabels) {
-          additionalStyles.push({ featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] })
-        }
-        
-        if (mapData.mapStyle.hideStreetNames) {
-          additionalStyles.push({ featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] })
-        }
-        
-        if (mapData.mapStyle.hideHighwayLabels) {
-          additionalStyles.push({ featureType: 'road.highway', elementType: 'labels', stylers: [{ visibility: 'off' }] })
-        }
-        
-        if (mapData.mapStyle.hideAreaLabels) {
-          additionalStyles.push({ featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] })
-        }
-        
-        if (mapData.mapStyle.hideBusinessLabels) {
-          additionalStyles.push({ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] })
-        }
-        
-        if (mapData.mapStyle.hideTransitLabels) {
-          additionalStyles.push({ featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] })
-        }
-        
-        if (mapData.mapStyle.hideWaterLabels) {
-          additionalStyles.push({ featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] })
-        }
-        
-        if (mapData.mapStyle.highlightHighways) {
-          additionalStyles.push({
-            featureType: 'road.highway',
-            elementType: 'geometry',
-            stylers: [
-              { color: mapData.mapStyle.highlightHighways.color },
-              { weight: mapData.mapStyle.highlightHighways.weight }
-            ]
-          })
-        }
-
-        // Apply additional styles if any exist
-        if (additionalStyles.length > 0) {
-          const currentStyles = map.get('styles') || []
-          map.setOptions({ styles: [...currentStyles, ...additionalStyles] })
-          console.log('[DownloadMapModal] Applied label/highway customizations')
-        }
-
-        // Add after style is applied
-        console.log('[DownloadMapModal] Map style after apply:', {
-          currentType: map.getMapTypeId(),
-          hasStyles: !!map.get('styles')
-        });
+        console.log('[DownloadMapModal] Map type set, waiting for tiles to load...');
       }
 
-      // Test what's actually loaded when this effect runs
-      console.log('[DownloadMapModal] Map state check:', {
-        mapExists: !!map,
-        mapReady: map.getProjection() !== undefined,
-        tilesLoaded: map.get('tilesloaded'),
-        mapTypeId: map.getMapTypeId(),
-        center: map.getCenter() ? { lat: map.getCenter().lat(), lng: map.getCenter().lng() } : null,
-        zoom: map.getZoom(),
-        hasStyles: !!map.get('styles'),
-        stylesCount: map.get('styles')?.length || 0
-      });
+      // Move all custom styling to the idle listener
+      const idleListener = map.addListener('idle', () => {
+        console.log('[DownloadMapModal] IDLE EVENT FIRED - Applying custom styles now');
+        
+        if (mapData.mapStyle) {
+          // Apply custom styles AFTER tiles are loaded
+          if (mapData.mapStyle.type !== 'satellite' && mapData.mapStyle.type !== 'terrain') {
+            // Apply custom styles from the mapStyles object
+            if (mapData.mapStyle.type in mapStyles) {
+              const customStyles = mapStyles[mapData.mapStyle.type as keyof typeof mapStyles]
+              map.setOptions({ styles: customStyles })
+              console.log('[DownloadMapModal] Applied predefined styles for:', mapData.mapStyle.type)
+            }
+          }
 
-      // Also test if we can add an idle listener
-      const testIdleListener = map.addListener('idle', () => {
-        console.log('[DownloadMapModal] IDLE EVENT FIRED - Map is now fully loaded:', {
-          mapTypeId: map.getMapTypeId(),
-          hasStyles: !!map.get('styles'),
-          stylesCount: map.get('styles')?.length || 0,
-          tilesLoaded: true
-        });
-        google.maps.event.removeListener(testIdleListener);
+          // Still check for custom styles from mapData
+          if (mapData.mapStyle.customStyles) {
+            map.setOptions({ styles: mapData.mapStyle.customStyles })
+          }
+
+          // Apply label hiding and highway highlighting
+          const additionalStyles = []
+          
+          if (mapData.mapStyle.hideAllLabels || mapData.mapStyle.hideLabels) {
+            additionalStyles.push({ featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+          }
+          
+          if (mapData.mapStyle.hideStreetNames) {
+            additionalStyles.push({ featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+          }
+          
+          if (mapData.mapStyle.hideHighwayLabels) {
+            additionalStyles.push({ featureType: 'road.highway', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+          }
+          
+          if (mapData.mapStyle.hideAreaLabels) {
+            additionalStyles.push({ featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+          }
+          
+          if (mapData.mapStyle.hideBusinessLabels) {
+            additionalStyles.push({ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+          }
+          
+          if (mapData.mapStyle.hideTransitLabels) {
+            additionalStyles.push({ featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+          }
+          
+          if (mapData.mapStyle.hideWaterLabels) {
+            additionalStyles.push({ featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+          }
+          
+          if (mapData.mapStyle.highlightHighways) {
+            additionalStyles.push({
+              featureType: 'road.highway',
+              elementType: 'geometry',
+              stylers: [
+                { color: mapData.mapStyle.highlightHighways.color },
+                { weight: mapData.mapStyle.highlightHighways.weight }
+              ]
+            })
+          }
+
+          // Apply additional styles if any exist
+          if (additionalStyles.length > 0) {
+            const currentStyles = map.get('styles') || []
+            map.setOptions({ styles: [...currentStyles, ...additionalStyles] })
+            console.log('[DownloadMapModal] Applied label/highway customizations')
+          }
+
+          console.log('[DownloadMapModal] All styles applied after idle:', {
+            currentType: map.getMapTypeId(),
+            hasStyles: !!map.get('styles'),
+            stylesCount: map.get('styles')?.length || 0
+          });
+        }
+        
+        google.maps.event.removeListener(idleListener);
       });
 
       console.log('[Map Context]', {
