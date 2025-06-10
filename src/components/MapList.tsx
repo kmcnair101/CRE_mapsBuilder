@@ -207,6 +207,18 @@ function MapPreview({
               () => {},
               () => {}
             )
+
+            // Debug the overlay object itself
+            console.log(`[MapPreview] Business overlay ${index} created object:`, {
+              overlayType: typeof businessOverlay,
+              overlayConstructor: businessOverlay?.constructor?.name,
+              hasGetDiv: typeof businessOverlay?.getDiv === 'function',
+              hasSetMap: typeof businessOverlay?.setMap === 'function',
+              overlayMethods: Object.getOwnPropertyNames(businessOverlay || {}),
+              overlayKeys: Object.keys(businessOverlay || {}),
+              isOverlayView: businessOverlay instanceof google.maps.OverlayView
+            })
+            
             overlayRefs.current.push(businessOverlay)
 
             // Log actual DOM element sizes after creation
