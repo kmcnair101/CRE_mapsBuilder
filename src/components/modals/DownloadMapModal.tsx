@@ -283,6 +283,12 @@ export function DownloadMapModal({
             console.log('[DownloadMapModal] Applied label/highway customizations')
           }
 
+          // ADD THIS: Force map to re-render after styles are applied
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize')
+            console.log('[DownloadMapModal] Triggered map resize to refresh styles')
+          }, 100)
+
           console.log('[DownloadMapModal] All styles applied after idle:', {
             currentType: map.getMapTypeId(),
             hasStyles: !!map.get('styles'),
