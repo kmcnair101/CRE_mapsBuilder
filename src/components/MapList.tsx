@@ -187,7 +187,7 @@ function MapPreview({
           }
         }
       })
-
+ 
       // Add subject property overlay (non-interactive, styled like main map)
       if (subject_property?.lat && subject_property?.lng) {
         const style = subject_property.style || {};
