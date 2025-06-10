@@ -53,10 +53,19 @@ function MapPreview({
         hasSubjectProperty: !!subject_property
       })
 
-      // Create the map exactly as it would appear in the main editor
+      // Calculate zoomed-out level for preview
+      const previewZoom = Math.max(zoom_level - 2, 8) // Zoom out by 2 levels, minimum zoom 8
+
+      console.log('[MapPreview] Using preview zoom:', {
+        originalZoom: zoom_level,
+        previewZoom: previewZoom,
+        zoomReduction: zoom_level - previewZoom
+      })
+
+      // Create the map with zoomed-out view
       mapInstance = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
-        zoom: zoom_level, // Use original zoom level
+        zoom: previewZoom, // Use reduced zoom level
         disableDefaultUI: true,
         styles: Array.isArray(mapStyle)
           ? mapStyle
