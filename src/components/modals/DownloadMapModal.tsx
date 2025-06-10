@@ -249,15 +249,35 @@ export function DownloadMapModal({
             // Apply custom styles from the mapStyles object
             if (mapData.mapStyle.type in mapStyles) {
               const customStyles = mapStyles[mapData.mapStyle.type as keyof typeof mapStyles]
-              console.log('[DownloadMapModal] Found predefined styles:', {
-                styleType: mapData.mapStyle.type,
-                styleCount: customStyles.length,
-                firstStyleFeature: customStyles[0]?.featureType,
-                firstStyleElement: customStyles[0]?.elementType
-              });
-              
               map.setOptions({ styles: customStyles })
               console.log('[DownloadMapModal] Applied predefined styles for:', mapData.mapStyle.type)
+              
+              // Force map redraw to reflect style changes immediately
+              google.maps.event.trigger(map, 'resize')
+              map.setCenter(map.getCenter()) // Nudge to re-render map tiles
+              console.log('[DownloadMapModal] Forced map redraw after style application')
+            }
+            
+            // Still check for custom styles from mapData
+            if (mapData.mapStyle.customStyles) {
+              map.setOptions({ styles: mapData.mapStyle.customStyles })
+              
+              // Force map redraw for custom styles too
+              google.maps.event.trigger(map, 'resize')
+              map.setCenter(map.getCenter())
+              console.log('[DownloadMapModal] Forced map redraw after custom styles')
+            }
+            
+            // Apply additional styles if any exist
+            if (additionalStyles.length > 0) {
+              const currentStyles = map.get('styles') || []
+              map.setOptions({ styles: [...currentStyles, ...additionalStyles] })
+              console.log('[DownloadMapModal] Applied label/highway customizations')
+              
+              // Force map redraw after additional styles
+              google.maps.event.trigger(map, 'resize')
+              map.setCenter(map.getCenter())
+              console.log('[DownloadMapModal] Forced map redraw after additional styles')
             }
           }
 
@@ -341,31 +361,18 @@ export function DownloadMapModal({
             map.setOptions({ styles: [...currentStyles, ...additionalStyles] })
             console.log('[DownloadMapModal] Applied label/highway customizations')
             
-            // Check final result
-            setTimeout(() => {
-              console.log('[DownloadMapModal] Post-additional-styles check:', {
-                hasStyles: !!map.get('styles'),
-                stylesCount: map.get('styles')?.length || 0,
-                finalStyles: map.get('styles')?.slice(0, 3) // Log first 3 styles for debugging
-              });
-            }, 50);
+            // Force map redraw after additional styles
+            google.maps.event.trigger(map, 'resize')
+            map.setCenter(map.getCenter())
+            console.log('[DownloadMapModal] Forced map redraw after additional styles')
           } else {
             console.log('[DownloadMapModal] No additional styles to apply');
           }
 
-          // Force map refresh attempts
-          console.log('[DownloadMapModal] Starting map refresh sequence...');
-          
-          setTimeout(() => {
-            google.maps.event.trigger(map, 'resize')
-            console.log('[DownloadMapModal] Simple resize triggered');
-            
-            // Remove listener after style application
-            google.maps.event.removeListener(idleListener);
-            console.log('[DownloadMapModal] Idle listener removed');
-          }, 50);
-        } else {
-          console.log('[DownloadMapModal] No mapData.mapStyle found in idle listener');
+          // Remove the existing setTimeout-based refresh since we're doing immediate refresh
+          // Remove listener after style application
+          google.maps.event.removeListener(idleListener);
+          console.log('[DownloadMapModal] Idle listener removed');
         }
       });
 
