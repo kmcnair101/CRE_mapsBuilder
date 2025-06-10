@@ -362,7 +362,7 @@ export function useMapDownload() {
                     }
                   }
                 })
-
+ 
                 // Find subject property and other text elements
                 const allTextElements = clonedDoc.querySelectorAll('div')
                 allTextElements.forEach((element: Element) => {
