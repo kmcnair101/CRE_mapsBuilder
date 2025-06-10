@@ -49,32 +49,31 @@ function MapPreview({
       // Calculate adjusted zoom level based on container size
       const containerWidth = mapRef.current?.offsetWidth || 0
       const containerHeight = mapRef.current?.offsetHeight || 0
-      const zoomAdjustment = Math.log2(containerWidth / 800) // 800px is a reference width
-      const adjustedZoom = Math.min(Math.max(zoom_level + zoomAdjustment, 0), 20) // Clamp between 0 and 20
+      
+      // Use more conservative scaling approach
+      const referenceWidth = 800
+      const rawScaleFactor = containerWidth / referenceWidth
+      const minScaleFactor = 0.6 // Don't scale below 60%
+      const scaleFactor = Math.max(rawScaleFactor, minScaleFactor)
+      
+      // For very small containers, use different scaling strategies
+      const isVerySmall = containerWidth < 300
+      const fontScaleFactor = isVerySmall ? 0.8 : scaleFactor
+      const borderScaleFactor = isVerySmall ? 0.9 : scaleFactor
+      
+      const zoomAdjustment = Math.log2(scaleFactor * 1.2)
+      const adjustedZoom = Math.min(Math.max(zoom_level + zoomAdjustment, 8), 18)
 
-      // Calculate scale factor for overlays
-      const scaleFactor = containerWidth / 800 // Scale factor relative to reference width
-
-      console.log('[MapPreview] Container and scaling info:', {
+      console.log('[MapPreview] Improved scaling calculation:', {
         containerWidth,
         containerHeight,
+        rawScaleFactor,
+        finalScaleFactor: scaleFactor,
+        fontScaleFactor,
+        borderScaleFactor,
+        isVerySmall,
         originalZoom: zoom_level,
-        zoomAdjustment,
-        adjustedZoom,
-        scaleFactor,
-        referenceWidth: 800
-      })
-
-      console.log('[MapPreview] Overlay data received:', {
-        overlayCount: overlays.length,
-        overlayTypes: overlays.map(o => o.type),
-        hasSubjectProperty: !!subject_property,
-        subjectPropertyData: subject_property ? {
-          lat: subject_property.lat,
-          lng: subject_property.lng,
-          name: subject_property.name,
-          style: subject_property.style
-        } : null
+        adjustedZoom
       })
 
       mapInstance = new google.maps.Map(mapRef.current!, {
@@ -95,32 +94,47 @@ function MapPreview({
       })
       overlayRefs.current = []
 
-      // Add overlays using the existing overlay creation functions
-      const map = mapInstance as google.maps.Map  // Type assertion
+      const map = mapInstance as google.maps.Map
+
+      // Create wrapper functions that add getDiv() method to overlays
+      function wrapOverlayWithGetDiv(overlay: any, divProperty: string = 'div') {
+        if (!overlay.getDiv && overlay[divProperty]) {
+          overlay.getDiv = () => overlay[divProperty]
+        }
+        return overlay
+      }
+
       overlays.forEach((overlay, index) => {
         console.log(`[MapPreview] Processing overlay ${index + 1}/${overlays.length}:`, {
           type: overlay.type,
           position: overlay.position,
           originalProperties: overlay.properties,
-          scaleFactor
+          scaleFactor,
+          fontScaleFactor,
+          borderScaleFactor
         })
 
         switch (overlay.type) {
           case 'image': {
             const originalWidth = overlay.properties.width || 200
-            const scaledWidth = Math.max(30, originalWidth * scaleFactor) // Min 30px width
+            const scaledWidth = Math.max(30, originalWidth * scaleFactor)
             const originalPadding = overlay.properties.containerStyle?.padding || 8
-            const scaledPadding = Math.max(2, originalPadding * scaleFactor) // Min 2px
+            const scaledPadding = Math.max(2, originalPadding * scaleFactor)
             const originalBorderWidth = overlay.properties.containerStyle?.borderWidth || 1
-            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * borderScaleFactor)
 
-            console.log(`[MapPreview] Image overlay ${index} scaling:`, {
+            console.log(`[MapPreview] Image overlay ${index} improved scaling:`, {
               originalWidth,
               scaledWidth,
               originalPadding,
               scaledPadding,
               originalBorderWidth,
-              scaledBorderWidth
+              scaledBorderWidth,
+              constraintsApplied: {
+                minWidth: scaledWidth >= 30,
+                minPadding: scaledPadding >= 2,
+                minBorder: scaledBorderWidth >= 0.5
+              }
             })
 
             const imageOverlay = createCustomImageOverlay(
@@ -144,46 +158,56 @@ function MapPreview({
               () => {},
               () => {}
             )
-            overlayRefs.current.push(imageOverlay)
+            
+            // Add getDiv method if it doesn't exist
+            const wrappedImageOverlay = wrapOverlayWithGetDiv(imageOverlay, 'container')
+            overlayRefs.current.push(wrappedImageOverlay)
 
-            // Log actual DOM element sizes after creation
+            // Log actual DOM after creation
             setTimeout(() => {
-              const overlayDiv = imageOverlay.getDiv?.();
+              const overlayDiv = wrappedImageOverlay.getDiv?.()
               if (overlayDiv) {
-                const computedStyle = getComputedStyle(overlayDiv);
-                const rect = overlayDiv.getBoundingClientRect();
-                console.log(`[MapPreview] Image overlay ${index} actual DOM sizes:`, {
+                const computedStyle = getComputedStyle(overlayDiv)
+                const rect = overlayDiv.getBoundingClientRect()
+                console.log(`[MapPreview] Image overlay ${index} actual DOM with constraints:`, {
                   elementWidth: rect.width,
                   elementHeight: rect.height,
                   computedWidth: computedStyle.width,
-                  computedHeight: computedStyle.height,
                   computedPadding: computedStyle.padding,
                   computedBorder: computedStyle.border,
-                  computedFontSize: computedStyle.fontSize,
-                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
-                  isVisible: rect.width > 0 && rect.height > 0
-                });
+                  isVisible: rect.width > 0 && rect.height > 0,
+                  meetsMinimums: {
+                    width: rect.width >= 30,
+                    padding: parseFloat(computedStyle.padding) >= 2,
+                    border: parseFloat(computedStyle.borderWidth) >= 0.5
+                  }
+                })
               } else {
-                console.log(`[MapPreview] Image overlay ${index} - no DOM element found`);
+                console.log(`[MapPreview] Image overlay ${index} - DOM still not accessible`)
               }
-            }, 100);
+            }, 200)
             break
           }
           case 'business': {
             const originalWidth = overlay.properties.width || 200
-            const scaledWidth = Math.max(40, originalWidth * scaleFactor) // Min 40px width
+            const scaledWidth = Math.max(40, originalWidth * scaleFactor)
             const originalFontSize = overlay.properties.containerStyle?.fontSize || 14
-            const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
+            const scaledFontSize = Math.max(10, originalFontSize * fontScaleFactor)
             const originalPadding = overlay.properties.containerStyle?.padding || 8
-            const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
+            const scaledPadding = Math.max(4, originalPadding * scaleFactor)
 
-            console.log(`[MapPreview] Business overlay ${index} scaling:`, {
+            console.log(`[MapPreview] Business overlay ${index} improved scaling:`, {
               originalWidth,
               scaledWidth,
               originalFontSize,
               scaledFontSize,
               originalPadding,
-              scaledPadding
+              scaledPadding,
+              constraintsApplied: {
+                minWidth: scaledWidth >= 40,
+                minFontSize: scaledFontSize >= 10,
+                minPadding: scaledPadding >= 4
+              }
             })
 
             const businessOverlay = createBusinessLogoOverlay(
@@ -208,58 +232,54 @@ function MapPreview({
               () => {}
             )
 
-            // Debug the overlay object itself
-            console.log(`[MapPreview] Business overlay ${index} created object:`, {
-              overlayType: typeof businessOverlay,
-              overlayConstructor: businessOverlay?.constructor?.name,
-              hasGetDiv: typeof businessOverlay?.getDiv === 'function',
-              hasSetMap: typeof businessOverlay?.setMap === 'function',
-              overlayMethods: Object.getOwnPropertyNames(businessOverlay || {}),
-              overlayKeys: Object.keys(businessOverlay || {}),
-              isOverlayView: businessOverlay instanceof google.maps.OverlayView
-            })
-            
-            overlayRefs.current.push(businessOverlay)
+            // Add getDiv method if it doesn't exist
+            const wrappedBusinessOverlay = wrapOverlayWithGetDiv(businessOverlay, 'container')
+            overlayRefs.current.push(wrappedBusinessOverlay)
 
-            // Log actual DOM element sizes after creation
             setTimeout(() => {
-              const overlayDiv = businessOverlay.getDiv?.();
+              const overlayDiv = wrappedBusinessOverlay.getDiv?.()
               if (overlayDiv) {
-                const computedStyle = getComputedStyle(overlayDiv);
-                const rect = overlayDiv.getBoundingClientRect();
-                console.log(`[MapPreview] Business overlay ${index} actual DOM sizes:`, {
+                const computedStyle = getComputedStyle(overlayDiv)
+                const rect = overlayDiv.getBoundingClientRect()
+                console.log(`[MapPreview] Business overlay ${index} actual DOM with constraints:`, {
                   elementWidth: rect.width,
                   elementHeight: rect.height,
-                  computedWidth: computedStyle.width,
-                  computedHeight: computedStyle.height,
-                  computedPadding: computedStyle.padding,
-                  computedBorder: computedStyle.border,
                   computedFontSize: computedStyle.fontSize,
-                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
-                  isVisible: rect.width > 0 && rect.height > 0
-                });
+                  computedPadding: computedStyle.padding,
+                  isVisible: rect.width > 0 && rect.height > 0,
+                  meetsMinimums: {
+                    width: rect.width >= 40,
+                    fontSize: parseFloat(computedStyle.fontSize) >= 10,
+                    padding: parseFloat(computedStyle.padding) >= 4
+                  }
+                })
               } else {
-                console.log(`[MapPreview] Business overlay ${index} - no DOM element found`);
+                console.log(`[MapPreview] Business overlay ${index} - DOM still not accessible`)
               }
-            }, 100);
+            }, 200)
             break
           }
           case 'text': {
             const originalFontSize = overlay.properties.fontSize || 14
-            const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
+            const scaledFontSize = Math.max(10, originalFontSize * fontScaleFactor)
             const originalPadding = overlay.properties.padding || 8
-            const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
+            const scaledPadding = Math.max(4, originalPadding * scaleFactor)
             const originalBorderWidth = overlay.properties.borderWidth || 1
-            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * borderScaleFactor)
 
-            console.log(`[MapPreview] Text overlay ${index} scaling:`, {
+            console.log(`[MapPreview] Text overlay ${index} improved scaling:`, {
               text: overlay.properties.content || overlay.properties.text,
               originalFontSize,
               scaledFontSize,
               originalPadding,
               scaledPadding,
               originalBorderWidth,
-              scaledBorderWidth
+              scaledBorderWidth,
+              constraintsApplied: {
+                minFontSize: scaledFontSize >= 10,
+                minPadding: scaledPadding >= 4,
+                minBorder: scaledBorderWidth >= 0.5
+              }
             })
 
             const textOverlay = createCustomTextOverlay(
@@ -279,49 +299,43 @@ function MapPreview({
               () => {},
               () => {}
             )
-            overlayRefs.current.push(textOverlay)
 
-            // Log actual DOM element sizes after creation
+            // Add getDiv method if it doesn't exist
+            const wrappedTextOverlay = wrapOverlayWithGetDiv(textOverlay, 'container')
+            overlayRefs.current.push(wrappedTextOverlay)
+
             setTimeout(() => {
-              const overlayDiv = textOverlay.getDiv?.();
+              const overlayDiv = wrappedTextOverlay.getDiv?.()
               if (overlayDiv) {
-                const computedStyle = getComputedStyle(overlayDiv);
-                const rect = overlayDiv.getBoundingClientRect();
-                console.log(`[MapPreview] Text overlay ${index} actual DOM sizes:`, {
+                const computedStyle = getComputedStyle(overlayDiv)
+                const rect = overlayDiv.getBoundingClientRect()
+                console.log(`[MapPreview] Text overlay ${index} actual DOM with constraints:`, {
                   elementWidth: rect.width,
                   elementHeight: rect.height,
-                  computedWidth: computedStyle.width,
-                  computedHeight: computedStyle.height,
+                  computedFontSize: computedStyle.fontSize,
                   computedPadding: computedStyle.padding,
                   computedBorder: computedStyle.border,
-                  computedFontSize: computedStyle.fontSize,
-                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
-                  textContent: overlayDiv.textContent?.substring(0, 50),
-                  isVisible: rect.width > 0 && rect.height > 0
-                });
+                  textContent: overlayDiv.textContent?.substring(0, 30),
+                  isVisible: rect.width > 0 && rect.height > 0,
+                  meetsMinimums: {
+                    fontSize: parseFloat(computedStyle.fontSize) >= 10,
+                    padding: parseFloat(computedStyle.padding) >= 4,
+                    border: parseFloat(computedStyle.borderWidth) >= 0.5
+                  }
+                })
               } else {
-                console.log(`[MapPreview] Text overlay ${index} - no DOM element found`);
+                console.log(`[MapPreview] Text overlay ${index} - DOM still not accessible`)
               }
-            }, 100);
+            }, 200)
             break
           }
           case 'group': {
             const originalFontSize = overlay.properties.fontSize || 14
-            const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
+            const scaledFontSize = Math.max(10, originalFontSize * fontScaleFactor)
             const originalPadding = overlay.properties.padding || 8
-            const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
+            const scaledPadding = Math.max(4, originalPadding * scaleFactor)
             const originalBorderWidth = overlay.properties.borderWidth || 1
-            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
-
-            console.log(`[MapPreview] Group overlay ${index} scaling:`, {
-              text: overlay.properties.text,
-              originalFontSize,
-              scaledFontSize,
-              originalPadding,
-              scaledPadding,
-              originalBorderWidth,
-              scaledBorderWidth
-            })
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * borderScaleFactor)
 
             const groupOverlay = createGroupOverlay(
               {
@@ -340,41 +354,23 @@ function MapPreview({
               () => {},
               () => {}
             )
-            overlayRefs.current.push(groupOverlay)
 
-            // Log actual DOM element sizes after creation
-            setTimeout(() => {
-              const overlayDiv = groupOverlay.getDiv?.();
-              if (overlayDiv) {
-                const computedStyle = getComputedStyle(overlayDiv);
-                const rect = overlayDiv.getBoundingClientRect();
-                console.log(`[MapPreview] Group overlay ${index} actual DOM sizes:`, {
-                  elementWidth: rect.width,
-                  elementHeight: rect.height,
-                  computedWidth: computedStyle.width,
-                  computedHeight: computedStyle.height,
-                  computedPadding: computedStyle.padding,
-                  computedBorder: computedStyle.border,
-                  computedFontSize: computedStyle.fontSize,
-                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
-                  textContent: overlayDiv.textContent?.substring(0, 50),
-                  isVisible: rect.width > 0 && rect.height > 0
-                });
-              } else {
-                console.log(`[MapPreview] Group overlay ${index} - no DOM element found`);
-              }
-            }, 100);
+            const wrappedGroupOverlay = wrapOverlayWithGetDiv(groupOverlay, 'container')
+            overlayRefs.current.push(wrappedGroupOverlay)
             break
           }
           case 'shape': {
             const originalStrokeWeight = overlay.properties.strokeWeight || 2
-            const scaledStrokeWeight = Math.max(1, originalStrokeWeight * scaleFactor) // Min 1px
+            const scaledStrokeWeight = Math.max(1, originalStrokeWeight * scaleFactor)
 
-            console.log(`[MapPreview] Shape overlay ${index} scaling:`, {
+            console.log(`[MapPreview] Shape overlay ${index} improved scaling:`, {
               shapeType: overlay.properties.shapeType,
               originalStrokeWeight,
               scaledStrokeWeight,
-              coordinates: overlay.properties.coordinates?.length || 0
+              coordinates: overlay.properties.coordinates?.length || 0,
+              constraintsApplied: {
+                minStrokeWeight: scaledStrokeWeight >= 1
+              }
             })
 
             const shapeOverlay = createShapeOverlay(
@@ -392,18 +388,15 @@ function MapPreview({
             )
             overlayRefs.current.push(shapeOverlay)
 
-            // Log actual rendered shape properties
             setTimeout(() => {
-              // For shapes, we need to check if it's a polygon, polyline, circle, etc.
-              console.log(`[MapPreview] Shape overlay ${index} actual properties:`, {
+              console.log(`[MapPreview] Shape overlay ${index} actual properties with constraints:`, {
                 shapeType: overlay.properties.shapeType,
-                actualStrokeWeight: shapeOverlay.strokeWeight || 'unknown',
-                actualStrokeColor: shapeOverlay.strokeColor || 'unknown',
-                actualFillColor: shapeOverlay.fillColor || 'unknown',
-                isVisible: shapeOverlay.getVisible?.() || 'unknown',
+                actualStrokeWeight: shapeOverlay.strokeWeight || scaledStrokeWeight,
+                meetsMinimum: (shapeOverlay.strokeWeight || scaledStrokeWeight) >= 1,
+                isVisible: shapeOverlay.getVisible?.() !== false,
                 map: !!shapeOverlay.getMap?.()
-              });
-            }, 100);
+              })
+            }, 200)
             break
           }
           default:
@@ -411,31 +404,41 @@ function MapPreview({
         }
       })
  
-      // Add subject property overlay (non-interactive, styled like main map)
+      // Subject property overlay with improved scaling
       if (subject_property?.lat && subject_property?.lng) {
         const style = subject_property.style || {};
         const position = new google.maps.LatLng(subject_property.lat, subject_property.lng);
 
         const originalFontSize = style.fontSize || 14
-        const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
+        const scaledFontSize = Math.max(10, originalFontSize * fontScaleFactor)
         const originalPadding = style.padding || 8
-        const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
+        const scaledPadding = Math.max(4, originalPadding * scaleFactor)
         const originalBorderWidth = style.borderWidth || 1
-        const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
+        const scaledBorderWidth = Math.max(0.5, originalBorderWidth * borderScaleFactor)
 
-        console.log('[MapPreview] Subject property scaling:', {
+        console.log('[MapPreview] Subject property improved scaling:', {
           name: subject_property.name,
           position: { lat: subject_property.lat, lng: subject_property.lng },
           originalStyle: style,
-          scaledValues: {
-            fontSize: `${originalFontSize}px -> ${scaledFontSize}px`,
-            padding: `${originalPadding}px -> ${scaledPadding}px`,
-            borderWidth: `${originalBorderWidth}px -> ${scaledBorderWidth}px`
+          improvedScaledValues: {
+            fontSize: `${originalFontSize}px -> ${scaledFontSize}px (min 10px)`,
+            padding: `${originalPadding}px -> ${scaledPadding}px (min 4px)`,
+            borderWidth: `${originalBorderWidth}px -> ${scaledBorderWidth}px (min 0.5px)`
+          },
+          constraintsApplied: {
+            minFontSize: scaledFontSize >= 10,
+            minPadding: scaledPadding >= 4,
+            minBorder: scaledBorderWidth >= 0.5
           }
         })
 
         class PreviewSubjectPropertyOverlay extends google.maps.OverlayView {
           div: HTMLDivElement | null = null;
+          
+          getDiv(): HTMLDivElement | null {
+            return this.div;
+          }
+          
           onAdd() {
             const div = document.createElement('div');
             div.style.position = 'absolute';
@@ -446,11 +449,11 @@ function MapPreview({
             const contentDiv = document.createElement('div');
             contentDiv.style.position = 'relative';
             contentDiv.style.minWidth = 'min-content';
-            contentDiv.style.maxWidth = `${Math.max(200, 400 * scaleFactor)}px`; // Min 200px
+            contentDiv.style.maxWidth = `${Math.max(200, 400 * scaleFactor)}px`;
             contentDiv.style.backgroundColor = style.backgroundColor || '#FFFFFF';
             contentDiv.style.border = `${scaledBorderWidth}px solid ${style.borderColor || '#000000'}`;
             contentDiv.style.padding = `${scaledPadding}px`;
-            contentDiv.style.borderRadius = `${Math.max(2, 4 * scaleFactor)}px`; // Min 2px
+            contentDiv.style.borderRadius = `${Math.max(2, 4 * scaleFactor)}px`;
             contentDiv.style.boxSizing = 'border-box';
             contentDiv.style.color = style.color || '#000000';
             contentDiv.style.fontSize = `${scaledFontSize}px`;
@@ -460,24 +463,29 @@ function MapPreview({
             contentDiv.style.display = 'inline-block';
             contentDiv.innerHTML = subject_property.name || '';
 
-            console.log('[MapPreview] Subject property div created with computed style:', {
+            console.log('[MapPreview] Subject property div created with improved constraints:', {
               maxWidth: contentDiv.style.maxWidth,
               fontSize: contentDiv.style.fontSize,
               padding: contentDiv.style.padding,
-              borderWidth: contentDiv.style.border
+              borderWidth: contentDiv.style.border,
+              borderRadius: contentDiv.style.borderRadius,
+              meetsConstraints: {
+                fontSize: scaledFontSize >= 10,
+                padding: scaledPadding >= 4,
+                border: scaledBorderWidth >= 0.5
+              }
             })
 
             div.appendChild(contentDiv);
             this.div = div;
             this.getPanes()?.overlayLayer.appendChild(div);
 
-            // Log actual DOM sizes after adding to DOM
             setTimeout(() => {
               if (this.div) {
                 const computedStyle = getComputedStyle(this.div);
                 const rect = this.div.getBoundingClientRect();
                 const contentRect = contentDiv.getBoundingClientRect();
-                console.log('[MapPreview] Subject property actual DOM sizes:', {
+                console.log('[MapPreview] Subject property actual DOM with improved constraints:', {
                   containerWidth: rect.width,
                   containerHeight: rect.height,
                   contentWidth: contentRect.width,
@@ -486,11 +494,17 @@ function MapPreview({
                   computedPadding: getComputedStyle(contentDiv).padding,
                   computedBorder: getComputedStyle(contentDiv).border,
                   textContent: contentDiv.textContent,
-                  isVisible: rect.width > 0 && rect.height > 0
+                  isVisible: rect.width > 0 && rect.height > 0,
+                  meetsMinimums: {
+                    fontSize: parseFloat(getComputedStyle(contentDiv).fontSize) >= 10,
+                    width: contentRect.width >= 50,
+                    height: contentRect.height >= 20
+                  }
                 });
               }
-            }, 100);
+            }, 200);
           }
+          
           draw() {
             if (!this.div) return;
             const overlayProjection = this.getProjection();
@@ -500,14 +514,9 @@ function MapPreview({
               const height = this.div.offsetHeight;
               this.div.style.left = `${pos.x - width / 2}px`;
               this.div.style.top = `${pos.y - height / 2}px`;
-              
-              console.log('[MapPreview] Subject property positioned:', {
-                screenPos: { x: pos.x, y: pos.y },
-                elementSize: { width, height },
-                finalPosition: { left: this.div.style.left, top: this.div.style.top }
-              })
             }
           }
+          
           onRemove() {
             if (this.div && this.div.parentNode) {
               this.div.parentNode.removeChild(this.div);
@@ -521,16 +530,22 @@ function MapPreview({
         overlayRefs.current.push(overlay);
       }
 
-      console.log('[MapPreview] Map initialization complete:', {
+      console.log('[MapPreview] Map initialization complete with improved scaling:', {
         totalOverlays: overlayRefs.current.length,
         mapCenter: { lat: center_lat, lng: center_lng },
         mapZoom: adjustedZoom,
-        hasSubjectProperty: !!subject_property
+        hasSubjectProperty: !!subject_property,
+        scalingInfo: {
+          containerSize: { width: containerWidth, height: containerWidth },
+          scaleFactor,
+          fontScaleFactor,
+          borderScaleFactor,
+          constraintsApplied: true
+        }
       })
     })
 
     return () => {
-      console.log('[MapPreview] Cleaning up overlays:', overlayRefs.current.length)
       overlayRefs.current.forEach(ov => {
         if (ov.setMap) ov.setMap(null)
       })
