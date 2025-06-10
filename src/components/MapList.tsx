@@ -92,7 +92,8 @@ function MapPreview({
 
       const map = mapInstance as google.maps.Map
 
-      // Create overlays with scaled properties
+      // Replace the overlay creation section with this improved version that forces scaling:
+
       overlays.forEach((overlay, index) => {
         console.log(`[MapPreview] Adding scaled overlay ${index + 1}/${overlays.length}:`, {
           type: overlay.type,
@@ -103,22 +104,22 @@ function MapPreview({
         switch (overlay.type) {
           case 'image': {
             const originalWidth = overlay.properties.width || 200
-            const scaledWidth = Math.max(20, originalWidth * scaleFactor) // Min 20px
+            const scaledWidth = Math.max(20, originalWidth * scaleFactor)
             const originalPadding = overlay.properties.containerStyle?.padding || 8
-            const scaledPadding = Math.max(2, originalPadding * scaleFactor) // Min 2px
+            const scaledPadding = Math.max(2, originalPadding * scaleFactor)
             const originalBorderWidth = overlay.properties.containerStyle?.borderWidth || 1
-            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor)
 
             const imageOverlay = createCustomImageOverlay(
               {
                 position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
                 url: overlay.properties.url || '',
-                width: scaledWidth, // Scaled width
+                width: scaledWidth,
                 style: {
                   backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
                   borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
-                  borderWidth: scaledBorderWidth, // Scaled border
-                  padding: scaledPadding, // Scaled padding
+                  borderWidth: scaledBorderWidth,
+                  padding: scaledPadding,
                   backgroundOpacity: overlay.properties.containerStyle?.backgroundOpacity || 1,
                   borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
                 }
@@ -135,24 +136,54 @@ function MapPreview({
           }
           case 'business': {
             const originalWidth = overlay.properties.width || 200
-            const scaledWidth = Math.max(30, originalWidth * scaleFactor) // Min 30px
+            const scaledWidth = Math.max(30, originalWidth * scaleFactor)
             const originalFontSize = overlay.properties.containerStyle?.fontSize || 14
-            const scaledFontSize = Math.max(8, originalFontSize * scaleFactor) // Min 8px
+            const scaledFontSize = Math.max(8, originalFontSize * scaleFactor)
             const originalPadding = overlay.properties.containerStyle?.padding || 8
-            const scaledPadding = Math.max(2, originalPadding * scaleFactor) // Min 2px
+            const scaledPadding = Math.max(2, originalPadding * scaleFactor)
+
+            // Create a modified overlay object with forced scaled properties
+            const scaledBusinessOverlay = {
+              ...overlay,
+              properties: {
+                ...overlay.properties,
+                width: scaledWidth,
+                containerStyle: {
+                  ...overlay.properties.containerStyle,
+                  fontSize: scaledFontSize,
+                  padding: scaledPadding,
+                  position: 'absolute',
+                  transform: 'translate(-50%, -50%)'
+                }
+              }
+            }
+
+            console.log(`[MapPreview] Business overlay ${index} forced scaling:`, {
+              originalWidth,
+              scaledWidth,
+              originalFontSize,
+              scaledFontSize,
+              originalPadding,
+              scaledPadding,
+              scaledOverlay: scaledBusinessOverlay
+            })
 
             const businessOverlay = createBusinessLogoOverlay(
               {
                 position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
                 logo: overlay.properties.logo || '',
                 businessName: overlay.properties.businessName || '',
-                width: scaledWidth, // Scaled width
+                width: scaledWidth,
+                // Force the scaled styles
                 style: {
-                  ...overlay.properties.containerStyle,
+                  fontSize: `${scaledFontSize}px`,
+                  padding: `${scaledPadding}px`,
                   position: 'absolute',
                   transform: 'translate(-50%, -50%)',
-                  fontSize: `${scaledFontSize}px`, // Scaled font size
-                  padding: `${scaledPadding}px` // Scaled padding
+                  // Include any other original styles but override the scaled ones
+                  ...overlay.properties.containerStyle,
+                  fontSize: `${scaledFontSize}px`, // Force override
+                  padding: `${scaledPadding}px`, // Force override
                 }
               },
               map,
@@ -167,22 +198,42 @@ function MapPreview({
           }
           case 'text': {
             const originalFontSize = overlay.properties.fontSize || 14
-            const scaledFontSize = Math.max(8, originalFontSize * scaleFactor) // Min 8px
+            const scaledFontSize = Math.max(8, originalFontSize * scaleFactor)
             const originalPadding = overlay.properties.padding || 8
-            const scaledPadding = Math.max(2, originalPadding * scaleFactor) // Min 2px
+            const scaledPadding = Math.max(2, originalPadding * scaleFactor)
             const originalBorderWidth = overlay.properties.borderWidth || 1
-            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor)
+
+            // Create a completely new overlay object with forced scaled properties
+            const scaledTextOverlay = {
+              ...overlay,
+              properties: {
+                ...overlay.properties,
+                fontSize: scaledFontSize, // Force scaled font size
+                padding: scaledPadding, // Force scaled padding
+                borderWidth: scaledBorderWidth, // Force scaled border
+                // Ensure these are applied
+                style: {
+                  ...overlay.properties.style,
+                  fontSize: `${scaledFontSize}px`,
+                  padding: `${scaledPadding}px`,
+                  borderWidth: `${scaledBorderWidth}px`
+                }
+              }
+            }
+
+            console.log(`[MapPreview] Text overlay ${index} forced scaling:`, {
+              originalFontSize,
+              scaledFontSize,
+              originalPadding,
+              scaledPadding,
+              originalBorderWidth,
+              scaledBorderWidth,
+              scaledOverlay: scaledTextOverlay
+            })
 
             const textOverlay = createCustomTextOverlay(
-              {
-                ...overlay,
-                properties: {
-                  ...overlay.properties,
-                  fontSize: scaledFontSize, // Scaled font size
-                  padding: scaledPadding, // Scaled padding
-                  borderWidth: scaledBorderWidth // Scaled border
-                }
-              },
+              scaledTextOverlay, // Pass the modified overlay object
               map,
               () => {},
               () => {},
@@ -195,22 +246,42 @@ function MapPreview({
           }
           case 'group': {
             const originalFontSize = overlay.properties.fontSize || 14
-            const scaledFontSize = Math.max(8, originalFontSize * scaleFactor) // Min 8px
+            const scaledFontSize = Math.max(8, originalFontSize * scaleFactor)
             const originalPadding = overlay.properties.padding || 8
-            const scaledPadding = Math.max(2, originalPadding * scaleFactor) // Min 2px
+            const scaledPadding = Math.max(2, originalPadding * scaleFactor)
             const originalBorderWidth = overlay.properties.borderWidth || 1
-            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor)
+
+            // Create a completely new overlay object with forced scaled properties
+            const scaledGroupOverlay = {
+              ...overlay,
+              properties: {
+                ...overlay.properties,
+                fontSize: scaledFontSize, // Force scaled font size
+                padding: scaledPadding, // Force scaled padding
+                borderWidth: scaledBorderWidth, // Force scaled border
+                // Ensure these are applied
+                style: {
+                  ...overlay.properties.style,
+                  fontSize: `${scaledFontSize}px`,
+                  padding: `${scaledPadding}px`,
+                  borderWidth: `${scaledBorderWidth}px`
+                }
+              }
+            }
+
+            console.log(`[MapPreview] Group overlay ${index} forced scaling:`, {
+              originalFontSize,
+              scaledFontSize,
+              originalPadding,
+              scaledPadding,
+              originalBorderWidth,
+              scaledBorderWidth,
+              scaledOverlay: scaledGroupOverlay
+            })
 
             const groupOverlay = createGroupOverlay(
-              {
-                ...overlay,
-                properties: {
-                  ...overlay.properties,
-                  fontSize: scaledFontSize, // Scaled font size
-                  padding: scaledPadding, // Scaled padding
-                  borderWidth: scaledBorderWidth // Scaled border
-                }
-              },
+              scaledGroupOverlay, // Pass the modified overlay object
               map,
               () => {},
               () => {},
@@ -223,16 +294,24 @@ function MapPreview({
           }
           case 'shape': {
             const originalStrokeWeight = overlay.properties.strokeWeight || 2
-            const scaledStrokeWeight = Math.max(1, originalStrokeWeight * scaleFactor) // Min 1px
+            const scaledStrokeWeight = Math.max(1, originalStrokeWeight * scaleFactor)
+
+            const scaledShapeOverlay = {
+              ...overlay,
+              properties: {
+                ...overlay.properties,
+                strokeWeight: scaledStrokeWeight
+              }
+            }
+
+            console.log(`[MapPreview] Shape overlay ${index} forced scaling:`, {
+              originalStrokeWeight,
+              scaledStrokeWeight,
+              scaledOverlay: scaledShapeOverlay
+            })
 
             const shapeOverlay = createShapeOverlay(
-              {
-                ...overlay,
-                properties: {
-                  ...overlay.properties,
-                  strokeWeight: scaledStrokeWeight // Scaled stroke weight
-                }
-              },
+              scaledShapeOverlay,
               map,
               () => {},
               () => {},
