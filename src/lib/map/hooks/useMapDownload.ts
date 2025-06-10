@@ -232,37 +232,101 @@ export function useMapDownload() {
           }
         }
 
-        // Now add overlays after map is ready
+        // Modify overlays to add blank lines to text overlays
         const overlaysWithProxiedUrls = mapData.overlays.map(overlay => {
-          if (overlay.type === 'image' && overlay.properties.url) {
-            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`
-            return {
+          let modifiedOverlay = { ...overlay }
+
+          // Add blank line to text overlays
+          if (overlay.type === 'text' && overlay.properties.content) {
+            modifiedOverlay = {
               ...overlay,
               properties: {
                 ...overlay.properties,
+                content: overlay.properties.content + '\n' // Add blank line
+              }
+            }
+          }
+
+          // Handle image/business URL proxying
+          if (overlay.type === 'image' && overlay.properties.url) {
+            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`
+            modifiedOverlay = {
+              ...modifiedOverlay,
+              properties: {
+                ...modifiedOverlay.properties,
                 url: proxiedUrl
               }
             }
           }
           if (overlay.type === 'business' && overlay.properties.logo) {
             const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.logo)}`
-            return {
-              ...overlay,
+            modifiedOverlay = {
+              ...modifiedOverlay,
               properties: {
-                ...overlay.properties,
+                ...modifiedOverlay.properties,
                 logo: proxiedUrl
               }
             }
           }
-          return overlay
+          return modifiedOverlay
         })
 
         overlaysWithProxiedUrls.forEach(overlay => {
           addOverlayToMap(overlay, map)
         })
 
+        // Add subject property with blank line if it's text-based
+        if (mapData.subject_property && !mapData.subject_property.image) {
+          // Create a modified subject property with extra blank line
+          const modifiedSubjectProperty = {
+            ...mapData.subject_property,
+            name: mapData.subject_property.name + '\n' // Add blank line
+          }
+
+          // You'll need to create the subject property overlay here
+          // This would require importing createSubjectPropertyOverlay
+          // For now, we'll modify the approach in the cleanup section below
+        }
+
         // Wait a bit to ensure all tiles and overlays are rendered
         await new Promise(resolve => setTimeout(resolve, 4000))
+
+        // Before generating the image, modify any text content in the DOM
+        const addBlankLinesToTextElements = () => {
+          // Find all text overlays and add blank lines
+          const textOverlays = container.querySelectorAll('.custom-map-overlay .text-content')
+          textOverlays.forEach((element: Element) => {
+            if (element instanceof HTMLElement && element.textContent) {
+              if (!element.textContent.endsWith('\n')) {
+                element.textContent = element.textContent + '\n'
+              }
+            }
+          })
+
+          // Find subject property text and add blank line
+          const subjectPropertyElements = container.querySelectorAll('[data-subject-property="true"]')
+          subjectPropertyElements.forEach((element: Element) => {
+            if (element instanceof HTMLElement && element.textContent) {
+              if (!element.textContent.endsWith('\n')) {
+                element.textContent = element.textContent + '\n'
+              }
+            }
+          })
+
+          // Alternative: find by content pattern for subject property
+          const allTextElements = container.querySelectorAll('div')
+          allTextElements.forEach((element: Element) => {
+            if (element instanceof HTMLElement && 
+                element.textContent && 
+                element.textContent.includes('Subject Property') &&
+                element.style.backgroundColor &&
+                element.style.border) {
+              if (!element.textContent.endsWith('\n')) {
+                element.textContent = element.textContent + '\n'
+              }
+            }
+          })
+        }
 
         // Generate image
         let canvas: HTMLCanvasElement | null = null
@@ -286,6 +350,37 @@ export function useMapDownload() {
               if (clonedLogo instanceof HTMLElement) {
                 clonedLogo.style.visibility = 'hidden'
               }
+
+              // Add blank lines to text elements in the cloned document
+              const addBlankLinesToClonedText = () => {
+                // Find all text overlays and add blank lines
+                const textOverlays = clonedDoc.querySelectorAll('.custom-map-overlay .text-content, .text-content')
+                textOverlays.forEach((element: Element) => {
+                  if (element instanceof HTMLElement && element.textContent) {
+                    if (!element.textContent.endsWith('\n')) {
+                      element.textContent = element.textContent + '\n'
+                    }
+                  }
+                })
+
+                // Find subject property and other text elements
+                const allTextElements = clonedDoc.querySelectorAll('div')
+                allTextElements.forEach((element: Element) => {
+                  if (element instanceof HTMLElement && element.textContent) {
+                    // Check if it's a text overlay or subject property
+                    const isTextOverlay = element.closest('.custom-map-overlay') || 
+                                         element.classList.contains('text-content') ||
+                                         (element.style.backgroundColor && element.style.border && 
+                                          element.style.position === 'absolute')
+                    
+                    if (isTextOverlay && !element.textContent.endsWith('\n')) {
+                      element.innerHTML = element.innerHTML + '<br>'
+                    }
+                  }
+                })
+              }
+
+              addBlankLinesToClonedText()
 
               // Ensure all images are loaded
               const images = clonedDoc.getElementsByTagName('img')
