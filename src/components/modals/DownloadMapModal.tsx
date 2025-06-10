@@ -215,7 +215,17 @@ export function DownloadMapModal({
       }
 
       // Move all custom styling to the idle listener
+      let stylesApplied = false; // Add this flag
+
       const idleListener = map.addListener('idle', () => {
+        // Guard against multiple applications
+        if (stylesApplied) {
+          console.log('[DownloadMapModal] Styles already applied, skipping...');
+          return;
+        }
+        
+        stylesApplied = true;
+        
         console.log('[DownloadMapModal] IDLE EVENT FIRED - Starting style application');
         console.log('[DownloadMapModal] Map state at idle:', {
           mapTypeId: map.getMapTypeId(),
@@ -249,20 +259,7 @@ export function DownloadMapModal({
               
               map.setOptions({ styles: customStyles })
               console.log('[DownloadMapModal] Applied predefined styles for:', mapData.mapStyle.type)
-              
-              // Check if styles were actually applied
-              setTimeout(() => {
-                console.log('[DownloadMapModal] Post-predefined-styles check:', {
-                  hasStyles: !!map.get('styles'),
-                  stylesCount: map.get('styles')?.length || 0,
-                  mapTypeId: map.getMapTypeId()
-                });
-              }, 50);
-            } else {
-              console.log('[DownloadMapModal] No predefined styles found for type:', mapData.mapStyle.type);
             }
-          } else {
-            console.log('[DownloadMapModal] Skipping custom styles for satellite/terrain map');
           }
 
           // Still check for custom styles from mapData
@@ -371,20 +368,15 @@ export function DownloadMapModal({
                 stylesCount: map.get('styles')?.length || 0,
                 isVisible: map.getDiv().style.visibility !== 'hidden'
               });
+              
+              // Remove listener after successful application
+              google.maps.event.removeListener(idleListener);
+              console.log('[DownloadMapModal] Idle listener removed after successful style application');
             }, 100);
           }, 100);
-
-          console.log('[DownloadMapModal] All styles applied after idle:', {
-            currentType: map.getMapTypeId(),
-            hasStyles: !!map.get('styles'),
-            stylesCount: map.get('styles')?.length || 0
-          });
         } else {
           console.log('[DownloadMapModal] No mapData.mapStyle found in idle listener');
         }
-        
-        google.maps.event.removeListener(idleListener);
-        console.log('[DownloadMapModal] Idle listener removed');
       });
 
       console.log('[Map Context]', {
