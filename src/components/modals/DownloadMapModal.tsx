@@ -218,14 +218,13 @@ export function DownloadMapModal({
       let stylesApplied = false; // Add this flag
 
       const idleListener = map.addListener('idle', () => {
-        // Guard against multiple applications
+        // Use the ref instead of a local variable
         if (stylesApplied) {
           console.log('[DownloadMapModal] Styles already applied, skipping...');
           return;
         }
-        
         stylesApplied = true;
-        
+
         console.log('[DownloadMapModal] IDLE EVENT FIRED - Starting style application');
         console.log('[DownloadMapModal] Map state at idle:', {
           mapTypeId: map.getMapTypeId(),
