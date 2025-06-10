@@ -59,29 +59,35 @@ export function DownloadMapModal({
   // Add a ref to track if we've already initialized
   const isInitializedRef = useRef(false)
 
-  useEffect(() => {
-    if (!open || isInitializedRef.current) {
-      return
-    }
+  // Add near the top of component to log initial state
+  console.log('[DownloadMapModal] Initial mapStyle:', mapData.mapStyle);
 
-    // Log original overlay positions
-    console.log('[DownloadMapModal] Original overlay positions:', mapData.overlays.map(overlay => ({
-      id: overlay.id,
-      type: overlay.type,
-      position: overlay.position,
-      properties: {
-        width: overlay.properties.width,
-        height: overlay.properties.height
-      }
-    })))
+  useEffect(() => {
+    if (!open || isInitializedRef.current) return;
+
+    // Log mapData being copied to preview
+    console.log('[DownloadMapModal] Setting preview data with mapStyle:', {
+      type: mapData.mapStyle?.type,
+      hasStyles: !!mapData.mapStyle?.customStyles,
+      mapData: mapData
+    });
 
     // Set preview data only once when modal opens
     setPreviewMapData((prev: typeof mapData) => {
       const newData = {
-        ...prev,
-        subject_property: mapData.subject_property
-      }
-      return newData
+        ...mapData, // Copy all mapData including mapStyle
+        subject_property: mapData.subject_property,
+        overlays: [...(mapData.overlays || [])],
+        mapStyle: mapData.mapStyle // Explicitly copy mapStyle
+      };
+      
+      // Log what's being set
+      console.log('[DownloadMapModal] Preview data being set:', {
+        type: newData.mapStyle?.type,
+        hasStyles: !!newData.mapStyle?.customStyles
+      });
+      
+      return newData;
     })
 
     isInitializedRef.current = true
@@ -193,12 +199,12 @@ export function DownloadMapModal({
 
       // Apply map style
       if (mapData.mapStyle) {
-        console.log('[DownloadMapModal] Applying map style:', {
+        console.log('[DownloadMapModal] Applying style to map:', {
           type: mapData.mapStyle.type,
-          hasCustomStyles: !!mapData.mapStyle.customStyles,
-          styleCount: mapData.mapStyle.customStyles?.length
+          styles: mapData.mapStyle.customStyles,
+          map: map
         });
-
+        
         if (mapData.mapStyle.type === 'satellite') {
           map.setMapTypeId('satellite')
           console.log('[DownloadMapModal] Set mapTypeId to satellite');
@@ -217,6 +223,12 @@ export function DownloadMapModal({
             currentMapType: map.getMapTypeId()
           });
         }
+
+        // Add after style is applied
+        console.log('[DownloadMapModal] Map style after apply:', {
+          currentType: map.getMapTypeId(),
+          hasStyles: !!map.get('styles')
+        });
       }
 
       console.log('[Map Context]', {
