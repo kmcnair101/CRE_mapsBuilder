@@ -108,11 +108,11 @@ function MapPreview({
         switch (overlay.type) {
           case 'image': {
             const originalWidth = overlay.properties.width || 200
-            const scaledWidth = originalWidth * scaleFactor
+            const scaledWidth = Math.max(30, originalWidth * scaleFactor) // Min 30px width
             const originalPadding = overlay.properties.containerStyle?.padding || 8
-            const scaledPadding = originalPadding * scaleFactor
+            const scaledPadding = Math.max(2, originalPadding * scaleFactor) // Min 2px
             const originalBorderWidth = overlay.properties.containerStyle?.borderWidth || 1
-            const scaledBorderWidth = originalBorderWidth * scaleFactor
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
 
             console.log(`[MapPreview] Image overlay ${index} scaling:`, {
               originalWidth,
@@ -145,15 +145,37 @@ function MapPreview({
               () => {}
             )
             overlayRefs.current.push(imageOverlay)
+
+            // Log actual DOM element sizes after creation
+            setTimeout(() => {
+              const overlayDiv = imageOverlay.getDiv?.();
+              if (overlayDiv) {
+                const computedStyle = getComputedStyle(overlayDiv);
+                const rect = overlayDiv.getBoundingClientRect();
+                console.log(`[MapPreview] Image overlay ${index} actual DOM sizes:`, {
+                  elementWidth: rect.width,
+                  elementHeight: rect.height,
+                  computedWidth: computedStyle.width,
+                  computedHeight: computedStyle.height,
+                  computedPadding: computedStyle.padding,
+                  computedBorder: computedStyle.border,
+                  computedFontSize: computedStyle.fontSize,
+                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
+                  isVisible: rect.width > 0 && rect.height > 0
+                });
+              } else {
+                console.log(`[MapPreview] Image overlay ${index} - no DOM element found`);
+              }
+            }, 100);
             break
           }
           case 'business': {
             const originalWidth = overlay.properties.width || 200
-            const scaledWidth = originalWidth * scaleFactor
+            const scaledWidth = Math.max(40, originalWidth * scaleFactor) // Min 40px width
             const originalFontSize = overlay.properties.containerStyle?.fontSize || 14
-            const scaledFontSize = originalFontSize * scaleFactor
+            const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
             const originalPadding = overlay.properties.containerStyle?.padding || 8
-            const scaledPadding = originalPadding * scaleFactor
+            const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
 
             console.log(`[MapPreview] Business overlay ${index} scaling:`, {
               originalWidth,
@@ -186,18 +208,40 @@ function MapPreview({
               () => {}
             )
             overlayRefs.current.push(businessOverlay)
+
+            // Log actual DOM element sizes after creation
+            setTimeout(() => {
+              const overlayDiv = businessOverlay.getDiv?.();
+              if (overlayDiv) {
+                const computedStyle = getComputedStyle(overlayDiv);
+                const rect = overlayDiv.getBoundingClientRect();
+                console.log(`[MapPreview] Business overlay ${index} actual DOM sizes:`, {
+                  elementWidth: rect.width,
+                  elementHeight: rect.height,
+                  computedWidth: computedStyle.width,
+                  computedHeight: computedStyle.height,
+                  computedPadding: computedStyle.padding,
+                  computedBorder: computedStyle.border,
+                  computedFontSize: computedStyle.fontSize,
+                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
+                  isVisible: rect.width > 0 && rect.height > 0
+                });
+              } else {
+                console.log(`[MapPreview] Business overlay ${index} - no DOM element found`);
+              }
+            }, 100);
             break
           }
           case 'text': {
             const originalFontSize = overlay.properties.fontSize || 14
-            const scaledFontSize = originalFontSize * scaleFactor
+            const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
             const originalPadding = overlay.properties.padding || 8
-            const scaledPadding = originalPadding * scaleFactor
+            const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
             const originalBorderWidth = overlay.properties.borderWidth || 1
-            const scaledBorderWidth = originalBorderWidth * scaleFactor
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
 
             console.log(`[MapPreview] Text overlay ${index} scaling:`, {
-              text: overlay.properties.text,
+              text: overlay.properties.content || overlay.properties.text,
               originalFontSize,
               scaledFontSize,
               originalPadding,
@@ -224,15 +268,38 @@ function MapPreview({
               () => {}
             )
             overlayRefs.current.push(textOverlay)
+
+            // Log actual DOM element sizes after creation
+            setTimeout(() => {
+              const overlayDiv = textOverlay.getDiv?.();
+              if (overlayDiv) {
+                const computedStyle = getComputedStyle(overlayDiv);
+                const rect = overlayDiv.getBoundingClientRect();
+                console.log(`[MapPreview] Text overlay ${index} actual DOM sizes:`, {
+                  elementWidth: rect.width,
+                  elementHeight: rect.height,
+                  computedWidth: computedStyle.width,
+                  computedHeight: computedStyle.height,
+                  computedPadding: computedStyle.padding,
+                  computedBorder: computedStyle.border,
+                  computedFontSize: computedStyle.fontSize,
+                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
+                  textContent: overlayDiv.textContent?.substring(0, 50),
+                  isVisible: rect.width > 0 && rect.height > 0
+                });
+              } else {
+                console.log(`[MapPreview] Text overlay ${index} - no DOM element found`);
+              }
+            }, 100);
             break
           }
           case 'group': {
             const originalFontSize = overlay.properties.fontSize || 14
-            const scaledFontSize = originalFontSize * scaleFactor
+            const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
             const originalPadding = overlay.properties.padding || 8
-            const scaledPadding = originalPadding * scaleFactor
+            const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
             const originalBorderWidth = overlay.properties.borderWidth || 1
-            const scaledBorderWidth = originalBorderWidth * scaleFactor
+            const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
 
             console.log(`[MapPreview] Group overlay ${index} scaling:`, {
               text: overlay.properties.text,
@@ -262,11 +329,34 @@ function MapPreview({
               () => {}
             )
             overlayRefs.current.push(groupOverlay)
+
+            // Log actual DOM element sizes after creation
+            setTimeout(() => {
+              const overlayDiv = groupOverlay.getDiv?.();
+              if (overlayDiv) {
+                const computedStyle = getComputedStyle(overlayDiv);
+                const rect = overlayDiv.getBoundingClientRect();
+                console.log(`[MapPreview] Group overlay ${index} actual DOM sizes:`, {
+                  elementWidth: rect.width,
+                  elementHeight: rect.height,
+                  computedWidth: computedStyle.width,
+                  computedHeight: computedStyle.height,
+                  computedPadding: computedStyle.padding,
+                  computedBorder: computedStyle.border,
+                  computedFontSize: computedStyle.fontSize,
+                  innerHTML: overlayDiv.innerHTML?.substring(0, 100),
+                  textContent: overlayDiv.textContent?.substring(0, 50),
+                  isVisible: rect.width > 0 && rect.height > 0
+                });
+              } else {
+                console.log(`[MapPreview] Group overlay ${index} - no DOM element found`);
+              }
+            }, 100);
             break
           }
           case 'shape': {
             const originalStrokeWeight = overlay.properties.strokeWeight || 2
-            const scaledStrokeWeight = originalStrokeWeight * scaleFactor
+            const scaledStrokeWeight = Math.max(1, originalStrokeWeight * scaleFactor) // Min 1px
 
             console.log(`[MapPreview] Shape overlay ${index} scaling:`, {
               shapeType: overlay.properties.shapeType,
@@ -289,6 +379,19 @@ function MapPreview({
               () => {}
             )
             overlayRefs.current.push(shapeOverlay)
+
+            // Log actual rendered shape properties
+            setTimeout(() => {
+              // For shapes, we need to check if it's a polygon, polyline, circle, etc.
+              console.log(`[MapPreview] Shape overlay ${index} actual properties:`, {
+                shapeType: overlay.properties.shapeType,
+                actualStrokeWeight: shapeOverlay.strokeWeight || 'unknown',
+                actualStrokeColor: shapeOverlay.strokeColor || 'unknown',
+                actualFillColor: shapeOverlay.fillColor || 'unknown',
+                isVisible: shapeOverlay.getVisible?.() || 'unknown',
+                map: !!shapeOverlay.getMap?.()
+              });
+            }, 100);
             break
           }
           default:
@@ -302,11 +405,11 @@ function MapPreview({
         const position = new google.maps.LatLng(subject_property.lat, subject_property.lng);
 
         const originalFontSize = style.fontSize || 14
-        const scaledFontSize = originalFontSize * scaleFactor
+        const scaledFontSize = Math.max(10, originalFontSize * scaleFactor) // Min 10px
         const originalPadding = style.padding || 8
-        const scaledPadding = originalPadding * scaleFactor
+        const scaledPadding = Math.max(4, originalPadding * scaleFactor) // Min 4px
         const originalBorderWidth = style.borderWidth || 1
-        const scaledBorderWidth = originalBorderWidth * scaleFactor
+        const scaledBorderWidth = Math.max(0.5, originalBorderWidth * scaleFactor) // Min 0.5px
 
         console.log('[MapPreview] Subject property scaling:', {
           name: subject_property.name,
@@ -331,11 +434,11 @@ function MapPreview({
             const contentDiv = document.createElement('div');
             contentDiv.style.position = 'relative';
             contentDiv.style.minWidth = 'min-content';
-            contentDiv.style.maxWidth = `${400 * scaleFactor}px`;
+            contentDiv.style.maxWidth = `${Math.max(200, 400 * scaleFactor)}px`; // Min 200px
             contentDiv.style.backgroundColor = style.backgroundColor || '#FFFFFF';
             contentDiv.style.border = `${scaledBorderWidth}px solid ${style.borderColor || '#000000'}`;
             contentDiv.style.padding = `${scaledPadding}px`;
-            contentDiv.style.borderRadius = `${4 * scaleFactor}px`;
+            contentDiv.style.borderRadius = `${Math.max(2, 4 * scaleFactor)}px`; // Min 2px
             contentDiv.style.boxSizing = 'border-box';
             contentDiv.style.color = style.color || '#000000';
             contentDiv.style.fontSize = `${scaledFontSize}px`;
@@ -355,6 +458,26 @@ function MapPreview({
             div.appendChild(contentDiv);
             this.div = div;
             this.getPanes()?.overlayLayer.appendChild(div);
+
+            // Log actual DOM sizes after adding to DOM
+            setTimeout(() => {
+              if (this.div) {
+                const computedStyle = getComputedStyle(this.div);
+                const rect = this.div.getBoundingClientRect();
+                const contentRect = contentDiv.getBoundingClientRect();
+                console.log('[MapPreview] Subject property actual DOM sizes:', {
+                  containerWidth: rect.width,
+                  containerHeight: rect.height,
+                  contentWidth: contentRect.width,
+                  contentHeight: contentRect.height,
+                  computedFontSize: getComputedStyle(contentDiv).fontSize,
+                  computedPadding: getComputedStyle(contentDiv).padding,
+                  computedBorder: getComputedStyle(contentDiv).border,
+                  textContent: contentDiv.textContent,
+                  isVisible: rect.width > 0 && rect.height > 0
+                });
+              }
+            }, 100);
           }
           draw() {
             if (!this.div) return;
