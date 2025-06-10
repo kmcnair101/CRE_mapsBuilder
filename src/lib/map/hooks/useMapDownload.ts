@@ -52,6 +52,8 @@ const checkTaintedCanvas = (canvas: HTMLCanvasElement) => {
 }
 
 export function useMapDownload() {
+  const { hasAccess } = useSubscription() // Add this missing hook
+  
   const { addOverlayToMap } = useMapOverlays(
     () => {}, // no-op function for handleDeleteLayer
     undefined, // handleTextEdit
@@ -70,10 +72,11 @@ export function useMapDownload() {
       // Wait for map to be idle with increased timeout
       const map = googleMapRef?.current
       if (map) {
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve) => {
           const timeout = setTimeout(() => {
-            reject(new Error('Map idle timeout'))
-          }, 20000) // Increase timeout to 20 seconds
+            console.warn('Map idle timeout, proceeding anyway')
+            resolve() // Don't reject, just proceed
+          }, 10000) // Reduced timeout
 
           const checkMapReady = () => {
             const center = map.getCenter()
@@ -96,7 +99,9 @@ export function useMapDownload() {
       }
 
       // Wait a bit to ensure all tiles and overlays are rendered
-      await new Promise(resolve => setTimeout(resolve, 4000))
+      await new Promise(resolve => setTimeout(resolve, 2000)) // Reduced wait time
+
+      console.log('Starting html2canvas capture...')
 
       // Generate image
       const canvas = await html2canvas(mapRef.current!, {
@@ -104,8 +109,10 @@ export function useMapDownload() {
         allowTaint: true,
         backgroundColor: 'white',
         scale: 2,
-        logging: true,
+        logging: false, // Disable logging to reduce console noise
         onclone: (clonedDoc) => {
+          console.log('onclone function called')
+          
           // Hide all Google Maps controls in the cloned document
           const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
           clonedControls.forEach(control => {
@@ -123,6 +130,8 @@ export function useMapDownload() {
           const addLineBreaksToTextOverlays = () => {
             // Find all divs that might be text overlays
             const allDivs = clonedDoc.querySelectorAll('div')
+            let overlayCount = 0
+            
             allDivs.forEach((element: Element) => {
               if (element instanceof HTMLElement && element.textContent && element.textContent.trim()) {
                 // Check if this looks like a text overlay or subject property
@@ -134,6 +143,7 @@ export function useMapDownload() {
                 
                 // If it looks like a text overlay
                 if ((hasBackground || hasBorder) && hasAbsolutePosition) {
+                  overlayCount++
                   // Add line break to the end if not already present
                   if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
                     element.innerHTML = element.innerHTML + '<br>'
@@ -141,47 +151,18 @@ export function useMapDownload() {
                 }
               }
             })
-
-            // Also target specific classes for text overlays
-            const textOverlays = clonedDoc.querySelectorAll('.text-content, .custom-map-overlay')
-            textOverlays.forEach((element: Element) => {
-              if (element instanceof HTMLElement && element.innerHTML) {
-                if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
-                  element.innerHTML = element.innerHTML + '<br>'
-                }
-              }
-            })
-
-            // Handle subject property specifically
-            const subjectPropertyDivs = clonedDoc.querySelectorAll('div')
-            subjectPropertyDivs.forEach((element: Element) => {
-              if (element instanceof HTMLElement && 
-                  element.textContent && 
-                  (element.textContent.includes('Subject Property') || 
-                   element.getAttribute('data-subject-property') === 'true')) {
-                if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
-                  element.innerHTML = element.innerHTML + '<br>'
-                }
-              }
-            })
+            
+            console.log(`Added line breaks to ${overlayCount} text overlays`)
           }
 
           addLineBreaksToTextOverlays()
 
-          // Handle images
-          const images = clonedDoc.getElementsByTagName('img')
-          return Promise.all(Array.from(images).map(img => {
-            if (img.complete) {
-              return Promise.resolve<void>(undefined)
-            }
-            return new Promise<void>(resolve => {
-              img.onload = () => resolve()
-              img.onerror = () => resolve()
-              setTimeout(() => resolve(), 3000)
-            })
-          }))
+          // Return Promise.resolve() instead of handling images
+          return Promise.resolve()
         }
       })
+
+      console.log('html2canvas completed successfully')
 
       // Only trigger download if not generating thumbnail
       if (!forThumbnail) {
@@ -189,20 +170,25 @@ export function useMapDownload() {
         link.download = 'map.png'
         link.href = canvas.toDataURL('image/png', 1.0)
         link.click()
+        console.log('Download triggered')
       }
 
       // Return the data URL
       return canvas.toDataURL('image/png', 1.0)
     } catch (error) {
       console.error('Error generating map image:', error)
+      alert(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       throw error
     }
   }, [])
 
   const downloadMapFromData = async (mapData: MapData, filename?: string) => {
     if (!hasAccess()) {
+      alert('Please upgrade your subscription to download maps.')
       return false
     }
+
+    console.log('Starting downloadMapFromData...')
 
     try {
       // Create a temporary container for the map
@@ -238,6 +224,7 @@ export function useMapDownload() {
 
       try {
         await loader.load()
+        console.log('Google Maps loaded')
 
         // Initialize map
         const map = new google.maps.Map(container, {
@@ -248,22 +235,20 @@ export function useMapDownload() {
           keyboardShortcuts: false
         })
 
-        // After initializing the map, force a resize
-        google.maps.event.trigger(map, 'resize')
+        // Wait for map to be idle with shorter timeout
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => {
+            console.warn('Map idle timeout, proceeding anyway')
+            resolve()
+          }, 5000) // Shorter timeout
 
-        // Wait for map to be idle, but with a timeout fallback
-        await Promise.race([
-          new Promise<void>(resolve => {
-            google.maps.event.addListenerOnce(map, 'idle', () => {
-              resolve()
-            })
-          }),
-          new Promise<void>((_, reject) => {
-            const idleTimeout = setTimeout(() => {
-              reject(new Error('Map idle timeout'))
-            }, 10000)
+          google.maps.event.addListenerOnce(map, 'idle', () => {
+            clearTimeout(timeout)
+            resolve()
           })
-        ])
+        })
+
+        console.log('Map initialized and idle')
 
         // Apply map style
         if (mapData.mapStyle) {
@@ -280,192 +265,46 @@ export function useMapDownload() {
           }
         }
 
-        // Modify overlays to add blank lines to text overlays
-        const overlaysWithProxiedUrls = mapData.overlays.map(overlay => {
-          let modifiedOverlay = { ...overlay }
-
-          // Add blank line to text overlays
-          if (overlay.type === 'text' && overlay.properties.content) {
-            modifiedOverlay = {
-              ...overlay,
-              properties: {
-                ...overlay.properties,
-                content: overlay.properties.content + '\n' // Add blank line
-              }
-            }
-          }
-
-          // Handle image/business URL proxying
-          if (overlay.type === 'image' && overlay.properties.url) {
-            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.url)}`
-            modifiedOverlay = {
-              ...modifiedOverlay,
-              properties: {
-                ...modifiedOverlay.properties,
-                url: proxiedUrl
-              }
-            }
-          }
-          if (overlay.type === 'business' && overlay.properties.logo) {
-            const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(overlay.properties.logo)}`
-            modifiedOverlay = {
-              ...modifiedOverlay,
-              properties: {
-                ...modifiedOverlay.properties,
-                logo: proxiedUrl
-              }
-            }
-          }
-          return modifiedOverlay
-        })
-
-        overlaysWithProxiedUrls.forEach(overlay => {
+        // Add overlays without modification for now
+        mapData.overlays.forEach(overlay => {
           addOverlayToMap(overlay, map)
         })
 
-        // Add subject property with blank line if it's text-based
-        if (mapData.subject_property && !mapData.subject_property.image) {
-          // Create a modified subject property with extra blank line
-          const modifiedSubjectProperty = {
-            ...mapData.subject_property,
-            name: mapData.subject_property.name + '\n' // Add blank line
+        console.log(`Added ${mapData.overlays.length} overlays to map`)
+
+        // Wait for overlays to render
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
+        console.log('Starting html2canvas for downloadMapFromData...')
+
+        // Generate image with simplified onclone
+        const canvas = await html2canvas(container, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: 'white',
+          scale: 2,
+          logging: false,
+          onclone: (clonedDoc) => {
+            console.log('onclone function called for downloadMapFromData')
+            
+            // Hide Google Maps controls
+            const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
+            clonedControls.forEach(control => {
+              if (control instanceof HTMLElement) {
+                control.style.visibility = 'hidden'
+              }
+            })
+
+            const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
+            if (clonedLogo instanceof HTMLElement) {
+              clonedLogo.style.visibility = 'hidden'
+            }
+
+            return Promise.resolve()
           }
+        })
 
-          // You'll need to create the subject property overlay here
-          // This would require importing createSubjectPropertyOverlay
-          // For now, we'll modify the approach in the cleanup section below
-        }
-
-        // Wait a bit to ensure all tiles and overlays are rendered
-        await new Promise(resolve => setTimeout(resolve, 4000))
-
-        // Before generating the image, modify any text content in the DOM
-        const addBlankLinesToTextElements = () => {
-          // Find all text overlays and add blank lines
-          const textOverlays = container.querySelectorAll('.custom-map-overlay .text-content')
-          textOverlays.forEach((element: Element) => {
-            if (element instanceof HTMLElement && element.textContent) {
-              if (!element.textContent.endsWith('\n')) {
-                element.textContent = element.textContent + '\n'
-              }
-            }
-          })
-
-          // Find subject property text and add blank line
-          const subjectPropertyElements = container.querySelectorAll('[data-subject-property="true"]')
-          subjectPropertyElements.forEach((element: Element) => {
-            if (element instanceof HTMLElement && element.textContent) {
-              if (!element.textContent.endsWith('\n')) {
-                element.textContent = element.textContent + '\n'
-              }
-            }
-          })
-
-          // Alternative: find by content pattern for subject property
-          const allTextElements = container.querySelectorAll('div')
-          allTextElements.forEach((element: Element) => {
-            if (element instanceof HTMLElement && 
-                element.textContent && 
-                element.textContent.includes('Subject Property') &&
-                element.style.backgroundColor &&
-                element.style.border) {
-              if (!element.textContent.endsWith('\n')) {
-                element.textContent = element.textContent + '\n'
-              }
-            }
-          })
-        }
-
-        // Generate image
-        let canvas: HTMLCanvasElement | null = null
-        try {
-          canvas = await html2canvas(container, {
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: 'white',
-            scale: 2,
-            logging: true,
-            onclone: (clonedDoc) => {
-              // Hide all Google Maps controls in the cloned document
-              const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
-              clonedControls.forEach(control => {
-                if (control instanceof HTMLElement) {
-                  control.style.visibility = 'hidden'
-                }
-              })
-
-              const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
-              if (clonedLogo instanceof HTMLElement) {
-                clonedLogo.style.visibility = 'hidden'
-              }
-
-              // Add line breaks ONLY in the cloned document for download
-              const addLineBreaksToTextOverlays = () => {
-                // Find all divs that might be text overlays
-                const allDivs = clonedDoc.querySelectorAll('div')
-                allDivs.forEach((element: Element) => {
-                  if (element instanceof HTMLElement && element.textContent && element.textContent.trim()) {
-                    // Check if this looks like a text overlay or subject property
-                    const hasBackground = element.style.backgroundColor && 
-                                         element.style.backgroundColor !== 'rgba(0, 0, 0, 0)' && 
-                                         element.style.backgroundColor !== 'transparent'
-                    const hasBorder = element.style.border || element.style.borderWidth
-                    const hasAbsolutePosition = element.style.position === 'absolute'
-                    
-                    // If it looks like a text overlay
-                    if ((hasBackground || hasBorder) && hasAbsolutePosition) {
-                      // Add line break to the end if not already present
-                      if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
-                        element.innerHTML = element.innerHTML + '<br>'
-                      }
-                    }
-                  }
-                })
-
-                // Also target specific classes for text overlays
-                const textOverlays = clonedDoc.querySelectorAll('.text-content, .custom-map-overlay')
-                textOverlays.forEach((element: Element) => {
-                  if (element instanceof HTMLElement && element.innerHTML) {
-                    if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
-                      element.innerHTML = element.innerHTML + '<br>'
-                    }
-                  }
-                })
-
-                // Handle subject property specifically
-                const subjectPropertyDivs = clonedDoc.querySelectorAll('div')
-                subjectPropertyDivs.forEach((element: Element) => {
-                  if (element instanceof HTMLElement && 
-                      element.textContent && 
-                      (element.textContent.includes('Subject Property') || 
-                       element.getAttribute('data-subject-property') === 'true')) {
-                    if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
-                      element.innerHTML = element.innerHTML + '<br>'
-                    }
-                  }
-                })
-              }
-
-              addLineBreaksToTextOverlays()
-
-              // Ensure all images are loaded
-              const images = clonedDoc.getElementsByTagName('img')
-              
-              return Promise.all(Array.from(images).map(img => {
-                if (img.complete) {
-                  return Promise.resolve<void>(undefined)
-                }
-                return new Promise<void>(resolve => {
-                  img.onload = () => resolve()
-                  img.onerror = () => resolve()
-                  setTimeout(() => resolve(), 3000)
-                })
-              }))
-            }
-          })
-        } catch (err) {
-          throw err
-        }
+        console.log('html2canvas completed for downloadMapFromData')
 
         // Trigger download
         const link = document.createElement('a')
@@ -473,7 +312,9 @@ export function useMapDownload() {
         link.href = canvas.toDataURL('image/png', 1.0)
         link.click()
         
+        console.log('Download triggered successfully')
         return true
+        
       } finally {
         // Clean up
         if (document.body.contains(container)) {
@@ -482,9 +323,11 @@ export function useMapDownload() {
         if (document.body.contains(loadingIndicator)) {
           document.body.removeChild(loadingIndicator)
         }
+        console.log('Cleanup completed')
       }
     } catch (error) {
-      alert('Failed to download map. Please try again.')
+      console.error('Error in downloadMapFromData:', error)
+      alert(`Failed to download map: ${error instanceof Error ? error.message : 'Unknown error'}`)
       return false
     }
   }
