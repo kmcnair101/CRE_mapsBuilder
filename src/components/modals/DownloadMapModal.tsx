@@ -216,53 +216,102 @@ export function DownloadMapModal({
 
       // Move all custom styling to the idle listener
       const idleListener = map.addListener('idle', () => {
-        console.log('[DownloadMapModal] IDLE EVENT FIRED - Applying custom styles now');
+        console.log('[DownloadMapModal] IDLE EVENT FIRED - Starting style application');
+        console.log('[DownloadMapModal] Map state at idle:', {
+          mapTypeId: map.getMapTypeId(),
+          hasExistingStyles: !!map.get('styles'),
+          existingStylesCount: map.get('styles')?.length || 0,
+          mapCenter: map.getCenter() ? { lat: map.getCenter().lat(), lng: map.getCenter().lng() } : null,
+          mapZoom: map.getZoom()
+        });
         
         if (mapData.mapStyle) {
+          console.log('[DownloadMapModal] About to apply mapStyle:', {
+            type: mapData.mapStyle.type,
+            hideLabels: mapData.mapStyle.hideLabels,
+            hideStreetNames: mapData.mapStyle.hideStreetNames,
+            highlightHighways: !!mapData.mapStyle.highlightHighways
+          });
+
           // Apply custom styles AFTER tiles are loaded
           if (mapData.mapStyle.type !== 'satellite' && mapData.mapStyle.type !== 'terrain') {
+            console.log('[DownloadMapModal] Applying custom styles for non-satellite/terrain map');
+            
             // Apply custom styles from the mapStyles object
             if (mapData.mapStyle.type in mapStyles) {
               const customStyles = mapStyles[mapData.mapStyle.type as keyof typeof mapStyles]
+              console.log('[DownloadMapModal] Found predefined styles:', {
+                styleType: mapData.mapStyle.type,
+                styleCount: customStyles.length,
+                firstStyleFeature: customStyles[0]?.featureType,
+                firstStyleElement: customStyles[0]?.elementType
+              });
+              
               map.setOptions({ styles: customStyles })
               console.log('[DownloadMapModal] Applied predefined styles for:', mapData.mapStyle.type)
+              
+              // Check if styles were actually applied
+              setTimeout(() => {
+                console.log('[DownloadMapModal] Post-predefined-styles check:', {
+                  hasStyles: !!map.get('styles'),
+                  stylesCount: map.get('styles')?.length || 0,
+                  mapTypeId: map.getMapTypeId()
+                });
+              }, 50);
+            } else {
+              console.log('[DownloadMapModal] No predefined styles found for type:', mapData.mapStyle.type);
             }
+          } else {
+            console.log('[DownloadMapModal] Skipping custom styles for satellite/terrain map');
           }
 
           // Still check for custom styles from mapData
           if (mapData.mapStyle.customStyles) {
+            console.log('[DownloadMapModal] Applying custom styles from mapData:', {
+              customStylesCount: mapData.mapStyle.customStyles.length
+            });
             map.setOptions({ styles: mapData.mapStyle.customStyles })
+          } else {
+            console.log('[DownloadMapModal] No custom styles in mapData');
           }
 
           // Apply label hiding and highway highlighting
           const additionalStyles = []
+          console.log('[DownloadMapModal] Checking for additional style modifications...');
           
           if (mapData.mapStyle.hideAllLabels || mapData.mapStyle.hideLabels) {
             additionalStyles.push({ featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+            console.log('[DownloadMapModal] Added hide all labels style');
           }
           
           if (mapData.mapStyle.hideStreetNames) {
             additionalStyles.push({ featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+            console.log('[DownloadMapModal] Added hide street names style');
           }
           
           if (mapData.mapStyle.hideHighwayLabels) {
             additionalStyles.push({ featureType: 'road.highway', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+            console.log('[DownloadMapModal] Added hide highway labels style');
           }
           
           if (mapData.mapStyle.hideAreaLabels) {
             additionalStyles.push({ featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+            console.log('[DownloadMapModal] Added hide area labels style');
           }
           
           if (mapData.mapStyle.hideBusinessLabels) {
             additionalStyles.push({ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+            console.log('[DownloadMapModal] Added hide business labels style');
           }
           
           if (mapData.mapStyle.hideTransitLabels) {
             additionalStyles.push({ featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+            console.log('[DownloadMapModal] Added hide transit labels style');
           }
           
           if (mapData.mapStyle.hideWaterLabels) {
             additionalStyles.push({ featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+            console.log('[DownloadMapModal] Added hide water labels style');
           }
           
           if (mapData.mapStyle.highlightHighways) {
@@ -274,29 +323,68 @@ export function DownloadMapModal({
                 { weight: mapData.mapStyle.highlightHighways.weight }
               ]
             })
+            console.log('[DownloadMapModal] Added highway highlighting style:', {
+              color: mapData.mapStyle.highlightHighways.color,
+              weight: mapData.mapStyle.highlightHighways.weight
+            });
           }
+
+          console.log('[DownloadMapModal] Additional styles to apply:', {
+            count: additionalStyles.length,
+            styles: additionalStyles
+          });
 
           // Apply additional styles if any exist
           if (additionalStyles.length > 0) {
             const currentStyles = map.get('styles') || []
+            console.log('[DownloadMapModal] Before merging additional styles:', {
+              currentStylesCount: currentStyles.length,
+              additionalStylesCount: additionalStyles.length
+            });
+            
             map.setOptions({ styles: [...currentStyles, ...additionalStyles] })
             console.log('[DownloadMapModal] Applied label/highway customizations')
+            
+            // Check final result
+            setTimeout(() => {
+              console.log('[DownloadMapModal] Post-additional-styles check:', {
+                hasStyles: !!map.get('styles'),
+                stylesCount: map.get('styles')?.length || 0,
+                finalStyles: map.get('styles')?.slice(0, 3) // Log first 3 styles for debugging
+              });
+            }, 50);
+          } else {
+            console.log('[DownloadMapModal] No additional styles to apply');
           }
 
-          // ADD THIS: Force map to re-render after styles are applied
+          // Force map refresh attempts
+          console.log('[DownloadMapModal] Starting map refresh sequence...');
+          
           setTimeout(() => {
+            console.log('[DownloadMapModal] Triggering resize event...');
             google.maps.event.trigger(map, 'resize')
-            console.log('[DownloadMapModal] Triggered map resize to refresh styles')
-          }, 100)
+            
+            setTimeout(() => {
+              console.log('[DownloadMapModal] Final state after all operations:', {
+                mapTypeId: map.getMapTypeId(),
+                hasStyles: !!map.get('styles'),
+                stylesCount: map.get('styles')?.length || 0,
+                isVisible: map.getDiv().style.visibility !== 'hidden'
+              });
+            }, 100);
+          }, 100);
 
           console.log('[DownloadMapModal] All styles applied after idle:', {
             currentType: map.getMapTypeId(),
             hasStyles: !!map.get('styles'),
             stylesCount: map.get('styles')?.length || 0
           });
+        } else {
+          console.log('[DownloadMapModal] No mapData.mapStyle found in idle listener');
         }
         
         google.maps.event.removeListener(idleListener);
+        console.log('[DownloadMapModal] Idle listener removed');
       });
 
       console.log('[Map Context]', {
