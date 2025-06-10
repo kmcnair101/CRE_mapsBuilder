@@ -193,16 +193,29 @@ export function DownloadMapModal({
 
       // Apply map style
       if (mapData.mapStyle) {
+        console.log('[DownloadMapModal] Applying map style:', {
+          type: mapData.mapStyle.type,
+          hasCustomStyles: !!mapData.mapStyle.customStyles,
+          styleCount: mapData.mapStyle.customStyles?.length
+        });
+
         if (mapData.mapStyle.type === 'satellite') {
           map.setMapTypeId('satellite')
+          console.log('[DownloadMapModal] Set mapTypeId to satellite');
         } else if (mapData.mapStyle.type === 'terrain') {
           map.setMapTypeId('terrain')
+          console.log('[DownloadMapModal] Set mapTypeId to terrain');
         } else {
           map.setMapTypeId('roadmap')
+          console.log('[DownloadMapModal] Set mapTypeId to roadmap');
         }
 
         if (mapData.mapStyle.customStyles) {
           map.setOptions({ styles: mapData.mapStyle.customStyles })
+          console.log('[DownloadMapModal] Applied custom styles:', {
+            appliedCount: mapData.mapStyle.customStyles.length,
+            currentMapType: map.getMapTypeId()
+          });
         }
       }
 
