@@ -209,6 +209,8 @@ export function DownloadMapModal({
           map.setMapTypeId('roadmap')
         }
 
+        console.log('[DownloadMapModal] CustomStyles check:', !!mapData.mapStyle.customStyles);
+        
         if (mapData.mapStyle.customStyles) {
           map.setOptions({ styles: mapData.mapStyle.customStyles })
           console.log('[DownloadMapModal] Applied custom styles:', {
