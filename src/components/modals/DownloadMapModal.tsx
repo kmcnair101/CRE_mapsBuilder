@@ -3,6 +3,7 @@ import { useMapInitialization } from '@/lib/map/hooks/useMapInitialization'
 import { useMapOverlays } from '@/lib/map/hooks/useMapOverlays'
 import { useMapDownload } from '@/lib/map/hooks/useMapDownload'
 import { X } from 'lucide-react'
+import { mapStyles } from '@/lib/map/styles'
 
 interface DownloadMapModalProps {
   open: boolean
@@ -207,16 +208,18 @@ export function DownloadMapModal({
           map.setMapTypeId('terrain')
         } else {
           map.setMapTypeId('roadmap')
+          
+          // Apply custom styles from the mapStyles object
+          if (mapData.mapStyle.type in mapStyles) {
+            const customStyles = mapStyles[mapData.mapStyle.type as keyof typeof mapStyles]
+            map.setOptions({ styles: customStyles })
+            console.log('[DownloadMapModal] Applied predefined styles for:', mapData.mapStyle.type)
+          }
         }
 
-        console.log('[DownloadMapModal] CustomStyles check:', !!mapData.mapStyle.customStyles);
-        
+        // Still check for custom styles from mapData
         if (mapData.mapStyle.customStyles) {
           map.setOptions({ styles: mapData.mapStyle.customStyles })
-          console.log('[DownloadMapModal] Applied custom styles:', {
-            appliedCount: mapData.mapStyle.customStyles.length,
-            currentMapType: map.getMapTypeId()
-          });
         }
 
         // Add after style is applied
