@@ -22,14 +22,15 @@ export function useMapInitialization(
   const isUnmountingRef = useRef(false)
  
   const cleanupSubjectProperty = useCallback(() => {
-    if (!isUnmountingRef.current) {
-      return;
-    }
     if (subjectPropertyOverlayRef.current) {
-      subjectPropertyOverlayRef.current.setMap(null)
+      try {
+        subjectPropertyOverlayRef.current.setMap(null)
+      } catch (error) {
+        console.warn('[useMapInitialization] Error removing subject property overlay:', error)
+      }
       subjectPropertyOverlayRef.current = null
     }
-  }, [mapData.subject_property])
+  }, [])
 
   const updateSubjectProperty = useCallback(async () => {
     if (!googleMapRef.current || !mapData.subject_property) {
@@ -281,39 +282,31 @@ export function useMapInitialization(
       return
     }
 
-    // Always remove the old overlay if it exists
-    if (subjectPropertyOverlayRef.current) {
-      subjectPropertyOverlayRef.current.setMap(null)
-      subjectPropertyOverlayRef.current = null
-    }
-
-    // Always create a new overlay with the latest data
-    createSubjectPropertyOverlay(
-      mapData,
-      (updates) => {
-        setMapData(prev => ({
-          ...prev,
-          subject_property: prev.subject_property ? {
-            ...prev.subject_property,
-            ...updates
-          } : null
-        }))
-      }
-    ).then(overlay => {
-      overlay.setMap(googleMapRef.current)
-      subjectPropertyOverlayRef.current = overlay
-    }).catch(error => {
+    // Always cleanup existing overlay before creating a new one
+    cleanupSubjectProperty()
+ 
+    try {
+      createSubjectPropertyOverlay(
+        mapData,
+        (updates) => {
+          setMapData(prev => ({
+            ...prev,
+            subject_property: prev.subject_property ? {
+              ...prev.subject_property,
+              ...updates
+            } : null
+          }))
+        }
+      ).then(overlay => {
+        overlay.setMap(googleMapRef.current)
+        subjectPropertyOverlayRef.current = overlay
+      }).catch(error => {
+        console.error('[useMapInitialization] Error creating subject property overlay:', error)
+      })
+    } catch (error) {
       console.error('[useMapInitialization] Error creating subject property overlay:', error)
-    })
-
-    // Cleanup on unmount
-    return () => {
-      if (subjectPropertyOverlayRef.current) {
-        subjectPropertyOverlayRef.current.setMap(null)
-        subjectPropertyOverlayRef.current = null
-      }
     }
-  }, [googleMapRef.current, mapData.subject_property])
+  }, [mapData.subject_property]) // React to any changes in subject_property
 
   return { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition }
 }
