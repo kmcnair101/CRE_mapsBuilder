@@ -222,6 +222,55 @@ export function DownloadMapModal({
           map.setOptions({ styles: mapData.mapStyle.customStyles })
         }
 
+        // Apply label hiding and highway highlighting
+        const additionalStyles = []
+        
+        if (mapData.mapStyle.hideAllLabels || mapData.mapStyle.hideLabels) {
+          additionalStyles.push({ featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+        }
+        
+        if (mapData.mapStyle.hideStreetNames) {
+          additionalStyles.push({ featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+        }
+        
+        if (mapData.mapStyle.hideHighwayLabels) {
+          additionalStyles.push({ featureType: 'road.highway', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+        }
+        
+        if (mapData.mapStyle.hideAreaLabels) {
+          additionalStyles.push({ featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+        }
+        
+        if (mapData.mapStyle.hideBusinessLabels) {
+          additionalStyles.push({ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+        }
+        
+        if (mapData.mapStyle.hideTransitLabels) {
+          additionalStyles.push({ featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+        }
+        
+        if (mapData.mapStyle.hideWaterLabels) {
+          additionalStyles.push({ featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] })
+        }
+        
+        if (mapData.mapStyle.highlightHighways) {
+          additionalStyles.push({
+            featureType: 'road.highway',
+            elementType: 'geometry',
+            stylers: [
+              { color: mapData.mapStyle.highlightHighways.color },
+              { weight: mapData.mapStyle.highlightHighways.weight }
+            ]
+          })
+        }
+
+        // Apply additional styles if any exist
+        if (additionalStyles.length > 0) {
+          const currentStyles = map.get('styles') || []
+          map.setOptions({ styles: [...currentStyles, ...additionalStyles] })
+          console.log('[DownloadMapModal] Applied label/highway customizations')
+        }
+
         // Add after style is applied
         console.log('[DownloadMapModal] Map style after apply:', {
           currentType: map.getMapTypeId(),
