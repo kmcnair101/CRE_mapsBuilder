@@ -275,5 +275,45 @@ export function useMapInitialization(
     }
   }, [])
 
+  useEffect(() => {
+    if (!googleMapRef.current || !mapData.subject_property) {
+      cleanupSubjectProperty()
+      return
+    }
+
+    // Always remove the old overlay if it exists
+    if (subjectPropertyOverlayRef.current) {
+      subjectPropertyOverlayRef.current.setMap(null)
+      subjectPropertyOverlayRef.current = null
+    }
+
+    // Always create a new overlay with the latest data
+    createSubjectPropertyOverlay(
+      mapData,
+      (updates) => {
+        setMapData(prev => ({
+          ...prev,
+          subject_property: prev.subject_property ? {
+            ...prev.subject_property,
+            ...updates
+          } : null
+        }))
+      }
+    ).then(overlay => {
+      overlay.setMap(googleMapRef.current)
+      subjectPropertyOverlayRef.current = overlay
+    }).catch(error => {
+      console.error('[useMapInitialization] Error creating subject property overlay:', error)
+    })
+
+    // Cleanup on unmount
+    return () => {
+      if (subjectPropertyOverlayRef.current) {
+        subjectPropertyOverlayRef.current.setMap(null)
+        subjectPropertyOverlayRef.current = null
+      }
+    }
+  }, [googleMapRef.current, mapData.subject_property])
+
   return { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition }
 }
