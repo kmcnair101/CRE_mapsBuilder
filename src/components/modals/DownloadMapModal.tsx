@@ -199,21 +199,14 @@ export function DownloadMapModal({
 
       // Apply map style
       if (mapData.mapStyle) {
-        console.log('[DownloadMapModal] Applying style to map:', {
-          type: mapData.mapStyle.type,
-          styles: mapData.mapStyle.customStyles,
-          map: map
-        });
+        console.log('[DownloadMapModal] Style:', mapData.mapStyle.type);
         
         if (mapData.mapStyle.type === 'satellite') {
           map.setMapTypeId('satellite')
-          console.log('[DownloadMapModal] Set mapTypeId to satellite');
         } else if (mapData.mapStyle.type === 'terrain') {
           map.setMapTypeId('terrain')
-          console.log('[DownloadMapModal] Set mapTypeId to terrain');
         } else {
           map.setMapTypeId('roadmap')
-          console.log('[DownloadMapModal] Set mapTypeId to roadmap');
         }
 
         if (mapData.mapStyle.customStyles) {
