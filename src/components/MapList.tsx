@@ -48,11 +48,34 @@ function MapPreview({
     loader.load().then(() => {
       // Calculate adjusted zoom level based on container size
       const containerWidth = mapRef.current?.offsetWidth || 0
+      const containerHeight = mapRef.current?.offsetHeight || 0
       const zoomAdjustment = Math.log2(containerWidth / 800) // 800px is a reference width
       const adjustedZoom = Math.min(Math.max(zoom_level + zoomAdjustment, 0), 20) // Clamp between 0 and 20
 
       // Calculate scale factor for overlays
       const scaleFactor = containerWidth / 800 // Scale factor relative to reference width
+
+      console.log('[MapPreview] Container and scaling info:', {
+        containerWidth,
+        containerHeight,
+        originalZoom: zoom_level,
+        zoomAdjustment,
+        adjustedZoom,
+        scaleFactor,
+        referenceWidth: 800
+      })
+
+      console.log('[MapPreview] Overlay data received:', {
+        overlayCount: overlays.length,
+        overlayTypes: overlays.map(o => o.type),
+        hasSubjectProperty: !!subject_property,
+        subjectPropertyData: subject_property ? {
+          lat: subject_property.lat,
+          lng: subject_property.lng,
+          name: subject_property.name,
+          style: subject_property.style
+        } : null
+      })
 
       mapInstance = new google.maps.Map(mapRef.current!, {
         center: { lat: center_lat, lng: center_lng },
@@ -74,19 +97,42 @@ function MapPreview({
 
       // Add overlays using the existing overlay creation functions
       const map = mapInstance as google.maps.Map  // Type assertion
-      overlays.forEach((overlay) => {
+      overlays.forEach((overlay, index) => {
+        console.log(`[MapPreview] Processing overlay ${index + 1}/${overlays.length}:`, {
+          type: overlay.type,
+          position: overlay.position,
+          originalProperties: overlay.properties,
+          scaleFactor
+        })
+
         switch (overlay.type) {
           case 'image': {
+            const originalWidth = overlay.properties.width || 200
+            const scaledWidth = originalWidth * scaleFactor
+            const originalPadding = overlay.properties.containerStyle?.padding || 8
+            const scaledPadding = originalPadding * scaleFactor
+            const originalBorderWidth = overlay.properties.containerStyle?.borderWidth || 1
+            const scaledBorderWidth = originalBorderWidth * scaleFactor
+
+            console.log(`[MapPreview] Image overlay ${index} scaling:`, {
+              originalWidth,
+              scaledWidth,
+              originalPadding,
+              scaledPadding,
+              originalBorderWidth,
+              scaledBorderWidth
+            })
+
             const imageOverlay = createCustomImageOverlay(
               {
                 position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
                 url: overlay.properties.url || '',
-                width: (overlay.properties.width || 200) * scaleFactor,
+                width: scaledWidth,
                 style: {
                   backgroundColor: overlay.properties.containerStyle?.backgroundColor || '#FFFFFF',
                   borderColor: overlay.properties.containerStyle?.borderColor || '#000000',
-                  borderWidth: (overlay.properties.containerStyle?.borderWidth || 1) * scaleFactor,
-                  padding: (overlay.properties.containerStyle?.padding || 8) * scaleFactor,
+                  borderWidth: scaledBorderWidth,
+                  padding: scaledPadding,
                   backgroundOpacity: overlay.properties.containerStyle?.backgroundOpacity || 1,
                   borderOpacity: overlay.properties.containerStyle?.borderOpacity || 1
                 }
@@ -102,18 +148,34 @@ function MapPreview({
             break
           }
           case 'business': {
+            const originalWidth = overlay.properties.width || 200
+            const scaledWidth = originalWidth * scaleFactor
+            const originalFontSize = overlay.properties.containerStyle?.fontSize || 14
+            const scaledFontSize = originalFontSize * scaleFactor
+            const originalPadding = overlay.properties.containerStyle?.padding || 8
+            const scaledPadding = originalPadding * scaleFactor
+
+            console.log(`[MapPreview] Business overlay ${index} scaling:`, {
+              originalWidth,
+              scaledWidth,
+              originalFontSize,
+              scaledFontSize,
+              originalPadding,
+              scaledPadding
+            })
+
             const businessOverlay = createBusinessLogoOverlay(
               {
                 position: new google.maps.LatLng(overlay.position.lat, overlay.position.lng),
                 logo: overlay.properties.logo || '',
                 businessName: overlay.properties.businessName || '',
-                width: (overlay.properties.width || 200) * scaleFactor,
+                width: scaledWidth,
                 style: {
                   ...overlay.properties.containerStyle,
                   position: 'absolute',
                   transform: 'translate(-50%, -50%)',
-                  fontSize: `${(overlay.properties.containerStyle?.fontSize || 14) * scaleFactor}px`,
-                  padding: `${(overlay.properties.containerStyle?.padding || 8) * scaleFactor}px`
+                  fontSize: `${scaledFontSize}px`,
+                  padding: `${scaledPadding}px`
                 }
               },
               map,
@@ -127,14 +189,31 @@ function MapPreview({
             break
           }
           case 'text': {
+            const originalFontSize = overlay.properties.fontSize || 14
+            const scaledFontSize = originalFontSize * scaleFactor
+            const originalPadding = overlay.properties.padding || 8
+            const scaledPadding = originalPadding * scaleFactor
+            const originalBorderWidth = overlay.properties.borderWidth || 1
+            const scaledBorderWidth = originalBorderWidth * scaleFactor
+
+            console.log(`[MapPreview] Text overlay ${index} scaling:`, {
+              text: overlay.properties.text,
+              originalFontSize,
+              scaledFontSize,
+              originalPadding,
+              scaledPadding,
+              originalBorderWidth,
+              scaledBorderWidth
+            })
+
             const textOverlay = createCustomTextOverlay(
               {
                 ...overlay,
                 properties: {
                   ...overlay.properties,
-                  fontSize: (overlay.properties.fontSize || 14) * scaleFactor,
-                  padding: (overlay.properties.padding || 8) * scaleFactor,
-                  borderWidth: (overlay.properties.borderWidth || 1) * scaleFactor
+                  fontSize: scaledFontSize,
+                  padding: scaledPadding,
+                  borderWidth: scaledBorderWidth
                 }
               },
               map,
@@ -148,14 +227,31 @@ function MapPreview({
             break
           }
           case 'group': {
+            const originalFontSize = overlay.properties.fontSize || 14
+            const scaledFontSize = originalFontSize * scaleFactor
+            const originalPadding = overlay.properties.padding || 8
+            const scaledPadding = originalPadding * scaleFactor
+            const originalBorderWidth = overlay.properties.borderWidth || 1
+            const scaledBorderWidth = originalBorderWidth * scaleFactor
+
+            console.log(`[MapPreview] Group overlay ${index} scaling:`, {
+              text: overlay.properties.text,
+              originalFontSize,
+              scaledFontSize,
+              originalPadding,
+              scaledPadding,
+              originalBorderWidth,
+              scaledBorderWidth
+            })
+
             const groupOverlay = createGroupOverlay(
               {
                 ...overlay,
                 properties: {
                   ...overlay.properties,
-                  fontSize: (overlay.properties.fontSize || 14) * scaleFactor,
-                  padding: (overlay.properties.padding || 8) * scaleFactor,
-                  borderWidth: (overlay.properties.borderWidth || 1) * scaleFactor
+                  fontSize: scaledFontSize,
+                  padding: scaledPadding,
+                  borderWidth: scaledBorderWidth
                 }
               },
               map,
@@ -169,12 +265,22 @@ function MapPreview({
             break
           }
           case 'shape': {
+            const originalStrokeWeight = overlay.properties.strokeWeight || 2
+            const scaledStrokeWeight = originalStrokeWeight * scaleFactor
+
+            console.log(`[MapPreview] Shape overlay ${index} scaling:`, {
+              shapeType: overlay.properties.shapeType,
+              originalStrokeWeight,
+              scaledStrokeWeight,
+              coordinates: overlay.properties.coordinates?.length || 0
+            })
+
             const shapeOverlay = createShapeOverlay(
               {
                 ...overlay,
                 properties: {
                   ...overlay.properties,
-                  strokeWeight: (overlay.properties.strokeWeight || 2) * scaleFactor
+                  strokeWeight: scaledStrokeWeight
                 }
               },
               map,
@@ -185,6 +291,8 @@ function MapPreview({
             overlayRefs.current.push(shapeOverlay)
             break
           }
+          default:
+            console.warn(`[MapPreview] Unknown overlay type: ${overlay.type}`)
         }
       })
  
@@ -192,6 +300,24 @@ function MapPreview({
       if (subject_property?.lat && subject_property?.lng) {
         const style = subject_property.style || {};
         const position = new google.maps.LatLng(subject_property.lat, subject_property.lng);
+
+        const originalFontSize = style.fontSize || 14
+        const scaledFontSize = originalFontSize * scaleFactor
+        const originalPadding = style.padding || 8
+        const scaledPadding = originalPadding * scaleFactor
+        const originalBorderWidth = style.borderWidth || 1
+        const scaledBorderWidth = originalBorderWidth * scaleFactor
+
+        console.log('[MapPreview] Subject property scaling:', {
+          name: subject_property.name,
+          position: { lat: subject_property.lat, lng: subject_property.lng },
+          originalStyle: style,
+          scaledValues: {
+            fontSize: `${originalFontSize}px -> ${scaledFontSize}px`,
+            padding: `${originalPadding}px -> ${scaledPadding}px`,
+            borderWidth: `${originalBorderWidth}px -> ${scaledBorderWidth}px`
+          }
+        })
 
         class PreviewSubjectPropertyOverlay extends google.maps.OverlayView {
           div: HTMLDivElement | null = null;
@@ -205,19 +331,26 @@ function MapPreview({
             const contentDiv = document.createElement('div');
             contentDiv.style.position = 'relative';
             contentDiv.style.minWidth = 'min-content';
-            contentDiv.style.maxWidth = '400px';
+            contentDiv.style.maxWidth = `${400 * scaleFactor}px`;
             contentDiv.style.backgroundColor = style.backgroundColor || '#FFFFFF';
-            contentDiv.style.border = `${(style.borderWidth || 1) * scaleFactor}px solid ${style.borderColor || '#000000'}`;
-            contentDiv.style.padding = `${(style.padding || 8) * scaleFactor}px`;
-            contentDiv.style.borderRadius = '4px';
+            contentDiv.style.border = `${scaledBorderWidth}px solid ${style.borderColor || '#000000'}`;
+            contentDiv.style.padding = `${scaledPadding}px`;
+            contentDiv.style.borderRadius = `${4 * scaleFactor}px`;
             contentDiv.style.boxSizing = 'border-box';
             contentDiv.style.color = style.color || '#000000';
-            contentDiv.style.fontSize = `${(style.fontSize || 14) * scaleFactor}px`;
+            contentDiv.style.fontSize = `${scaledFontSize}px`;
             contentDiv.style.fontFamily = style.fontFamily || 'Arial';
             contentDiv.style.textAlign = 'center';
             contentDiv.style.whiteSpace = 'pre';
             contentDiv.style.display = 'inline-block';
             contentDiv.innerHTML = subject_property.name || '';
+
+            console.log('[MapPreview] Subject property div created with computed style:', {
+              maxWidth: contentDiv.style.maxWidth,
+              fontSize: contentDiv.style.fontSize,
+              padding: contentDiv.style.padding,
+              borderWidth: contentDiv.style.border
+            })
 
             div.appendChild(contentDiv);
             this.div = div;
@@ -232,6 +365,12 @@ function MapPreview({
               const height = this.div.offsetHeight;
               this.div.style.left = `${pos.x - width / 2}px`;
               this.div.style.top = `${pos.y - height / 2}px`;
+              
+              console.log('[MapPreview] Subject property positioned:', {
+                screenPos: { x: pos.x, y: pos.y },
+                elementSize: { width, height },
+                finalPosition: { left: this.div.style.left, top: this.div.style.top }
+              })
             }
           }
           onRemove() {
@@ -246,9 +385,17 @@ function MapPreview({
         overlay.setMap(map);
         overlayRefs.current.push(overlay);
       }
+
+      console.log('[MapPreview] Map initialization complete:', {
+        totalOverlays: overlayRefs.current.length,
+        mapCenter: { lat: center_lat, lng: center_lng },
+        mapZoom: adjustedZoom,
+        hasSubjectProperty: !!subject_property
+      })
     })
 
     return () => {
+      console.log('[MapPreview] Cleaning up overlays:', overlayRefs.current.length)
       overlayRefs.current.forEach(ov => {
         if (ov.setMap) ov.setMap(null)
       })
