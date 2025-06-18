@@ -339,3 +339,21 @@ export function useMapDownload() {
 
   return { handleDownload, downloadMapFromData }
 }
+
+// 2. Generate thumbnail in the background and update the map record
+setTimeout(async () => {
+  try {
+    console.log('Starting thumbnail generation...')
+    const thumbnail = await handleDownload(mapRef, true, undefined, undefined, googleMapRef)
+    if (thumbnail) {
+      await supabase
+        .from('maps')
+        .update({ thumbnail })
+        .eq('id', mapId)
+      console.log('Thumbnail generated and saved successfully')
+    }
+  } catch (err) {
+    // Silently handle thumbnail generation errors - don't show alerts to user
+    console.warn('Thumbnail generation failed (this is non-critical):', err)
+  }
+}, 2000) // Increase delay to let map settle after save
