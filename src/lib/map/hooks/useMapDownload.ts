@@ -177,7 +177,12 @@ export function useMapDownload() {
       return canvas.toDataURL('image/png', 1.0)
     } catch (error) {
       console.error('Error generating map image:', error)
-      alert(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      
+      // Only show user-facing alerts for actual downloads, not thumbnails
+      if (!forThumbnail) {
+        alert(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+      
       throw error
     }
   }, [])
