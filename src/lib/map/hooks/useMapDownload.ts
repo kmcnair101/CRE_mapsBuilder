@@ -69,120 +69,55 @@ export function useMapDownload() {
     googleMapRef?: React.RefObject<google.maps.Map>
   ) => {
     try {
-      // Wait for map to be idle with increased timeout
+      // Wait for map to be idle
       const map = googleMapRef?.current
       if (map) {
         await new Promise<void>((resolve) => {
-          const timeout = setTimeout(() => {
-            console.warn('Map idle timeout, proceeding anyway')
-            resolve() // Don't reject, just proceed
-          }, 10000) // Reduced timeout
-
-          const checkMapReady = () => {
-            const center = map.getCenter()
-            const zoom = map.getZoom()
-            const div = map.getDiv()
-            
-            if (center && zoom !== undefined && div.offsetWidth > 0 && div.offsetHeight > 0) {
-              clearTimeout(timeout)
-              resolve()
-            } else {
-              google.maps.event.trigger(map, 'resize')
-              setTimeout(checkMapReady, 500)
-            }
-          }
-
-          google.maps.event.addListenerOnce(map, 'idle', checkMapReady)
-          google.maps.event.addListenerOnce(map, 'tilesloaded', checkMapReady)
-          checkMapReady()
+          const timeout = setTimeout(resolve, 5000)
+          google.maps.event.addListenerOnce(map, 'idle', () => {
+            clearTimeout(timeout)
+            resolve()
+          })
         })
       }
 
       // Wait a bit to ensure all tiles and overlays are rendered
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Reduced wait time
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      console.log('Starting html2canvas capture...')
-
-      // Generate image
+      // Capture the actual map DOM node
       const canvas = await html2canvas(mapRef.current!, {
         useCORS: true,
         allowTaint: true,
         backgroundColor: 'white',
         scale: 2,
-        logging: false, // Disable logging to reduce console noise
         onclone: (clonedDoc) => {
-          console.log('onclone function called')
-          
-          // Hide all Google Maps controls in the cloned document
-          const clonedControls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
-          clonedControls.forEach(control => {
+          // Hide Google Maps controls in the cloned document
+          const controls = clonedDoc.querySelectorAll('.gm-style-cc, .gm-control-active, .gmnoprint, .gm-svpc')
+          controls.forEach(control => {
             if (control instanceof HTMLElement) {
               control.style.visibility = 'hidden'
             }
           })
-
-          const clonedLogo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
-          if (clonedLogo instanceof HTMLElement) {
-            clonedLogo.style.visibility = 'hidden'
+          const logo = clonedDoc.querySelector('.gm-style a[href*="maps.google.com"]')
+          if (logo instanceof HTMLElement) {
+            logo.style.visibility = 'hidden'
           }
-
-          // Add line breaks ONLY in the cloned document for download
-          const addLineBreaksToTextOverlays = () => {
-            // Find all divs that might be text overlays
-            const allDivs = clonedDoc.querySelectorAll('div')
-            let overlayCount = 0
-            
-            allDivs.forEach((element: Element) => {
-              if (element instanceof HTMLElement && element.textContent && element.textContent.trim()) {
-                // Check if this looks like a text overlay or subject property
-                const hasBackground = element.style.backgroundColor && 
-                                     element.style.backgroundColor !== 'rgba(0, 0, 0, 0)' && 
-                                     element.style.backgroundColor !== 'transparent'
-                const hasBorder = element.style.border || element.style.borderWidth
-                const hasAbsolutePosition = element.style.position === 'absolute'
-                
-                // If it looks like a text overlay
-                if ((hasBackground || hasBorder) && hasAbsolutePosition) {
-                  overlayCount++
-                  // Add line break to the end if not already present
-                  if (!element.innerHTML.endsWith('<br>') && !element.innerHTML.endsWith('<br/>')) {
-                    element.innerHTML = element.innerHTML + '<br>'
-                  }
-                }
-              }
-            })
-            
-            console.log(`Added line breaks to ${overlayCount} text overlays`)
-          }
-
-          addLineBreaksToTextOverlays()
-
-          // Return Promise.resolve() instead of handling images
-          return Promise.resolve()
         }
       })
 
-      console.log('html2canvas completed successfully')
-
-      // Only trigger download if not generating thumbnail
       if (!forThumbnail) {
         const link = document.createElement('a')
         link.download = 'map.png'
         link.href = canvas.toDataURL('image/png', 1.0)
         link.click()
-        console.log('Download triggered')
       }
 
-      // Return the data URL
       return canvas.toDataURL('image/png', 1.0)
     } catch (error) {
       console.error('Error generating map image:', error)
-      
-      // Only show user-facing alerts for actual downloads, not thumbnails
       if (!forThumbnail) {
         alert(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
-      
       throw error
     }
   }, [])
