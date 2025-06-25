@@ -410,7 +410,7 @@ export function createCustomTextOverlay(
         contentDiv.style.removeProperty('width');
       }
       contentDiv.innerHTML = this.content;
-    }
+    } 
 
     updateContent(content: string, style: any) {
       this.content = content;
