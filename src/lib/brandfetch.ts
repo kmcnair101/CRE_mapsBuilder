@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { getBusinessDomain } from './utils/domain'
 
-const BRANDFETCH_API_KEY = 'Y1RHW9DpY+ca5sePNlM3+AKFSj3RkCeoRrS5EDOQugw='
-const LOGODEV_API_KEY = 'pk_IUW5ADLFTyaB0B8WF5lwtA'
+const BRANDFETCH_API_KEY = '4aNIBty5gfr79P03bxmBBMDijq-TijRPGfRAxDZI2/14='
+const LOGODEV_API_KEY = 'pk_MxyuUoAQTXSlNndFI3R6vg'
 
 const logoResponseSchema = z.array(z.object({
   url: z.string().url(),
