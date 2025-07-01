@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET');
+console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.slice(0, 8) + '...' : 'NOT SET');
 console.log('STRIPE_PRICE_ID_MONTHLY:', process.env.STRIPE_PRICE_ID_MONTHLY);
 console.log('STRIPE_PRICE_ID_ANNUAL:', process.env.STRIPE_PRICE_ID_ANNUAL);
 console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
@@ -26,7 +26,13 @@ export default async function handler(req, res) {
       : process.env.STRIPE_PRICE_ID_MONTHLY;
 
     if (!priceId || !process.env.NEXT_PUBLIC_SITE_URL) {
-      return res.status(500).json({ error: 'Stripe price ID or site URL missing' });
+      return res.status(500).json({
+        error: 'Debug info',
+        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET',
+        STRIPE_PRICE_ID_MONTHLY: process.env.STRIPE_PRICE_ID_MONTHLY,
+        STRIPE_PRICE_ID_ANNUAL: process.env.STRIPE_PRICE_ID_ANNUAL,
+        NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+      });
     }
  
     // Use the provided returnUrl or default to home page
