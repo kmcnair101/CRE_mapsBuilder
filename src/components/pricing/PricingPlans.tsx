@@ -93,7 +93,7 @@ export function PricingPlans({ isOpen, onClose, onSave }: PricingPlanProps) {
               {/* Annual Plan */}
               <div className="border rounded-lg p-4 shadow-sm">
                 <h3 className="text-lg font-semibold mb-2">Annual Plan</h3>
-                <p className="text-gray-600 mb-4">$449 per year</p>
+                <p className="text-gray-600 mb-4">$379 per year</p>
                 <button
                   onClick={() => handleSubscribe('annual')}
                   disabled={loading}
