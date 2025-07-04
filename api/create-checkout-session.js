@@ -4,11 +4,6 @@ import Stripe from 'stripe';
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.slice(0, 8) + '...' : 'NOT SET');
-console.log('STRIPE_PRICE_ID_MONTHLY:', process.env.STRIPE_PRICE_ID_MONTHLY);
-console.log('STRIPE_PRICE_ID_ANNUAL:', process.env.STRIPE_PRICE_ID_ANNUAL);
-console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -53,6 +48,7 @@ export default async function handler(req, res) {
         userId,
         priceId,
       },
+      allow_promotion_codes: true,
     });
 
     return res.status(200).json({ url: session.url });
