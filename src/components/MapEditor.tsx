@@ -420,8 +420,23 @@ export default function MapEditor() {
       },
       properties: {
         content: text,
-        ...style,
-        width: style.width ?? 200 // <-- Ensure width is set
+        width: style.width ?? 200,
+        // Properly structure the styles into textStyle and containerStyle
+        textStyle: {
+          color: style.color,
+          fontSize: style.fontSize,
+          fontFamily: style.fontFamily,
+          fontWeight: 'normal', // Default value
+          textAlign: 'center' as const // Default value
+        },
+        containerStyle: {
+          backgroundColor: style.backgroundColor,
+          borderColor: style.borderColor,
+          borderWidth: style.borderWidth,
+          padding: style.padding,
+          backgroundOpacity: style.backgroundOpacity,
+          borderOpacity: style.borderOpacity
+        }
       }
     }
 
