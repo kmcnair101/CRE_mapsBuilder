@@ -1,6 +1,7 @@
 import html2canvas from 'html2canvas'
 import { loader } from '@/lib/google-maps'
 import type { MapData } from '@/lib/types'
+import { createSubjectPropertyOverlay } from '../overlays/SubjectPropertyOverlay'
 
 export function useMapDownload() {
   const handleDownload = async (mapRef: React.RefObject<HTMLDivElement>, forThumbnail = false) => {
@@ -54,7 +55,7 @@ export function useMapDownload() {
 
           // ULTIMATE TEXT REPLACEMENT STRATEGY
           // Find all text overlay elements and replace them with canvas-drawn text
-          const textElements = clonedDoc.querySelectorAll('.text-content, [data-text-overlay]')
+          const textElements = clonedDoc.querySelectorAll('.text-content, [data-text-overlay], [data-subject-property-text]')
           textElements.forEach(element => {
             if (element instanceof HTMLElement) {
               const originalElement = document.querySelector(`[data-overlay-id="${element.getAttribute('data-overlay-id')}"]`) || element
@@ -226,24 +227,14 @@ export function useMapDownload() {
           google.maps.event.addListenerOnce(map, 'idle', resolve)
         })
 
-        // Add subject property marker
+        // Add subject property overlay (not just a marker)
         if (mapData.subject_property) {
-          new google.maps.Marker({
-            position: { 
-              lat: mapData.subject_property.lat, 
-              lng: mapData.subject_property.lng 
-            },
-            map,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#3B82F6',
-              fillOpacity: 0.7,
-              strokeColor: '#2563EB',
-              strokeWeight: 2
-            },
-            title: mapData.subject_property.name || 'Subject Property'
-          })
+          const subjectPropertyOverlay = await createSubjectPropertyOverlay(
+            mapData,
+            () => {} // No-op for updates in download
+          )
+          
+          subjectPropertyOverlay.setMap(map)
         }
 
         // Add overlays
