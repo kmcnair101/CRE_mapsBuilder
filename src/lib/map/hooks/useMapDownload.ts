@@ -80,28 +80,29 @@ export function useMapDownload() {
               
               // Create a canvas to draw the text perfectly centered
               const canvas = clonedDoc.createElement('canvas')
-              canvas.width = containerWidth
-              canvas.height = containerHeight
-              canvas.style.width = `${containerWidth}px`
-              canvas.style.height = `${containerHeight}px`
+              const pixelRatio = window.devicePixelRatio || 2; // or set to 2 for consistent sharpness
+              canvas.width = containerWidth * pixelRatio;
+              canvas.height = containerHeight * pixelRatio;
+              canvas.style.width = `${containerWidth}px`;
+              canvas.style.height = `${containerHeight}px`;
               
-              const ctx = canvas.getContext('2d')
+              const ctx = canvas.getContext('2d');
               if (ctx) {
-                // Set up canvas for text drawing
-                ctx.font = `${fontSize}px ${fontFamily}`
-                ctx.fillStyle = color
-                ctx.textAlign = 'center'
-                ctx.textBaseline = 'middle'
-                
+                ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0); // Scale context for sharpness
+
+                ctx.font = `${fontSize}px ${fontFamily}`;
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
                 // Fill background if needed
                 if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)') {
-                  ctx.fillStyle = backgroundColor
-                  ctx.fillRect(0, 0, containerWidth, containerHeight)
-                  ctx.fillStyle = color
+                  ctx.fillStyle = backgroundColor;
+                  ctx.fillRect(0, 0, containerWidth, containerHeight);
+                  ctx.fillStyle = color;
                 }
-                
-                // Draw text at exact center
-                ctx.fillText(textContent, containerWidth / 2, containerHeight / 2)
+
+                ctx.fillText(textContent, containerWidth / 2, containerHeight / 2);
               }
               
               // Replace the element with the canvas
@@ -351,28 +352,29 @@ export function useMapDownload() {
                 
                 // Create a canvas to draw the text perfectly centered
                 const canvas = clonedDoc.createElement('canvas')
-                canvas.width = containerWidth
-                canvas.height = containerHeight
-                canvas.style.width = `${containerWidth}px`
-                canvas.style.height = `${containerHeight}px`
+                const pixelRatio = window.devicePixelRatio || 2; // or set to 2 for consistent sharpness
+                canvas.width = containerWidth * pixelRatio;
+                canvas.height = containerHeight * pixelRatio;
+                canvas.style.width = `${containerWidth}px`;
+                canvas.style.height = `${containerHeight}px`;
                 
-                const ctx = canvas.getContext('2d')
+                const ctx = canvas.getContext('2d');
                 if (ctx) {
-                  // Set up canvas for text drawing
-                  ctx.font = `${fontSize}px ${fontFamily}`
-                  ctx.fillStyle = color
-                  ctx.textAlign = 'center'
-                  ctx.textBaseline = 'middle'
-                  
+                  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0); // Scale context for sharpness
+
+                  ctx.font = `${fontSize}px ${fontFamily}`;
+                  ctx.fillStyle = color;
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+
                   // Fill background if needed
                   if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)') {
-                    ctx.fillStyle = backgroundColor
-                    ctx.fillRect(0, 0, containerWidth, containerHeight)
-                    ctx.fillStyle = color
+                    ctx.fillStyle = backgroundColor;
+                    ctx.fillRect(0, 0, containerWidth, containerHeight);
+                    ctx.fillStyle = color;
                   }
-                  
-                  // Draw text at exact center
-                  ctx.fillText(textContent, containerWidth / 2, containerHeight / 2)
+
+                  ctx.fillText(textContent, containerWidth / 2, containerHeight / 2);
                 }
                 
                 // Replace the element with the canvas
