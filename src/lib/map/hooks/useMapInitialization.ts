@@ -306,7 +306,7 @@ export function useMapInitialization(
     } catch (error) {
       console.error('[useMapInitialization] Error creating subject property overlay:', error)
     }
-  }, [mapData.subject_property]) // React to any changes in subject_property
+  }, [mapData.subject_property, mapData.mapStyle])
 
   return { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition }
 }
