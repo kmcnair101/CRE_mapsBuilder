@@ -472,6 +472,12 @@ export function DownloadMapModal({
     setDownloadModalOpen(true);
   };
 
+  useEffect(() => {
+    if (open) {
+      setPreviewMapData(JSON.parse(JSON.stringify(mapData)));
+    }
+  }, [open, mapData.center_lat, mapData.center_lng, mapData.zoom_level, mapData.overlays]);
+
   return (
     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
       <div className="bg-white w-full h-full flex">
