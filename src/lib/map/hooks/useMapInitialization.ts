@@ -282,9 +282,8 @@ export function useMapInitialization(
       return
     }
 
-    // Always cleanup existing overlay before creating a new one
     cleanupSubjectProperty()
- 
+
     try {
       createSubjectPropertyOverlay(
         mapData,
@@ -306,7 +305,14 @@ export function useMapInitialization(
     } catch (error) {
       console.error('[useMapInitialization] Error creating subject property overlay:', error)
     }
-  }, [mapData.subject_property, mapData.mapStyle])
+  }, [
+    mapData.subject_property?.lat,
+    mapData.subject_property?.lng,
+    mapData.subject_property?.name,
+    mapData.subject_property?.image,
+    JSON.stringify(mapData.subject_property?.style),
+    JSON.stringify(mapData.mapStyle)
+  ])
 
   return { googleMapRef, drawingManagerRef, setDrawingMode, getSafePosition }
 }
