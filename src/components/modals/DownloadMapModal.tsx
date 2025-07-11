@@ -478,6 +478,20 @@ export function DownloadMapModal({
     }
   }, [open, mapData.center_lat, mapData.center_lng, mapData.zoom_level, mapData.overlays]);
 
+  // --- Ensure preview map always tracks live center/zoom ---
+  useEffect(() => {
+    if (
+      open &&
+      googleMapRef.current &&
+      typeof mapData.center_lat === 'number' &&
+      typeof mapData.center_lng === 'number' &&
+      typeof mapData.zoom_level === 'number'
+    ) {
+      googleMapRef.current.setCenter({ lat: mapData.center_lat, lng: mapData.center_lng });
+      googleMapRef.current.setZoom(mapData.zoom_level);
+    }
+  }, [open, mapData.center_lat, mapData.center_lng, mapData.zoom_level, googleMapRef.current]);
+
   return (
     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
       <div className="bg-white w-full h-full flex">
