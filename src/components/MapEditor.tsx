@@ -426,7 +426,8 @@ export default function MapEditor() {
           color: style.color,
           fontSize: style.fontSize,
           fontFamily: style.fontFamily,
-          fontWeight: 'normal' // Default value
+          fontWeight: 'normal', // Default value
+          textAlign: 'center' as const // Default value
         },
         containerStyle: {
           backgroundColor: style.backgroundColor,
@@ -1252,13 +1253,7 @@ export default function MapEditor() {
           }
         }}
         mapRef={mapRef}
-        mapData={{
-          ...mapData,
-          overlays: extractLiveOverlays(overlaysRef, mapData),
-          center_lat: googleMapRef.current?.getCenter()?.lat() ?? mapData.center_lat,
-          center_lng: googleMapRef.current?.getCenter()?.lng() ?? mapData.center_lng,
-          zoom_level: googleMapRef.current?.getZoom() ?? mapData.zoom_level,
-        }}
+        mapData={{ ...mapData, overlays: extractLiveOverlays(overlaysRef, mapData) }} // <-- also for preview
       />
 
       <PricingPlans

@@ -233,6 +233,11 @@ export function TextEditModal({
                   ref={editorRef}
                   contentEditable
                   onInput={handleInput}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
                   onFocus={() => {
                     setIsEditorFocused(true)
                     // Select all text when gaining focus if nothing is selected
@@ -271,7 +276,8 @@ export function TextEditModal({
                   }}
                   className={cn(
                     editorClassName,
-                    isEditorFocused && 'ring-2 ring-blue-500'
+                    isEditorFocused && 'ring-2 ring-blue-500',
+                    'whitespace-nowrap'
                   )}
                   onPaste={(e) => {
                     e.preventDefault()

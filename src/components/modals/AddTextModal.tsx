@@ -266,6 +266,11 @@ export function AddTextModal({
                   ref={editorRef}
                   contentEditable
                   onInput={handleInput}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
                   onFocus={() => {
                     const selection = window.getSelection()
                     if (selection?.isCollapsed) {
@@ -289,7 +294,7 @@ export function AddTextModal({
                   onKeyUp={() => {
                     updateFormatState()
                   }}
-                  className="min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto"
+                  className="min-h-[120px] max-h-[200px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto whitespace-nowrap"
                   onPaste={(e) => {
                     e.preventDefault()
                     const text = e.clipboardData.getData('text/plain')

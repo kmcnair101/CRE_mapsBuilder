@@ -79,8 +79,13 @@ export function SubjectPropertyModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Add these logs
+    console.log('[SubjectPropertyModal] editorRef.current.innerHTML:', editorRef.current?.innerHTML)
+    console.log('[SubjectPropertyModal] name state:', name)
+    
     onSave({ 
-      name,
+      name: editorRef.current?.innerHTML || name, // Use innerHTML instead of name state
       image,
       style: {
         color,
@@ -289,7 +294,12 @@ export function SubjectPropertyModal({
                     ref={editorRef}
                     contentEditable
                     onInput={handleInput}
-                    className="min-h-[60px] max-h-[100px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto [&>b]:font-bold [&>i]:italic [&>u]:underline"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="min-h-[60px] max-h-[100px] w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 overflow-y-auto [&>b]:font-bold [&>i]:italic [&>u]:underline whitespace-nowrap"
                     onPaste={(e) => {
                       e.preventDefault();
                       const text = e.clipboardData.getData('text/plain');
