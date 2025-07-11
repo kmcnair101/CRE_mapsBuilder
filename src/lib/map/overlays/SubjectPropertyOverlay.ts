@@ -151,6 +151,7 @@ export async function createSubjectPropertyOverlay(
         }
       } else {
         contentDiv.innerHTML = this.content.name
+        contentDiv.setAttribute('data-subject-property-text', 'true'); // Mark for download logic
         contentDiv.style.color = this.content.style.color
         contentDiv.style.fontSize = `${this.content.style.fontSize}px`
         contentDiv.style.fontFamily = this.content.style.fontFamily
@@ -405,12 +406,11 @@ export async function createSubjectPropertyOverlay(
       if (!this.div) return;
       const overlayProjection = this.getProjection();
       const point = overlayProjection.fromLatLngToDivPixel(this.position);
-      if (point) {
-        const width = this.div.offsetWidth;
-        const height = this.div.offsetHeight;
-        this.div.style.left = `${point.x - width / 2}px`;
-        this.div.style.top = `${point.y - height / 2}px`;
-      }
+      if (!point) return;
+      const width = this.div.offsetWidth;
+      const height = this.div.offsetHeight;
+      this.div.style.left = `${point.x - width / 2}px`;
+      this.div.style.top = `${point.y - height / 2}px`;
     }
 
     onRemove() {

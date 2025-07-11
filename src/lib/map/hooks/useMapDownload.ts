@@ -335,7 +335,7 @@ export function useMapDownload() {
 
             // ULTIMATE TEXT REPLACEMENT STRATEGY
             // Find all text overlay elements and replace them with canvas-drawn text
-            const textElements = clonedDoc.querySelectorAll('.text-content, [data-text-overlay]')
+            const textElements = clonedDoc.querySelectorAll('.text-content, [data-text-overlay], [data-subject-property-text]')
             textElements.forEach(element => {
               if (element instanceof HTMLElement) {
                 const originalElement = document.querySelector(`[data-overlay-id="${element.getAttribute('data-overlay-id')}"]`) || element
