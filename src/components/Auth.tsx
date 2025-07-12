@@ -217,7 +217,7 @@ export function Auth() {
             <p className="mt-2 text-sm text-gray-600">
               {isLogin 
                 ? 'Sign in to your account to continue'
-                : 'Get started with your 30 days free trial'}
+                : 'Sign Up To Get Started For Free'}
             </p>
           </div>
 
